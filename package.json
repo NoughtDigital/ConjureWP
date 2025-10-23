@@ -2,7 +2,7 @@
 	"name": "conjure-wp",
 	"slug": "conjure-wp",
 	"textdomain": "conjure-wp",
-	"repository": "https://github.com/richtabor/ConjureWP",
+	"repository": "https://github.com/NoughtDigital/ConjureWP",
 	"version": "1.0.0",
 	"theme_uri": "https://conjurewp.com",
 	"author": "Jake Henshall <hello@conjurewp.com>",

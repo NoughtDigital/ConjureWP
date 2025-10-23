@@ -1197,6 +1197,10 @@ class Conjure {
 		$import    = $strings['btn-import'];
 
 		$multi_import = ( 1 < count( $this->import_files ) ) ? 'is-multi-import' : null;
+		
+		// Initialize server health checker.
+		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-server-health.php';
+		$server_health = new Conjure_Server_Health();
 		?>
 
 		<div class="conjure__content--transition">
@@ -1210,6 +1214,19 @@ class Conjure {
 			<h1><?php echo esc_html( $header ); ?></h1>
 
 			<p><?php echo esc_html( $paragraph ); ?></p>
+			
+			<?php
+			// Display server health check.
+			echo $server_health->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$server_health->render_complete(
+				array(
+					'show_title'       => true,
+					'title'            => __( 'Server Health Check', 'conjurewp' ),
+					'requirements_url' => '',
+					'theme_name'       => $this->theme->name,
+				)
+			);
+			?>
 
 			<?php if ( 1 < count( $this->import_files ) ) : ?>
 

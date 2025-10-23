@@ -125,9 +125,26 @@ See `conjure-filters-sample.php` for more examples.
 When the plugin is active, you'll see ConjureWP options in the WordPress Admin Bar:
 
 -   **Run Setup Wizard** - Launch the setup wizard
--   **Reset Setup Wizard** - Clear wizard progress and start fresh
+-   **Reset Setup Wizard** - Delete the child theme, clear wizard progress, and start fresh
 
 These are useful for testing and development.
+
+**Note:** The reset function will:
+
+-   Switch back to the parent theme if a child theme is active
+-   Delete the child theme directory and all its files
+-   Clear all ConjureWP options and transients
+-   Allow you to run the setup wizard again from scratch
+
+### Server Health Check
+
+The wizard automatically displays a server health check on the Content Import step. This shows:
+
+-   PHP Memory Limit (minimum 512MB recommended)
+-   PHP Max Execution Time (minimum 40000s recommended)
+-   Visual indicator if requirements are met
+
+The health check helps identify potential timeout issues before importing content.
 
 ### Debugging
 

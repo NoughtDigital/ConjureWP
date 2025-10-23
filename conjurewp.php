@@ -166,7 +166,7 @@ function conjurewp_admin_bar_reset( $wp_admin_bar ) {
 			'title'  => __( 'Reset Setup Wizard', 'conjurewp' ),
 			'href'   => $reset_url,
 			'meta'   => array(
-				'onclick' => 'return confirm("' . esc_js( __( 'Are you sure you want to reset ConjureWP? This will allow you to run the setup wizard again.', 'conjurewp' ) ) . '");',
+				'onclick' => 'return confirm("' . esc_js( __( 'Are you sure you want to reset ConjureWP? This will delete the child theme and allow you to run the setup wizard again.', 'conjurewp' ) ) . '");',
 			),
 		)
 	);
@@ -202,18 +202,70 @@ function conjurewp_handle_reset() {
 		wp_die( __( 'You do not have permission to perform this action.', 'conjurewp' ) );
 	}
 
+	// Get the logger.
+	$logger = conjurewp_get_logger();
+
 	// Get the current theme.
-	$theme = wp_get_theme();
-	$slug  = strtolower( preg_replace( '#[^a-zA-Z]#', '', $theme->template ) );
+	$theme    = wp_get_theme();
+	$is_child = is_child_theme();
+	
+	// Determine the parent theme slug (used for option names).
+	// If we're on a child theme, $theme->template gives us the parent.
+	// If we're on a parent theme, $theme->template gives us the current theme.
+	$parent_template = $theme->template;
+	$slug            = strtolower( preg_replace( '#[^a-zA-Z]#', '', $parent_template ) );
+	
+	$logger->info( sprintf( 'Reset initiated. Current theme: %s, Parent template: %s, Slug: %s, Is child: %s', $theme->get_stylesheet(), $parent_template, $slug, $is_child ? 'yes' : 'no' ) );
+
+	// Check if a child theme was created by ConjureWP.
+	$child_theme_option = get_option( 'conjure_' . $slug . '_child' );
+	
+	$logger->info( sprintf( 'Child theme option value: %s', $child_theme_option ? $child_theme_option : 'not set' ) );
+	
+	if ( $child_theme_option ) {
+		// Build child theme slug and path.
+		$child_theme_name = $child_theme_option;
+		$child_theme_slug = sanitize_title( $child_theme_name );
+		$child_theme_path = get_theme_root() . '/' . $child_theme_slug;
+		
+		$logger->info( sprintf( 'Attempting to delete child theme: %s at path: %s', $child_theme_slug, $child_theme_path ) );
+
+		// If the child theme directory exists, delete it.
+		if ( file_exists( $child_theme_path ) ) {
+			// If we're currently using the child theme, switch to parent first.
+			if ( $is_child && $theme->get_stylesheet() === $child_theme_slug ) {
+				$logger->info( __( 'Switching from child theme to parent theme before deletion', 'conjurewp' ) );
+				switch_theme( $parent_template );
+				$logger->info( sprintf( 'Switched to parent theme: %s', $parent_template ) );
+			}
+
+			// Initialize WP_Filesystem.
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+			global $wp_filesystem;
+
+			// Delete the child theme directory.
+			$deleted = $wp_filesystem->delete( $child_theme_path, true );
+
+			if ( $deleted ) {
+				$logger->info( sprintf( __( 'Child theme deleted successfully: %s', 'conjurewp' ), $child_theme_path ) );
+			} else {
+				$logger->error( sprintf( __( 'Failed to delete child theme directory: %s', 'conjurewp' ), $child_theme_path ) );
+			}
+		} else {
+			$logger->warning( sprintf( __( 'Child theme directory not found: %s', 'conjurewp' ), $child_theme_path ) );
+		}
+	} else {
+		$logger->info( 'No child theme option found, skipping child theme deletion.' );
+	}
 
 	// Delete ConjureWP options.
 	delete_option( 'conjure_' . $slug . '_completed' );
 	delete_option( 'conjure_' . $slug . '_child' );
-	delete_transient( $theme->template . '_conjure_redirect' );
+	delete_transient( $parent_template . '_conjure_redirect' );
 	delete_transient( 'conjure_import_file_base_name' );
 
 	// Log the reset action.
-	$logger = conjurewp_get_logger();
 	$logger->info( __( 'ConjureWP was reset via admin bar', 'conjurewp' ) );
 
 	// Redirect to the setup wizard.
@@ -240,7 +292,7 @@ function conjurewp_reset_success_notice() {
 	<div class="notice notice-success is-dismissible">
 		<p>
 			<strong><?php _e( 'ConjureWP Reset Successful!', 'conjurewp' ); ?></strong><br>
-			<?php _e( 'The setup wizard has been reset. You can now run through the setup process again.', 'conjurewp' ); ?>
+			<?php _e( 'The child theme has been deleted and the setup wizard has been reset. You can now run through the setup process again.', 'conjurewp' ); ?>
 		</p>
 	</div>
 	<?php

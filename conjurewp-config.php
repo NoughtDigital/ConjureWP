@@ -25,7 +25,7 @@ $config = array(
 	'parent_slug'          => 'admin.php', // The wp-admin parent page slug for the admin menu item.
 	'capability'           => 'manage_options', // The capability required for this menu to be displayed to the user.
 	'child_action_btn_url' => 'https://codex.wordpress.org/child_themes', // URL for the 'child-action-link'.
-	'dev_mode'             => false, // Enable development mode for testing.
+	'dev_mode'             => true, // Enable development mode for testing.
 	'license_step'         => false, // EDD license activation step.
 	'license_required'     => false, // Require the license activation step.
 	'license_help_url'     => '', // URL for the 'license-tooltip'.
@@ -99,5 +99,28 @@ $strings = array(
 	'ready-link-2'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://github.com/richtabor/ConjureWP/', esc_html__( 'Get Help', 'conjurewp' ) ),
 	'ready-link-3'             => sprintf( '<a href="%1$s">%2$s</a>', admin_url( 'customize.php' ), esc_html__( 'Start Customizing', 'conjurewp' ) ),
 );
+
+/**
+ * Configure demo import files for testing.
+ *
+ * @param array $files Import files configuration.
+ * @return array Modified import files.
+ */
+function conjurewp_demo_import_files( $files ) {
+	$demo_path = CONJUREWP_PLUGIN_DIR . 'demo/';
+	$demo_url  = CONJUREWP_PLUGIN_URL . 'demo/';
+
+	return array(
+		array(
+			'import_file_name'             => 'Demo Content',
+			'local_import_file'            => $demo_path . 'content.xml',
+			'local_import_widget_file'     => $demo_path . 'widgets.json',
+			'local_import_customizer_file' => $demo_path . 'customizer.dat',
+			'import_notice'                => __( 'This is a demo import for testing. It will import sample content, widgets, and customizer settings.', 'conjurewp' ),
+			'preview_url'                  => '',
+		),
+	);
+}
+add_filter( 'conjure_import_files', 'conjurewp_demo_import_files' );
 
 $wizard = new Conjure( $config, $strings );

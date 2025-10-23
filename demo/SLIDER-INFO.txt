@@ -1,0 +1,20 @@
+Revolution Slider Demo File
+============================
+
+To test Revolution Slider import functionality, you need to:
+
+1. Install and activate Revolution Slider plugin
+2. Create a slider in Revolution Slider
+3. Export the slider:
+   - Go to Revolution Slider admin
+   - Select your slider
+   - Click "Export Slider"
+   - Save the exported file as "slider.zip"
+4. Place the slider.zip file in this directory
+
+The slider.zip file should be a complete Revolution Slider export that can be
+imported through the ConjureWP import wizard.
+
+Note: Revolution Slider is a premium plugin and is optional for testing.
+      The basic ConjureWP functionality works without it.
+

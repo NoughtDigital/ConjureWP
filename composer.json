@@ -1,0 +1,38 @@
+{
+  "name": "conjurewp/conjurewp",
+  "description": "WordPress Setup Wizard Plugin - Better Theme Onboarding. Built on Conjure WP.",
+  "keywords": [
+    "wp",
+    "wordpress",
+    "plugin",
+    "theme",
+    "onboarding",
+    "import",
+    "content",
+    "setup",
+    "wizard"
+  ],
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Jake Henshall",
+      "homepage": "https://nought.digital"
+    }
+  ],
+  "require": {
+    "php": ">=7.4.0",
+    "monolog/monolog": "^2.9||^3.0"
+  },
+  "config": {
+    "platform": {
+      "php": "8.4"
+    },
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.7",
+    "wp-coding-standards/wpcs": "^3.0"
+  }
+}

@@ -1,0 +1,24 @@
+{
+	"name": "conjure-wp",
+	"slug": "conjure-wp",
+	"textdomain": "conjure-wp",
+	"repository": "https://github.com/richtabor/ConjureWP",
+	"version": "1.0.0",
+	"theme_uri": "https://conjurewp.com",
+	"author": "Jake Henshall <hello@conjurewp.com>",
+	"author_uri": "https://conjurewp.com",
+	"author_shop": "Conjure WP",
+	"license": "GPLv3",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"sass": "^1.93.2",
+		"terser": "^5.44.0",
+		"vite": "^7.1.11",
+		"vite-plugin-banner": "^0.8.1"
+	}
+}

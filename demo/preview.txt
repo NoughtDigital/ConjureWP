@@ -1,0 +1,19 @@
+Preview Image Placeholder
+=========================
+
+To add a preview image for your demo:
+
+1. Create a screenshot/preview image of your demo (recommended: 1200x900px)
+2. Save it as "preview.jpg" or "preview.png"
+3. Place it in this directory
+4. Reference it in your import configuration:
+
+   'import_preview_image_url' => WP_PLUGIN_DIR . '/ConjureWP/demo/preview.jpg',
+
+   OR for theme-based demos:
+
+   'import_preview_image_url' => get_template_directory_uri() . '/demo/preview.jpg',
+
+The preview image will be displayed in the import selection screen to help
+users choose which demo to import.
+

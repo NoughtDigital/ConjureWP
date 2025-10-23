@@ -1,0 +1,38 @@
+{
+  "sidebar-1": {
+    "search-1": {
+      "title": "Search"
+    },
+    "recent-posts-1": {
+      "title": "Recent Posts",
+      "number": 5
+    },
+    "recent-comments-1": {
+      "title": "Recent Comments",
+      "number": 5
+    },
+    "archives-1": {
+      "title": "Archives",
+      "count": 0,
+      "dropdown": 0
+    },
+    "categories-1": {
+      "title": "Categories",
+      "count": 0,
+      "hierarchical": 0,
+      "dropdown": 0
+    },
+    "text-1": {
+      "title": "About This Demo",
+      "text": "<p>This is a demo sidebar widget imported through ConjureWP. You can customize or remove these widgets after testing the import.</p>",
+      "filter": false
+    }
+  },
+  "footer-1": {
+    "text-2": {
+      "title": "Footer Info",
+      "text": "<p>Demo footer content imported via ConjureWP.</p><p>&copy; 2025 Your Site Name</p>",
+      "filter": false
+    }
+  }
+}

@@ -156,7 +156,7 @@ npm run dev          # Development build with watching
 
 ## Credits
 
-Based on [MerlinWP](https://github.com/richtabor/MerlinWP) by Jake Henshall.
+Based on [MerlinWP](https://github.com/richtabor/MerlinWP).
 
 Built with:
 

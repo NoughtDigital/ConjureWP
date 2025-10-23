@@ -1654,7 +1654,7 @@ class Conjure {
 			 * Failure to use the proper tag will result in a CSS file needlessly being loaded twice.
 			 * This will usually not affect the site appearance, but it's inefficient and extends your page's loading time.
 			 *
-			 * @link https://codex.wordpress.org/Child_Themes
+			 * @link https://developer.wordpress.org/themes/advanced-topics/child-themes/
 			 */
 			function {$slug_no_hyphens}_child_enqueue_styles() {
 			    wp_enqueue_style( '{$slug}-style' , get_template_directory_uri() . '/style.css' );

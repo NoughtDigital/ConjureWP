@@ -96,7 +96,7 @@ $strings = array(
 	'ready-action-link'        => esc_html__( 'Extras', 'conjurewp' ),
 	'ready-big-button'         => esc_html__( 'View your website', 'conjurewp' ),
 	'ready-link-1'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://wordpress.org/support/', esc_html__( 'Explore WordPress', 'conjurewp' ) ),
-	'ready-link-2'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://github.com/richtabor/ConjureWP/', esc_html__( 'Get Help', 'conjurewp' ) ),
+	'ready-link-2'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://github.com/NoughtDigital/ConjureWP', esc_html__( 'Get Help', 'conjurewp' ) ),
 	'ready-link-3'             => sprintf( '<a href="%1$s">%2$s</a>', admin_url( 'customize.php' ), esc_html__( 'Start Customizing', 'conjurewp' ) ),
 );
 

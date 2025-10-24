@@ -31,74 +31,87 @@ class Conjure_Downloader {
 
 
 	/**
-	 * Download file from a given URL.
+	 * Download file from a given URL using streaming to avoid memory issues.
 	 *
 	 * @param string $url URL of file to download.
 	 * @param string $filename Filename of the file to save.
 	 * @return string|WP_Error Full path to the downloaded file or WP_Error object with error message.
 	 */
 	public function download_file( $url, $filename ) {
-		$content = $this->get_content_from_url( $url );
-
-		// Check if there was an error and break out.
-		if ( is_wp_error( $content ) ) {
+		// Test if the URL to the file is defined.
+		if ( empty( $url ) ) {
+			$error = new \WP_Error(
+				'missing_url',
+				__( 'Missing URL for downloading a file!', 'conjurewp' )
+			);
+			
 			Conjure_Logger::get_instance()->error(
-				$content->get_error_message(),
+				$error->get_error_message(),
+				array(
+					'url'      => $url,
+					'filename' => $filename,
+				)
+			);
+			
+			return $error;
+		}
+
+		// Ensure the destination directory exists.
+		if ( ! file_exists( $this->download_directory_path ) ) {
+			if ( ! wp_mkdir_p( $this->download_directory_path ) ) {
+				$error = new \WP_Error(
+					'directory_creation_failed',
+					sprintf(
+						/* translators: %s: directory path */
+						__( 'Could not create directory: %s', 'conjurewp' ),
+						$this->download_directory_path
+					)
+				);
+
+				Conjure_Logger::get_instance()->error(
+					$error->get_error_message(),
+					array(
+						'url'      => $url,
+						'filename' => $filename,
+						'path'     => $this->download_directory_path,
+					)
+				);
+
+				return $error;
+			}
+		}
+
+		// Build the full destination path.
+		$destination_path = $this->download_directory_path . $filename;
+
+		// Stream the file directly to disk to avoid loading it into memory.
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'  => apply_filters( 'conjure_timeout_for_downloading_import_file', 20 ),
+				'stream'   => true,
+				'filename' => $destination_path,
+			)
+		);
+
+		// Test if the get request was not successful.
+		if ( is_wp_error( $response ) ) {
+			Conjure_Logger::get_instance()->error(
+				$response->get_error_message(),
 				array(
 					'url'      => $url,
 					'filename' => $filename,
 				)
 			);
 
-			return $content;
+			return $response;
 		}
 
-		$saved_file = file_put_contents( $this->download_directory_path . $filename, $content );
-
-		if ( ! empty( $saved_file ) ) {
-			return $this->download_directory_path . $filename;
-		}
-
-		Conjure_Logger::get_instance()->error(
-			/* translators: %s: file URL and filename */
-			__( 'The file was not able to save to disk, while trying to download it', 'conjurewp' ),
-			array(
-				'url'      => $url,
-				'filename' => $filename,
-			)
-		);
-
-		return false;
-	}
-
-
-	/**
-	 * Helper function: get content from an URL.
-	 *
-	 * @param string $url URL to the content file.
-	 * @return string|WP_Error, content from the URL or WP_Error object with error message.
-	 */
-	private function get_content_from_url( $url ) {
-		// Test if the URL to the file is defined.
-		if ( empty( $url ) ) {
-			return new \WP_Error(
-				'missing_url',
-				__( 'Missing URL for downloading a file!', 'conjurewp' )
-			);
-		}
-
-		// Get file content from the server.
-		$response = wp_remote_get(
-			$url,
-			array( 'timeout' => apply_filters( 'conjure_timeout_for_downloading_import_file', 20 ) )
-		);
-
-		// Test if the get request was not successful.
-		if ( is_wp_error( $response ) || 200 !== $response['response']['code'] ) {
-			// Collect the right format of error data (array or WP_Error).
+		// Check HTTP response code.
+		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
 			$response_error = $this->get_error_from_response( $response );
 
-			return new \WP_Error(
+			$error = new \WP_Error(
 				'download_error',
 				sprintf(
 					/* translators: 1: strong tag start, 2: URL, 3: strong tag end, 4: line break, 5: error code, 6: error message */
@@ -111,10 +124,38 @@ class Conjure_Downloader {
 					$response_error['error_message']
 				)
 			);
+
+			Conjure_Logger::get_instance()->error(
+				$error->get_error_message(),
+				array(
+					'url'      => $url,
+					'filename' => $filename,
+				)
+			);
+
+			return $error;
 		}
 
-		// Return content retrieved from the URL.
-		return wp_remote_retrieve_body( $response );
+		// Verify that the file was actually written to disk.
+		if ( ! file_exists( $destination_path ) || 0 === filesize( $destination_path ) ) {
+			$error = new \WP_Error(
+				'file_not_saved',
+				__( 'The file was not able to save to disk, while trying to download it', 'conjurewp' )
+			);
+
+			Conjure_Logger::get_instance()->error(
+				$error->get_error_message(),
+				array(
+					'url'      => $url,
+					'filename' => $filename,
+					'path'     => $destination_path,
+				)
+			);
+
+			return $error;
+		}
+
+		return $destination_path;
 	}
 
 

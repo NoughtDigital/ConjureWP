@@ -100,6 +100,36 @@ Common fixes:
 -   Increase memory: `define('WP_MEMORY_LIMIT', '256M');`
 -   Increase timeout: `define('WP_MAX_EXECUTION_TIME', 300);`
 
+## Rerunning Individual Steps (Power Users)
+
+After onboarding is complete, you can enable developer tools to rerun individual steps without resetting the entire onboarding process.
+
+### Enable Rerun Tools
+
+Add this constant to your `wp-config.php`:
+
+```php
+define( 'CONJURE_TOOLS_ENABLED', true );
+```
+
+### Using Rerun Tools
+
+Once enabled, administrators will see a **"Conjure WP"** menu in the WordPress admin bar with:
+
+-   Individual step status (✓ completed, ○ not completed)
+-   Reset individual steps: Child Theme, License, Plugins, Content
+-   Reset all steps to restart complete onboarding
+-   Quick access to open the wizard
+
+**Use cases:**
+
+-   Re-import demo content with different settings
+-   Reinstall/update plugins after changes
+-   Regenerate child theme
+-   Test onboarding flow during development
+
+**Note:** Only visible to users with `manage_options` capability (administrators).
+
 ## Build Commands
 
 ```bash

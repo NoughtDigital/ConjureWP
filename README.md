@@ -14,6 +14,7 @@ WordPress theme setup wizard with demo content import.
 -   Demo content, widgets, customizer import
 -   Revolution Slider & Redux support
 -   Self-contained importer (no external dependencies)
+-   **WP-CLI commands for automated imports** (CI/CD, hosting automation)
 
 ## Requirements
 
@@ -83,6 +84,51 @@ function my_theme_after_import_setup( $selected_import ) {
 -   `conjure_after_all_import` - Post-import actions
 
 See `conjure-filters-sample.php` for examples.
+
+## WP-CLI Commands
+
+ConjureWP supports WP-CLI for automated imports, perfect for CI/CD pipelines and hosting automation.
+
+### List Available Demos
+
+```bash
+wp conjure list
+```
+
+### Import Demo Content
+
+```bash
+# Import by slug
+wp conjure import --demo=demo-content
+
+# Import by index
+wp conjure import --demo=0
+
+# Skip specific imports
+wp conjure import --demo=0 --skip-widgets --skip-sliders
+```
+
+**Available Options:**
+
+-   `--skip-content` - Skip content import
+-   `--skip-widgets` - Skip widgets import
+-   `--skip-options` - Skip customizer options
+-   `--skip-sliders` - Skip Revolution Sliders
+-   `--skip-redux` - Skip Redux options
+
+### Example: CI/CD Pipeline
+
+```bash
+#!/bin/bash
+# Automated site setup
+wp core install --url=example.com --title="My Site" \
+    --admin_user=admin --admin_email=admin@example.com
+wp theme activate my-theme
+wp plugin install contact-form-7 --activate
+wp conjure import --demo=0
+```
+
+For complete documentation, see [WP-CLI.md](WP-CLI.md).
 
 ## Admin Tools
 

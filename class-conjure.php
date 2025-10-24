@@ -326,6 +326,11 @@ class Conjure {
 		add_action( 'import_start', array( $this, 'before_content_import_setup' ) );
 		add_action( 'admin_init', array( $this, 'register_import_files' ) );
 		add_filter( 'upload_mimes', array( $this, 'allow_import_file_types' ) );
+
+		// Register WP-CLI commands if WP-CLI is available.
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			add_action( 'admin_init', array( $this, 'register_cli_commands' ) );
+		}
 	}
 
 	/**
@@ -2300,6 +2305,23 @@ class Conjure {
 	 */
 	public function register_import_files() {
 		$this->import_files = $this->validate_import_file_info( apply_filters( 'conjure_import_files', array() ) );
+	}
+
+	/**
+	 * Register WP-CLI commands.
+	 */
+	public function register_cli_commands() {
+		if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
+			return;
+		}
+
+		// Load the CLI class.
+		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-cli.php';
+
+		// Register the CLI commands.
+		$cli = new Conjure_CLI( $this );
+		WP_CLI::add_command( 'conjure list', array( $cli, 'list_demos' ) );
+		WP_CLI::add_command( 'conjure import', array( $cli, 'import' ) );
 	}
 
 	/**

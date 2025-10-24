@@ -121,7 +121,7 @@ function conjurewp_demo_import_files( $files ) {
 		),
 	);
 }
-// Comment out to test manual upload UI
-// add_filter( 'conjure_import_files', 'conjurewp_demo_import_files' );
+// Comment out to test manual upload UI or uncomment to enable CLI commands testing
+add_filter( 'conjure_import_files', 'conjurewp_demo_import_files' );
 
 $wizard = new Conjure( $config, $strings );

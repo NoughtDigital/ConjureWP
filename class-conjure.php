@@ -1415,6 +1415,18 @@ class Conjure {
 	 */
 	public function generate_child() {
 
+		// Verify nonce for security.
+		check_ajax_referer( 'conjure_nonce', 'wpnonce' );
+
+		// Check if user has permission to switch themes.
+		if ( ! current_user_can( 'switch_themes' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ),
+				)
+			);
+		}
+
 		// Strings passed in from the config file.
 		$strings = $this->strings;
 

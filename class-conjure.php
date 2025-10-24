@@ -1437,19 +1437,75 @@ class Conjure {
 		$name = $this->theme . ' Child';
 		$slug = sanitize_title( $name );
 
-		$path = get_theme_root() . '/' . $slug;
+	$path = get_theme_root() . '/' . $slug;
 
-		if ( ! file_exists( $path ) ) {
+	if ( ! file_exists( $path ) ) {
 
-			WP_Filesystem();
+		if ( ! WP_Filesystem() ) {
+			$error_message = __( 'Unable to initialize the WordPress filesystem. Cannot create child theme.', 'conjurewp' );
+			$this->logger->error( $error_message );
 
-			global $wp_filesystem;
+			wp_send_json_error(
+				array(
+					'message' => esc_html( $error_message ),
+				)
+			);
+		}
 
-			$wp_filesystem->mkdir( $path );
-			$wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $this->theme->template, $this->theme->name, $this->theme->author, $this->theme->version ) );
-			$wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $this->theme->template ) );
+		global $wp_filesystem;
 
-			$this->generate_child_screenshot( $path );
+		if ( ! $wp_filesystem ) {
+			$error_message = __( 'WordPress filesystem is not available. Cannot create child theme.', 'conjurewp' );
+			$this->logger->error( $error_message );
+
+			wp_send_json_error(
+				array(
+					'message' => esc_html( $error_message ),
+				)
+			);
+		}
+
+		$mkdir_result = $wp_filesystem->mkdir( $path );
+		if ( ! $mkdir_result ) {
+			$error_message = sprintf(
+				/* translators: %s: directory path */
+				__( 'Unable to create child theme directory: %s', 'conjurewp' ),
+				$path
+			);
+			$this->logger->error( $error_message );
+
+			wp_send_json_error(
+				array(
+					'message' => esc_html( $error_message ),
+				)
+			);
+		}
+
+		$style_result = $wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $this->theme->template, $this->theme->name, $this->theme->author, $this->theme->version ) );
+		if ( ! $style_result ) {
+			$error_message = __( 'Unable to create child theme style.css file.', 'conjurewp' );
+			$this->logger->error( $error_message );
+
+			wp_send_json_error(
+				array(
+					'message' => esc_html( $error_message ),
+				)
+			);
+		}
+
+		$functions_result = $wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $this->theme->template ) );
+		if ( ! $functions_result ) {
+			$error_message = __( 'Unable to create child theme functions.php file.', 'conjurewp' );
+			$this->logger->error( $error_message );
+
+			wp_send_json_error(
+				array(
+					'message' => esc_html( $error_message ),
+				)
+			);
+		}
+
+		$this->generate_child_screenshot( $path );
 
 			$allowed_themes          = get_option( 'allowedthemes' );
 			$allowed_themes[ $slug ] = true;

@@ -96,10 +96,68 @@
 		position: relative;
 		width: 100%;
 
-		span {
-			transition: color 100ms;
+		.conjure__upload-label-content {
+			display: flex;
+			flex-direction: column;
+			gap: 1px; // Tighter spacing between title and description
+			padding-right: 25px; // Make room for the checkbox
+		}
+
+		.conjure__upload-title {
+			display: flex;
+			align-items: center;
+			gap: 4px; // Closer to text
 			font-size: 14px;
+			font-weight: 500;
 			color: $gray;
+			transition: color 100ms;
+
+			// Tooltip help icon
+			.hint--top {
+				display: inline-flex;
+				align-items: center;
+				cursor: help;
+				margin-left: 0;
+				line-height: 1; // Prevent extra spacing
+
+				.icon {
+					width: 20px;
+					height: 20px;
+					opacity: 0.6;
+					transition: opacity 0.2s ease;
+					color: #4299e1;
+					display: block;
+					margin-bottom: 0 !important; // Remove bottom margin
+					vertical-align: middle;
+
+					&:hover {
+						opacity: 1;
+					}
+				}
+
+				// Fix tooltip width and positioning
+				&:before,
+				&:after {
+					white-space: normal !important;
+					width: 200px !important;
+					left: 50% !important;
+					transform: translateX(-50%) !important;
+				}
+
+				&:after {
+					font-size: 11px !important;
+					line-height: 1.4 !important;
+					padding: 8px 10px !important;
+				}
+			}
+		}
+
+		.conjure__upload-description {
+			font-size: 11px;
+			color: #718096;
+			line-height: 1.4;
+			display: block;
+			margin-top: 2px; // Small margin for breathing room
 		}
 
 		// Use the same circle checkbox style as regular import
@@ -151,7 +209,7 @@
 				border-color: $blue;
 			}
 
-			span {
+			.conjure__upload-title {
 				color: $blue;
 			}
 		}
@@ -274,12 +332,17 @@
 		}
 	}
 
-	.conjure__upload-description {
+	.conjure__upload-file-type {
 		display: block;
 		font-size: 9px;
 		color: #718096;
 		line-height: 1.3;
 		margin-top: 2px;
+		font-family: monospace;
+		background-color: #edf2f7;
+		padding: 2px 5px;
+		border-radius: 3px;
+		display: inline-block;
 	}
 }
 

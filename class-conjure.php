@@ -2811,27 +2811,23 @@ class Conjure {
 		$upload_options = array(
 			'content' => array(
 				'title'       => esc_html__( 'Content', 'conjurewp' ),
-				'description' => esc_html__( 'Upload your content.xml file (posts, pages, custom post types)', 'conjurewp' ),
+				'description' => esc_html__( 'Posts, pages, and site structure', 'conjurewp' ),
 				'accept'      => '.xml',
 			),
 			'images' => array(
-				'title'       => esc_html__( 'Images', 'conjurewp' ),
-				'description' => esc_html__( 'Upload a separate images.xml file (optional, if not included in content.xml)', 'conjurewp' ),
+				'title'       => esc_html__( 'Images & Media', 'conjurewp' ),
+				'description' => esc_html__( 'Import media library attachments', 'conjurewp' ),
+				'tooltip'     => esc_html__( 'Uncheck if replacing images or on shared hosting to speed up import', 'conjurewp' ),
 				'accept'      => '.xml',
-			),
-			'menus' => array(
-				'title'       => esc_html__( 'Menus', 'conjurewp' ),
-				'description' => esc_html__( 'Upload your menus.json file (optional)', 'conjurewp' ),
-				'accept'      => '.json',
 			),
 			'widgets' => array(
 				'title'       => esc_html__( 'Widgets', 'conjurewp' ),
-				'description' => esc_html__( 'Upload your widgets.json or widgets.wie file (optional)', 'conjurewp' ),
+				'description' => esc_html__( 'Sidebar widgets and widget areas', 'conjurewp' ),
 				'accept'      => '.json,.wie',
 			),
 			'options' => array(
 				'title'       => esc_html__( 'Theme Options', 'conjurewp' ),
-				'description' => esc_html__( 'Upload your customizer.dat file (optional)', 'conjurewp' ),
+				'description' => esc_html__( 'Customizer settings and theme options', 'conjurewp' ),
 				'accept'      => '.dat,.json',
 			),
 		);
@@ -2859,7 +2855,18 @@ class Conjure {
 					>
 					
 					<label for="default_content_<?php echo esc_attr( $type ); ?>" class="conjure__upload-label">
-						<i></i><span><?php echo esc_html( $option['title'] ); ?></span>
+						<i></i>
+						<span class="conjure__upload-label-content">
+							<span class="conjure__upload-title">
+								<?php echo esc_html( $option['title'] ); ?>
+								<?php if ( ! empty( $option['tooltip'] ) ) : ?>
+									<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
+										<?php echo wp_kses( $this->svg( array( 'icon' => 'help' ) ), $this->svg_allowed_html() ); ?>
+									</span>
+								<?php endif; ?>
+							</span>
+							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+						</span>
 					</label>
 
 				<div class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>" 
@@ -2874,7 +2881,7 @@ class Conjure {
 						</svg>
 						<p class="conjure__upload-text">
 							<strong><?php esc_html_e( 'Click to select file', 'conjurewp' ); ?></strong>
-							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+							<span class="conjure__upload-file-type"><?php echo esc_html( $option['accept'] ); ?></span>
 						</p>
 					</div>
 

@@ -147,6 +147,14 @@
 		padding-bottom: 12px;
 	}
 
+	&--content {
+		min-height: 580px;
+		
+		form {
+			position: relative;
+		}
+	}
+
 	body.loaded &--transition {
 		filter: blur(0);
 		opacity: 1;

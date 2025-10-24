@@ -321,23 +321,33 @@ class Conjure_Server_Health {
 		<style>
 			#server-health-info {
 				background: #f8f9fd;
-				padding: 20px;
+				padding: 12px 15px !important;
 				border-radius: 3px;
-				margin-bottom: 20px;
+				margin-bottom: 15px !important;
+				font-size: 11px !important;
 			}
 			#server-health-info h3 {
 				display: inline-block;
-				margin: 0 0 12px 0;
-				font-weight: 300;
+				margin: 0 0 6px 0 !important;
+				font-weight: 500 !important;
+				font-size: 11px !important;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				color: #555 !important;
+			}
+			#server-health-info p {
+				font-size: 10px !important;
+				line-height: 1.4 !important;
+				margin: 6px 0 !important;
 			}
 			#health-meter {
 				display: inline-block;
 				position: relative;
-				top: -1px;
-				height: 8px;
-				width: 8px;
-				margin: 0 0 0 8px;
-				border-radius: 8px;
+				top: 0px;
+				height: 5px;
+				width: 5px;
+				margin: 0 0 0 5px;
+				border-radius: 5px;
 			}
 			#health-meter.does-not-meet-requirements {
 				background-color: #bc0000;
@@ -346,20 +356,24 @@ class Conjure_Server_Health {
 				background-color: #7faf1b;
 			}
 			.below-req {
-				color: #bc0000;
+				color: #bc0000 !important;
+				font-size: 10px !important;
 			}
 			.meets-req {
-				color: #7faf1b;
+				color: #7faf1b !important;
+				font-size: 10px !important;
 			}
 			.server-info {
-				margin-bottom: 0;
+				margin-bottom: 0 !important;
 				list-style: none;
-				padding: 0;
+				padding: 0 !important;
+				font-size: 10px !important;
 			}
 			.server-info li {
 				clear: both;
 				overflow: hidden;
-				margin-bottom: 5px;
+				margin-bottom: 3px !important;
+				font-size: 10px !important;
 			}
 			.server-info li::after {
 				content: "";
@@ -368,9 +382,12 @@ class Conjure_Server_Health {
 			}
 			.server-feature {
 				float: left;
+				font-size: 10px !important;
 			}
 			.server-value {
 				float: right;
+				font-size: 10px !important;
+				font-weight: 600;
 			}
 		</style>
 		';

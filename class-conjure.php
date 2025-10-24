@@ -315,10 +315,14 @@ class Conjure {
 		add_action( 'wp_ajax_conjure_activate_license', array( $this, '_ajax_activate_license' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $this, 'update_selected_import_data_info' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_import_finished', array( $this, 'import_finished' ), 10, 0 );
+		add_action( 'wp_ajax_conjure_upload_file', array( $this, '_ajax_upload_file' ), 10, 0 );
+		add_action( 'wp_ajax_conjure_upload_from_media', array( $this, '_ajax_upload_from_media' ), 10, 0 );
+		add_action( 'wp_ajax_conjure_delete_uploaded_file', array( $this, '_ajax_delete_uploaded_file' ), 10, 0 );
 		add_filter( 'pt-importer/new_ajax_request_response_data', array( $this, 'pt_importer_new_ajax_request_response_data' ) );
 		add_action( 'import_end', array( $this, 'after_content_import_setup' ) );
 		add_action( 'import_start', array( $this, 'before_content_import_setup' ) );
 		add_action( 'admin_init', array( $this, 'register_import_files' ) );
+		add_filter( 'upload_mimes', array( $this, 'allow_import_file_types' ) );
 	}
 
 	/**
@@ -468,11 +472,14 @@ class Conjure {
 		// Always use minified files built with Vite.
 		$suffix = '.min';
 
+		// Enqueue WordPress media uploader.
+		wp_enqueue_media();
+
 		// Enqueue styles.
 		wp_enqueue_style( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/css/conjure' . $suffix . '.css', array( 'wp-admin' ), CONJURE_VERSION );
 
 		// Enqueue javascript.
-		wp_enqueue_script( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/js/conjure' . $suffix . '.js', array( 'jquery-core' ), CONJURE_VERSION, true );
+		wp_enqueue_script( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/js/conjure' . $suffix . '.js', array( 'jquery-core', 'jquery-ui-core' ), CONJURE_VERSION, true );
 
 		$texts = array(
 			'something_went_wrong' => esc_html__( 'Something went wrong. Please refresh the page and try again!', 'conjurewp' ),
@@ -769,13 +776,11 @@ class Conjure {
 			);
 		}
 
-		// Show the content importer, only if there's demo content added.
-		if ( ! empty( $this->import_files ) ) {
-			$this->steps['content'] = array(
-				'name' => esc_html__( 'Content', 'conjurewp' ),
-				'view' => array( $this, 'content' ),
-			);
-		}
+		// Show the content importer - either with pre-configured files or manual upload.
+		$this->steps['content'] = array(
+			'name' => esc_html__( 'Content', 'conjurewp' ),
+			'view' => array( $this, 'content' ),
+		);
 
 		$this->steps['ready'] = array(
 			'name' => esc_html__( 'Ready', 'conjurewp' ),
@@ -1250,11 +1255,21 @@ class Conjure {
 
 		</div>
 
-		<form action="" method="post" class="<?php echo esc_attr( $multi_import ); ?>">
+		<form action="" method="post" class="<?php echo esc_attr( $multi_import ); ?> <?php echo $this->is_manual_upload_mode() ? 'conjure-manual-upload-mode' : ''; ?>">
 
-			<ul class="conjure__drawer conjure__drawer--import-content js-conjure-drawer-import-content">
-				<?php echo $this->get_import_steps_html( $import_info ); ?>
-			</ul>
+			<?php if ( $this->is_manual_upload_mode() ) : ?>
+
+				<ul class="conjure__drawer conjure__drawer--import-content conjure__drawer--upload js-conjure-drawer-import-content">
+					<?php echo $this->get_manual_upload_html(); ?>
+				</ul>
+
+			<?php else : ?>
+
+				<ul class="conjure__drawer conjure__drawer--import-content js-conjure-drawer-import-content">
+					<?php echo $this->get_import_steps_html( $import_info ); ?>
+				</ul>
+
+			<?php endif; ?>
 
 			<footer class="conjure__content__footer">
 
@@ -1967,7 +1982,13 @@ class Conjure {
 			'after_import' => false,
 		);
 
+		// If in manual upload mode (no registered files), return empty structure
 		if ( empty( $this->import_files[ $selected_import_index ] ) ) {
+			// Check if we're in manual upload mode
+			if ( $this->is_manual_upload_mode() ) {
+				// Return all false - manual upload will be handled by the UI
+				return $import_data;
+			}
 			return false;
 		}
 
@@ -2243,7 +2264,38 @@ class Conjure {
 	public function get_import_files_paths( $selected_import_index ) {
 		$selected_import_data = empty( $this->import_files[ $selected_import_index ] ) ? false : $this->import_files[ $selected_import_index ];
 
+		// Check for manually uploaded files if no registered import files.
 		if ( empty( $selected_import_data ) ) {
+			$uploaded_files = get_transient( 'conjure_uploaded_files' );
+
+			if ( ! empty( $uploaded_files ) && is_array( $uploaded_files ) ) {
+				$import_files = array(
+					'content' => '',
+					'widgets' => '',
+					'options' => '',
+					'redux'   => array(),
+					'sliders' => '',
+					'images'  => '',
+					'menus'   => '',
+				);
+
+				// Map uploaded files to expected format.
+				foreach ( $uploaded_files as $type => $file_data ) {
+					if ( isset( $import_files[ $type ] ) && file_exists( $file_data['path'] ) ) {
+						if ( 'redux' === $type ) {
+							$import_files['redux'][] = array(
+								'option_name' => 'redux_option_name',
+								'file_path'   => $file_data['path'],
+							);
+						} else {
+							$import_files[ $type ] = $file_data['path'];
+						}
+					}
+				}
+
+				return $import_files;
+			}
+
 			return array();
 		}
 
@@ -2451,6 +2503,414 @@ class Conjure {
 	 */
 	public function import_finished() {
 		delete_transient( 'conjure_import_file_base_name' );
+		$this->cleanup_uploaded_files();
 		wp_send_json_success();
+	}
+
+	/**
+	 * Get the upload directory for Conjure files.
+	 *
+	 * @return string
+	 */
+	private function get_upload_dir() {
+		$upload_dir = wp_upload_dir();
+		$conjure_dir = trailingslashit( $upload_dir['basedir'] ) . 'conjure-uploads/';
+
+		if ( ! file_exists( $conjure_dir ) ) {
+			wp_mkdir_p( $conjure_dir );
+			// Add .htaccess for security.
+			$htaccess_content = 'deny from all';
+			file_put_contents( $conjure_dir . '.htaccess', $htaccess_content );
+		}
+
+		return $conjure_dir;
+	}
+
+	/**
+	 * AJAX handler for file uploads.
+	 */
+	public function _ajax_upload_file() {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'conjurewp' ) ) );
+		}
+
+		if ( empty( $_FILES['file'] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'No file uploaded.', 'conjurewp' ) ) );
+		}
+
+		$file = $_FILES['file'];
+		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
+
+		// Validate file type.
+		$allowed_types = array(
+			'content' => array( 'xml' ),
+			'widgets' => array( 'json', 'wie' ),
+			'options' => array( 'dat', 'json' ),
+			'redux' => array( 'json' ),
+			'sliders' => array( 'zip' ),
+			'images' => array( 'xml' ),
+			'menus' => array( 'json' ),
+		);
+
+		if ( ! isset( $allowed_types[ $file_type ] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'conjurewp' ) ) );
+		}
+
+		$file_extension = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
+
+		if ( ! in_array( $file_extension, $allowed_types[ $file_type ], true ) ) {
+			wp_send_json_error( array(
+				'message' => sprintf(
+					esc_html__( 'Invalid file extension. Allowed: %s', 'conjurewp' ),
+					implode( ', ', $allowed_types[ $file_type ] )
+				),
+			) );
+		}
+
+		// Check for upload errors.
+		if ( $file['error'] !== UPLOAD_ERR_OK ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'File upload error.', 'conjurewp' ) ) );
+		}
+
+		// Validate file size (max 50MB).
+		$max_size = 50 * 1024 * 1024;
+		if ( $file['size'] > $max_size ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'File is too large. Maximum size is 50MB.', 'conjurewp' ) ) );
+		}
+
+		// Move file to upload directory.
+		$upload_dir = $this->get_upload_dir();
+		$filename = $file_type . '-' . time() . '.' . $file_extension;
+		$destination = $upload_dir . $filename;
+
+		if ( ! move_uploaded_file( $file['tmp_name'], $destination ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to save uploaded file.', 'conjurewp' ) ) );
+		}
+
+		// Store file info in transient.
+		$uploaded_files = get_transient( 'conjure_uploaded_files' );
+		if ( ! $uploaded_files ) {
+			$uploaded_files = array();
+		}
+
+		$uploaded_files[ $file_type ] = array(
+			'path' => $destination,
+			'name' => sanitize_file_name( $file['name'] ),
+			'size' => $file['size'],
+			'time' => time(),
+		);
+
+		set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
+
+		$this->logger->info(
+			__( 'File uploaded successfully', 'conjurewp' ),
+			array(
+				'type' => $file_type,
+				'name' => $file['name'],
+				'size' => size_format( $file['size'] ),
+			)
+		);
+
+		wp_send_json_success( array(
+			'message' => esc_html__( 'File uploaded successfully.', 'conjurewp' ),
+			'filename' => $file['name'],
+			'size' => size_format( $file['size'] ),
+		) );
+	}
+
+	/**
+	 * AJAX handler for uploading from WordPress media library.
+	 */
+	public function _ajax_upload_from_media() {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'conjurewp' ) ) );
+		}
+
+		if ( empty( $_POST['attachment_id'] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'No file selected.', 'conjurewp' ) ) );
+		}
+
+		$attachment_id = intval( $_POST['attachment_id'] );
+		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
+
+		// Validate file type.
+		$allowed_types = array( 'content', 'widgets', 'options', 'redux', 'sliders', 'images', 'menus' );
+
+		if ( ! in_array( $file_type, $allowed_types, true ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'conjurewp' ) ) );
+		}
+
+		// Get attachment file path.
+		$file_path = get_attached_file( $attachment_id );
+
+		if ( ! $file_path || ! file_exists( $file_path ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'File not found in media library.', 'conjurewp' ) ) );
+		}
+
+		// Validate file extension.
+		$file_extension = strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) );
+		$allowed_extensions = array(
+			'content' => array( 'xml' ),
+			'widgets' => array( 'json', 'wie' ),
+			'options' => array( 'dat', 'json' ),
+			'redux' => array( 'json' ),
+			'sliders' => array( 'zip' ),
+			'images' => array( 'xml' ),
+			'menus' => array( 'json' ),
+		);
+
+		if ( ! isset( $allowed_extensions[ $file_type ] ) || ! in_array( $file_extension, $allowed_extensions[ $file_type ], true ) ) {
+			wp_send_json_error( array(
+				'message' => sprintf(
+					esc_html__( 'Invalid file extension. Allowed: %s', 'conjurewp' ),
+					implode( ', ', $allowed_extensions[ $file_type ] )
+				),
+			) );
+		}
+
+		// Copy file to upload directory.
+		$upload_dir = $this->get_upload_dir();
+		$filename = $file_type . '-' . time() . '.' . $file_extension;
+		$destination = $upload_dir . $filename;
+
+		if ( ! copy( $file_path, $destination ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to copy file.', 'conjurewp' ) ) );
+		}
+
+		// Get file info.
+		$file_size = filesize( $destination );
+		$file_name = basename( get_attached_file( $attachment_id ) );
+
+		// Store file info in transient.
+		$uploaded_files = get_transient( 'conjure_uploaded_files' );
+		if ( ! $uploaded_files ) {
+			$uploaded_files = array();
+		}
+
+		$uploaded_files[ $file_type ] = array(
+			'path' => $destination,
+			'name' => sanitize_file_name( $file_name ),
+			'size' => $file_size,
+			'time' => time(),
+		);
+
+		set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
+
+		$this->logger->info(
+			__( 'File copied from media library successfully', 'conjurewp' ),
+			array(
+				'type' => $file_type,
+				'name' => $file_name,
+				'size' => size_format( $file_size ),
+			)
+		);
+
+		wp_send_json_success( array(
+			'message' => esc_html__( 'File uploaded successfully.', 'conjurewp' ),
+			'filename' => $file_name,
+			'size' => size_format( $file_size ),
+		) );
+	}
+
+	/**
+	 * AJAX handler for deleting uploaded files.
+	 */
+	public function _ajax_delete_uploaded_file() {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to delete files.', 'conjurewp' ) ) );
+		}
+
+		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
+
+		if ( empty( $file_type ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'No file type specified.', 'conjurewp' ) ) );
+		}
+
+		$uploaded_files = get_transient( 'conjure_uploaded_files' );
+
+		if ( ! empty( $uploaded_files[ $file_type ] ) ) {
+			$file_path = $uploaded_files[ $file_type ]['path'];
+
+			if ( file_exists( $file_path ) ) {
+				wp_delete_file( $file_path );
+			}
+
+			unset( $uploaded_files[ $file_type ] );
+			set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
+
+			$this->logger->info( __( 'Uploaded file deleted', 'conjurewp' ), array( 'type' => $file_type ) );
+		}
+
+		wp_send_json_success( array( 'message' => esc_html__( 'File deleted successfully.', 'conjurewp' ) ) );
+	}
+
+	/**
+	 * Cleanup all uploaded files.
+	 */
+	private function cleanup_uploaded_files() {
+		$uploaded_files = get_transient( 'conjure_uploaded_files' );
+
+		if ( ! empty( $uploaded_files ) && is_array( $uploaded_files ) ) {
+			foreach ( $uploaded_files as $file_data ) {
+				if ( ! empty( $file_data['path'] ) && file_exists( $file_data['path'] ) ) {
+					wp_delete_file( $file_data['path'] );
+				}
+			}
+
+			delete_transient( 'conjure_uploaded_files' );
+
+			$this->logger->info( __( 'All uploaded files cleaned up', 'conjurewp' ) );
+		}
+	}
+
+	/**
+	 * Check if manual upload mode is enabled (no pre-registered import files).
+	 *
+	 * @return bool
+	 */
+	private function is_manual_upload_mode() {
+		return empty( $this->import_files );
+	}
+
+	/**
+	 * Allow import file types (XML, JSON, DAT, WIE) in WordPress media uploads.
+	 *
+	 * @param array $mimes Existing allowed MIME types.
+	 * @return array Modified MIME types.
+	 */
+	public function allow_import_file_types( $mimes ) {
+		// Add support for import file types.
+		$mimes['xml']  = 'application/xml';
+		$mimes['json'] = 'application/json';
+		$mimes['dat']  = 'application/octet-stream';
+		$mimes['wie']  = 'application/json'; // Widget import/export format.
+
+		return $mimes;
+	}
+
+	/**
+	 * Get the manual upload zones HTML.
+	 *
+	 * @return string
+	 */
+	private function get_manual_upload_html() {
+		$uploaded_files = get_transient( 'conjure_uploaded_files' );
+
+		$upload_options = array(
+			'content' => array(
+				'title'       => esc_html__( 'Content', 'conjurewp' ),
+				'description' => esc_html__( 'Upload your content.xml file (posts, pages, custom post types)', 'conjurewp' ),
+				'accept'      => '.xml',
+			),
+			'images' => array(
+				'title'       => esc_html__( 'Images', 'conjurewp' ),
+				'description' => esc_html__( 'Upload a separate images.xml file (optional, if not included in content.xml)', 'conjurewp' ),
+				'accept'      => '.xml',
+			),
+			'menus' => array(
+				'title'       => esc_html__( 'Menus', 'conjurewp' ),
+				'description' => esc_html__( 'Upload your menus.json file (optional)', 'conjurewp' ),
+				'accept'      => '.json',
+			),
+			'widgets' => array(
+				'title'       => esc_html__( 'Widgets', 'conjurewp' ),
+				'description' => esc_html__( 'Upload your widgets.json or widgets.wie file (optional)', 'conjurewp' ),
+				'accept'      => '.json,.wie',
+			),
+			'options' => array(
+				'title'       => esc_html__( 'Theme Options', 'conjurewp' ),
+				'description' => esc_html__( 'Upload your customizer.dat file (optional)', 'conjurewp' ),
+				'accept'      => '.dat,.json',
+			),
+		);
+
+		ob_start();
+		?>
+
+		<?php foreach ( $upload_options as $type => $option ) : ?>
+			<?php
+			$has_file = ! empty( $uploaded_files[ $type ] );
+			$file_info = $has_file ? $uploaded_files[ $type ] : null;
+			?>
+
+			<li class="conjure__drawer--upload__item" data-upload-type="<?php echo esc_attr( $type ); ?>">
+				<div class="conjure__upload-zone-wrapper">
+					
+					<input 
+						type="checkbox" 
+						name="default_content[<?php echo esc_attr( $type ); ?>]" 
+						class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox" 
+						id="default_content_<?php echo esc_attr( $type ); ?>" 
+						value="1"
+						<?php checked( $has_file ); ?>
+						<?php disabled( ! $has_file ); ?>
+					>
+					
+					<label for="default_content_<?php echo esc_attr( $type ); ?>" class="conjure__upload-label">
+						<i></i><span><?php echo esc_html( $option['title'] ); ?></span>
+					</label>
+
+				<div class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>" 
+					data-type="<?php echo esc_attr( $type ); ?>"
+					data-accept="<?php echo esc_attr( $option['accept'] ); ?>">
+
+					<div class="conjure__upload-prompt">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+							<polyline points="17 8 12 3 7 8"></polyline>
+							<line x1="12" y1="3" x2="12" y2="15"></line>
+						</svg>
+						<p class="conjure__upload-text">
+							<strong><?php esc_html_e( 'Click to select file', 'conjurewp' ); ?></strong>
+							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+						</p>
+					</div>
+
+						<?php if ( $has_file ) : ?>
+							<div class="conjure__upload-success">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<polyline points="20 6 9 17 4 12"></polyline>
+								</svg>
+								<div class="conjure__file-info">
+									<strong class="conjure__file-name"><?php echo esc_html( $file_info['name'] ); ?></strong>
+									<span class="conjure__file-size"><?php echo esc_html( size_format( $file_info['size'] ) ); ?></span>
+								</div>
+								<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<line x1="18" y1="6" x2="6" y2="18"></line>
+										<line x1="6" y1="6" x2="18" y2="18"></line>
+									</svg>
+								</button>
+							</div>
+						<?php endif; ?>
+
+						<div class="conjure__upload-progress" style="display: none;">
+							<div class="conjure__progress-bar-small">
+								<div class="conjure__progress-fill"></div>
+							</div>
+							<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'conjurewp' ); ?></span>
+						</div>
+
+					</div>
+
+				</div>
+			</li>
+
+		<?php endforeach; ?>
+
+		<?php
+		return ob_get_clean();
 	}
 }

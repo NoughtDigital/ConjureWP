@@ -23,6 +23,7 @@
 @use "modules/footer";
 @use "modules/progress-bar";
 @use "modules/multi-demo-import-controls";
+@use "modules/server-health";
 
 .conjure__body {
 	align-items: center;

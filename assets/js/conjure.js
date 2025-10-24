@@ -43,6 +43,9 @@ var Conjure = (function ($) {
 			body.toggleClass(drawer_opened);
 		});
 
+		// Initialize Server Health dropdown
+		init_server_health_dropdown();
+
 		// Initialize file upload handlers
 		init_file_uploads();
 
@@ -584,6 +587,19 @@ var Conjure = (function ($) {
 				find_next();
 			},
 		};
+	}
+
+	function init_server_health_dropdown() {
+		var serverHealthHeader = document.getElementById(
+			"server-health-header"
+		);
+		var serverHealthInfo = document.getElementById("server-health-info");
+
+		if (serverHealthHeader && serverHealthInfo) {
+			serverHealthHeader.addEventListener("click", function () {
+				serverHealthInfo.classList.toggle("open");
+			});
+		}
 	}
 
 	function init_file_uploads() {

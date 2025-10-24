@@ -27,8 +27,8 @@
 	}
 
 	.conjure__drawer--upload__item {
-		margin-bottom: 10px;
-		padding: 0;
+		margin-bottom: 0;
+		padding: 2px 0;
 		border: none;
 
 		&:last-child {
@@ -38,18 +38,26 @@
 		// Hide upload zone by default
 		.conjure__upload-zone {
 			max-height: 0;
+			min-height: 0;
 			opacity: 0;
 			overflow: hidden;
 			margin-top: 0;
-			transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out;
+			margin-bottom: 0;
+			padding: 0;
+			border-width: 0;
+			transition: max-height 0.3s ease-in-out, min-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out, margin-bottom 0.3s ease-in-out, padding 0.3s ease-in-out, border-width 0.3s ease-in-out;
 		}
 
 		// Show upload zone when checkbox is checked or item is expanded
 		input[type="checkbox"]:checked ~ .conjure__upload-zone-wrapper .conjure__upload-zone,
 		&.conjure__drawer--upload__item--expanded .conjure__upload-zone {
 			max-height: 200px;
+			min-height: 60px;
 			opacity: 1;
-			margin-top: 8px;
+			margin-top: 5px;
+			margin-bottom: 8px;
+			padding: 10px 12px;
+			border-width: 1px;
 		}
 
 		// Visual state for expanded zone (when checkbox is disabled but zone is visible)
@@ -79,7 +87,7 @@
 	.conjure__upload-zone-wrapper {
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: 3px;
 	}
 
 	.conjure__upload-label {

@@ -260,25 +260,29 @@ class Conjure_Server_Health {
 		?>
 		<div id="server-health-info">
 			<?php if ( $args['show_title'] ) : ?>
-				<h3><?php echo esc_html( $args['title'] ); ?></h3>
-				<span id="health-meter" class="<?php echo $meets_requirements ? 'meets-requirements' : 'does-not-meet-requirements'; ?>"></span>
+				<div class="server-health-header" id="server-health-header">
+					<h3><?php echo esc_html( $args['title'] ); ?></h3>
+					<span id="health-meter" class="<?php echo $meets_requirements ? 'meets-requirements' : 'does-not-meet-requirements'; ?>"></span>
+					<span class="chevron"></span>
+				</div>
 			<?php endif; ?>
 
-			<?php if ( $meets_requirements ) : ?>
-				<p id="check-req">
-					<strong><?php esc_html_e( 'Meets Requirements', 'conjure-wp' ); ?></strong>, 
-					<?php esc_html_e( 'setup & import functions will operate smoothly.', 'conjure-wp' ); ?>
-				</p>
+			<div class="server-health-content" id="server-health-content">
+				<?php if ( $meets_requirements ) : ?>
+					<p id="check-req">
+						<strong><?php esc_html_e( 'Meets Requirements', 'conjure-wp' ); ?></strong>, 
+						<?php esc_html_e( 'setup & import functions will operate smoothly.', 'conjure-wp' ); ?>
+					</p>
 			<?php else : ?>
 				<p id="check-req">
-					<strong><?php esc_html_e( 'Does not meet requirements', 'conjure-wp' ); ?></strong><br />
+					<strong><?php esc_html_e( 'Server Resources Low', 'conjure-wp' ); ?></strong><br />
 					<?php
 					if ( ! empty( $args['requirements_url'] ) && filter_var( $args['requirements_url'], FILTER_VALIDATE_URL ) ) {
 						echo wp_kses(
 							sprintf(
 								/* translators: %s: link to theme requirements documentation */
-								__( 'You may see timeout issues resulting in a broken demo import. Before you proceed please check the %s.', 'conjure-wp' ),
-								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'theme requirements', 'conjure-wp' ) . '</em></a>'
+								__( 'Your server may experience timeout issues during import. Please review the %s to ensure a smooth setup.', 'conjure-wp' ),
+								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'recommended requirements', 'conjure-wp' ) . '</em></a>'
 							),
 							array(
 								'a' => array(
@@ -290,22 +294,23 @@ class Conjure_Server_Health {
 							)
 						);
 					} else {
-						esc_html_e( 'You may see timeout issues resulting in a broken demo import.', 'conjure-wp' );
+						esc_html_e( 'Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.', 'conjure-wp' );
 					}
 					?>
 				</p>
 			<?php endif; ?>
 
-			<ul class="server-info">
-				<li>
-					<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'conjure-wp' ); ?></span>
-					<span class="server-value"><?php echo wp_kses_post( $this->get_memory_limit_html() ); ?></span>
-				</li>
-				<li>
-					<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'conjure-wp' ); ?></span>
-					<span class="server-value"><?php echo wp_kses_post( $this->get_max_execution_time_html() ); ?></span>
-				</li>
-			</ul>
+				<ul class="server-info">
+					<li>
+						<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'conjure-wp' ); ?></span>
+						<span class="server-value"><?php echo wp_kses_post( $this->get_memory_limit_html() ); ?></span>
+					</li>
+					<li>
+						<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'conjure-wp' ); ?></span>
+						<span class="server-value"><?php echo wp_kses_post( $this->get_max_execution_time_html() ); ?></span>
+					</li>
+				</ul>
+			</div>
 		</div>
 		<?php
 		return ob_get_clean();
@@ -314,83 +319,12 @@ class Conjure_Server_Health {
 	/**
 	 * Get inline CSS for server health display.
 	 *
-	 * @return string CSS styles.
+	 * @deprecated Styles have been moved to SCSS.
+	 * @return string Empty string.
 	 */
 	public function get_health_check_styles() {
-		return '
-		<style>
-			#server-health-info {
-				background: #f8f9fd;
-				padding: 12px 15px !important;
-				border-radius: 3px;
-				margin-bottom: 15px !important;
-				font-size: 11px !important;
-			}
-			#server-health-info h3 {
-				display: inline-block;
-				margin: 0 0 6px 0 !important;
-				font-weight: 500 !important;
-				font-size: 11px !important;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				color: #555 !important;
-			}
-			#server-health-info p {
-				font-size: 10px !important;
-				line-height: 1.4 !important;
-				margin: 6px 0 !important;
-			}
-			#health-meter {
-				display: inline-block;
-				position: relative;
-				top: 0px;
-				height: 5px;
-				width: 5px;
-				margin: 0 0 0 5px;
-				border-radius: 5px;
-			}
-			#health-meter.does-not-meet-requirements {
-				background-color: #bc0000;
-			}
-			#health-meter.meets-requirements {
-				background-color: #7faf1b;
-			}
-			.below-req {
-				color: #bc0000 !important;
-				font-size: 10px !important;
-			}
-			.meets-req {
-				color: #7faf1b !important;
-				font-size: 10px !important;
-			}
-			.server-info {
-				margin-bottom: 0 !important;
-				list-style: none;
-				padding: 0 !important;
-				font-size: 10px !important;
-			}
-			.server-info li {
-				clear: both;
-				overflow: hidden;
-				margin-bottom: 3px !important;
-				font-size: 10px !important;
-			}
-			.server-info li::after {
-				content: "";
-				display: table;
-				clear: both;
-			}
-			.server-feature {
-				float: left;
-				font-size: 10px !important;
-			}
-			.server-value {
-				float: right;
-				font-size: 10px !important;
-				font-weight: 600;
-			}
-		</style>
-		';
+		// Styles are now in assets/scss/modules/_server-health.scss
+		return '';
 	}
 
 	/**

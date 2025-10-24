@@ -45,6 +45,11 @@ require_once CONJUREWP_PLUGIN_DIR . 'class-conjure.php';
 require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
 
 /**
+ * Load demo helpers class.
+ */
+require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
+
+/**
  * Load the configuration.
  */
 require_once CONJUREWP_PLUGIN_DIR . 'conjurewp-config.php';
@@ -63,6 +68,33 @@ function conjurewp_load_textdomain() {
 	load_plugin_textdomain( 'conjurewp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'plugins_loaded', 'conjurewp_load_textdomain' );
+
+/**
+ * Auto-register demo imports from custom directory.
+ *
+ * This function automatically discovers and registers demo content
+ * if CONJUREWP_AUTO_REGISTER_DEMOS is enabled in wp-config.php
+ *
+ * @param array $import_files Existing import files.
+ * @return array Modified import files with auto-discovered demos.
+ */
+function conjurewp_auto_register_demos( $import_files ) {
+	// Check if auto-registration is enabled.
+	if ( ! Conjure_Demo_Helpers::is_auto_register_enabled() ) {
+		return $import_files;
+	}
+
+	// Auto-discover demos from custom directory.
+	$auto_demos = Conjure_Demo_Helpers::auto_discover_demos();
+
+	// Merge with existing demos (auto-discovered demos come first).
+	if ( ! empty( $auto_demos ) ) {
+		$import_files = array_merge( $auto_demos, $import_files );
+	}
+
+	return $import_files;
+}
+add_filter( 'conjure_import_files', 'conjurewp_auto_register_demos', 5 );
 
 /**
  * Add settings link to plugins page.

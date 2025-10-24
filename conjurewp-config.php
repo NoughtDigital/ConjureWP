@@ -7,7 +7,7 @@
  * @link      https://conjurewp.com/
  * @author    Jake Henshall, from nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Inventionn LLC
- * @license   Licensed GPLv3 for Open Source Use
+ * @licence   Licenced GPLv3 for Open Source Use
  */
 
 if ( ! class_exists( 'Conjure' ) ) {
@@ -109,14 +109,32 @@ $strings = array(
 );
 
 /**
- * Configure demo import files for testing.
+ * DEMO IMPORT CONFIGURATION
  *
- * @param array $files Import files configuration.
- * @return array Modified import files.
+ * The plugin includes sample demo files in the /demo/ folder for testing only.
+ * These files will be overwritten during plugin updates.
+ *
+ * For production, store demo content in update-safe locations:
+ *
+ * Option 1: wp-config.php (Recommended)
+ *   define( 'CONJUREWP_DEMO_PATH', '/path/to/your/demo/files' );
+ *   define( 'CONJUREWP_AUTO_REGISTER_DEMOS', true );
+ *
+ * Option 2: Theme directory (Survives plugin updates)
+ *   /themes/your-theme/conjurewp-demos/
+ *
+ * The plugin automatically checks these locations in priority order.
+ * See example-theme-integration.php for complete examples.
  */
+
+/**
+ * EXAMPLE: Basic theme integration using demo helper
+ *
+ * Uncomment this to use the plugin's included demo files for testing:
+ */
+/*
 function conjurewp_demo_import_files( $files ) {
 	$demo_path = CONJUREWP_PLUGIN_DIR . 'demo/';
-	$demo_url  = CONJUREWP_PLUGIN_URL . 'demo/';
 
 	return array(
 		array(
@@ -124,12 +142,12 @@ function conjurewp_demo_import_files( $files ) {
 			'local_import_file'            => $demo_path . 'content.xml',
 			'local_import_widget_file'     => $demo_path . 'widgets.json',
 			'local_import_customizer_file' => $demo_path . 'customizer.dat',
-			'import_notice'                => __( 'This is a demo import for testing. It will import sample content, widgets, and customizer settings.', 'conjurewp' ),
+			'import_notice'                => __( 'This is a demo import for testing. It will import sample content, widgets, and customiser settings.', 'conjurewp' ),
 			'preview_url'                  => '',
 		),
 	);
 }
-// Comment out to test manual upload UI or uncomment to enable CLI commands testing
 add_filter( 'conjure_import_files', 'conjurewp_demo_import_files' );
+*/
 
 $wizard = new Conjure( $config, $strings );

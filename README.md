@@ -11,7 +11,7 @@ WordPress theme setup wizard with demo content import.
 -   Setup wizard with progress tracking
 -   Plugin installation (TGMPA)
 -   Child theme generator
--   Demo content, widgets, customizer import
+-   Demo content, widgets, customiser import
 -   Revolution Slider & Redux support
 -   Self-contained importer (no external dependencies)
 -   **WP-CLI commands for automated imports** (CI/CD, hosting automation)
@@ -35,28 +35,64 @@ Activate via WordPress admin, then configure imports using filters.
 
 ## Quick Start
 
-1. Enable demo in `demo-theme-integration.php`
+1. Enable demo in `examples/demo-theme-integration.php`
 2. Run wizard from theme setup page
-3. See `example-theme-integration.php` for integration
+3. See `examples/theme-integration.php` for integration
 
 ## Configuration
+
+### Custom Demo Content (Update-Safe)
+
+The plugin's `/demo/` folder is for examples only and gets overwritten during updates. For production, use update-safe locations:
+
+#### Option 1: Auto-Discovery (Easiest)
+
+Add to your `wp-config.php`:
+
+```php
+// Point to your custom demo folder
+define( 'CONJUREWP_DEMO_PATH', '/full/path/to/demo/files' );
+
+// Enable auto-discovery
+define( 'CONJUREWP_AUTO_REGISTER_DEMOS', true );
+```
+
+Organise your demo files:
+
+```
+/your-custom-path/
+├── content.xml          # Single demo
+├── widgets.json
+└── customizer.dat
+
+OR multiple demos:
+/your-custom-path/
+├── main/
+│   ├── content.xml
+│   └── widgets.json
+└── portfolio/
+    └── content.xml
+```
+
+Demos are automatically discovered and registered.
+
+#### Option 2: Theme Directory
+
+Store in: `wp-content/themes/your-theme/conjurewp-demos/`
 
 ```php
 function my_theme_import_files() {
     return array(
         array(
-            'import_file_name'           => 'Demo Import',
-            'import_file_url'            => 'https://example.com/demo/content.xml',
-            'import_widget_file_url'     => 'https://example.com/demo/widgets.json',
-            'import_customizer_file_url' => 'https://example.com/demo/customizer.dat',
-            'import_preview_image_url'   => 'https://example.com/demo/preview.jpg',
+            'import_file_name'             => 'Demo Import',
+            'local_import_file'            => get_template_directory() . '/conjurewp-demos/content.xml',
+            'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/widgets.json',
+            'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/customizer.dat',
         ),
     );
 }
 add_filter( 'conjure_import_files', 'my_theme_import_files' );
 ```
-
-Use `local_import_file`, `local_import_widget_file`, `local_import_customizer_file` for local files.
 
 ### Post-Import Setup
 
@@ -76,14 +112,30 @@ function my_theme_after_import_setup( $selected_import ) {
 }
 ```
 
+### Demo Location Priority
+
+1. `CONJUREWP_DEMO_PATH` constant (wp-config.php)
+2. Theme directory `/conjurewp-demos/`
+3. Uploads directory `/conjurewp-demos/`
+4. Plugin directory `/demo/` (examples only)
+
+### Auto-Discovery
+
+When `CONJUREWP_AUTO_REGISTER_DEMOS` is enabled:
+
+-   Automatically finds all demos in the directory
+-   Detects `content.xml`, `widgets.json`, `customizer.dat`, `redux-options.json`, `slider.zip`
+-   Reads `info.txt` for import notices
+-   Finds `preview.jpg/png/gif` for preview images
+
 ### Key Hooks
 
--   `conjure_import_files` - Define imports
--   `conjure_content_home_page_title` - Home page title
+-   `conjure_import_files` - Register import configurations
+-   `conjure_after_all_import` - Post-import setup
+-   `conjure_content_home_page_title` - Homepage title
 -   `conjure_content_blog_page_title` - Blog page title
--   `conjure_after_all_import` - Post-import actions
 
-See `conjure-filters-sample.php` for examples.
+See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` for more examples.
 
 ## WP-CLI Commands
 
@@ -163,7 +215,7 @@ define( 'CONJURE_TOOLS_ENABLED', true );
 Once enabled, administrators will see a **"Conjure WP"** menu in the WordPress admin bar with:
 
 -   Individual step status (✓ completed, ○ not completed)
--   Reset individual steps: Child Theme, License, Plugins, Content
+-   Reset individual steps: Child Theme, Licence, Plugins, Content
 -   Reset all steps to restart complete onboarding
 -   Quick access to open the wizard
 
@@ -187,6 +239,6 @@ npm run dev      # Development with watch
 
 Based on [MerlinWP](https://github.com/richtabor/MerlinWP). Built with ConjureWP Importer, [Monolog](https://github.com/Seldaek/monolog), and TGMPA.
 
-## License
+## Licence
 
 GPLv3 - See [LICENSE](LICENSE)

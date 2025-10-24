@@ -6,6 +6,7 @@
 
 var Conjure = (function ($) {
 	var t;
+	var drawer_opened;
 
 	// Callbacks from form button clicks.
 	var callbacks = {
@@ -33,6 +34,7 @@ var Conjure = (function ($) {
 			body_exiting = $(".conjure__body--exiting"),
 			drawer_trigger = $("#conjure__drawer-trigger"),
 			drawer_opening = "conjure__drawer--opening";
+
 		drawer_opened = "conjure__drawer--open";
 
 		setTimeout(function () {

@@ -33,7 +33,7 @@ class Conjure_Customizer_Importer {
 			return false;
 		}
 
-		Conjure_Logger::get_instance()->info( __( 'The customizer import has finished successfully', '@@textdomain' ) );
+		Conjure_Logger::get_instance()->info( __( 'The customizer import has finished successfully', 'conjurewp' ) );
 		return true;
 	}
 
@@ -61,7 +61,7 @@ class Conjure_Customizer_Importer {
 				'missing_cutomizer_import_file',
 				sprintf(
 					/* translators: %s: file path to the customizer import file */
-					esc_html__( 'Error: The customizer import file is missing! File path: %s', '@@textdomain' ),
+					esc_html__( 'Error: The customizer import file is missing! File path: %s', 'conjurewp' ),
 					$import_file_path
 				)
 			);
@@ -74,7 +74,7 @@ class Conjure_Customizer_Importer {
 		if ( empty( $raw ) ) {
 			return new \WP_Error(
 				'customizer_import_data_missing_content',
-				esc_html__( 'Error: The customizer import file does not have any content in it. Please make sure to use the correct customizer import file.', '@@textdomain' )
+				esc_html__( 'Error: The customizer import file does not have any content in it. Please make sure to use the correct customizer import file.', 'conjurewp' )
 			);
 		}
 
@@ -84,13 +84,13 @@ class Conjure_Customizer_Importer {
 		if ( ! is_array( $data ) && ( ! isset( $data['template'] ) || ! isset( $data['mods'] ) ) ) {
 			return new \WP_Error(
 				'customizer_import_data_error',
-				esc_html__( 'Error: The customizer import file is not in a correct format. Please make sure to use the correct customizer import file.', '@@textdomain' )
+				esc_html__( 'Error: The customizer import file is not in a correct format. Please make sure to use the correct customizer import file.', 'conjurewp' )
 			);
 		}
 		if ( $data['template'] !== $template ) {
 			return new \WP_Error(
 				'customizer_import_wrong_theme',
-				esc_html__( 'Error: The customizer import file is not suitable for current theme. You can only import customizer settings for the same theme or a child theme.', '@@textdomain' )
+				esc_html__( 'Error: The customizer import file is not suitable for current theme. You can only import customizer settings for the same theme or a child theme.', 'conjurewp' )
 			);
 		}
 

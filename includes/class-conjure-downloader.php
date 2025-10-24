@@ -61,7 +61,7 @@ class Conjure_Downloader {
 
 		Conjure_Logger::get_instance()->error(
 			/* translators: %s: file URL and filename */
-			__( 'The file was not able to save to disk, while trying to download it', '@@textdomain' ),
+			__( 'The file was not able to save to disk, while trying to download it', 'conjurewp' ),
 			array(
 				'url'      => $url,
 				'filename' => $filename,
@@ -83,7 +83,7 @@ class Conjure_Downloader {
 		if ( empty( $url ) ) {
 			return new \WP_Error(
 				'missing_url',
-				__( 'Missing URL for downloading a file!', '@@textdomain' )
+				__( 'Missing URL for downloading a file!', 'conjurewp' )
 			);
 		}
 
@@ -102,7 +102,7 @@ class Conjure_Downloader {
 				'download_error',
 				sprintf(
 					/* translators: 1: strong tag start, 2: URL, 3: strong tag end, 4: line break, 5: error code, 6: error message */
-					__( 'An error occurred while fetching file from: %1$s%2$s%3$s!%4$sReason: %5$s - %6$s.', '@@textdomain' ),
+					__( 'An error occurred while fetching file from: %1$s%2$s%3$s!%4$sReason: %5$s - %6$s.', 'conjurewp' ),
 					'<strong>',
 					$url,
 					'</strong>',

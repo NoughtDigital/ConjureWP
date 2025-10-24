@@ -526,13 +526,14 @@ class Conjure {
 
 			<div class="conjure__content conjure__content--<?php echo esc_attr( strtolower( $this->steps[ $this->step ]['name'] ) ); ?>">
 
-				<?php
-				// Content Handlers.
-				$show_content = true;
+			<?php
+			// Content Handlers.
+			$show_content = true;
 
-				if ( ! empty( $_REQUEST['save_step'] ) && isset( $this->steps[ $this->step ]['handler'] ) ) {
-					$show_content = call_user_func( $this->steps[ $this->step ]['handler'] );
-				}
+			if ( ! empty( $_REQUEST['save_step'] ) && isset( $this->steps[ $this->step ]['handler'] ) ) {
+				check_admin_referer( 'conjure' );
+				$show_content = call_user_func( $this->steps[ $this->step ]['handler'] );
+			}
 
 				if ( $show_content ) {
 					$this->body();

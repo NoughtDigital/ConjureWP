@@ -10,6 +10,8 @@
 
 use Monolog\Logger as MonologLogger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Formatter\LineFormatter;
 
 /**
  * Logger class for handling log operations.
@@ -48,15 +50,32 @@ class Conjure_Logger {
 
 
 	/**
+	 * Logger configuration options.
+	 *
+	 * @var array
+	 */
+	private $config;
+
+
+	/**
 	 * Returns the *Singleton* instance of this class.
+	 *
+	 * @param array $config Optional configuration array (only used on first instantiation).
 	 *
 	 * @return object EasyDigitalDownloadsFastspring *Singleton* instance.
 	 *
 	 * @codeCoverageIgnore Nothing to test, default PHP singleton functionality.
 	 */
-	public static function get_instance() {
+	public static function get_instance( $config = array() ) {
 		if ( null === static::$instance ) {
-			static::$instance = new static();
+			// Check for global config.
+			if ( empty( $config ) && defined( 'CONJUREWP_LOGGER_CONFIG' ) ) {
+				$config = CONJUREWP_LOGGER_CONFIG;
+			}
+			static::$instance = new static( null, 'conjure-logger', $config );
+		} elseif ( ! empty( $config ) ) {
+			// Allow updating config after instantiation.
+			static::$instance->update_config( $config );
 		}
 
 		return static::$instance;
@@ -71,10 +90,24 @@ class Conjure_Logger {
 	 *
 	 * @param string $log_path Path to the log file.
 	 * @param string $name     Name of the logger instance.
+	 * @param array  $config   Configuration options.
 	 */
-	protected function __construct( $log_path = null, $name = 'conjure-logger' ) {
+	protected function __construct( $log_path = null, $name = 'conjure-logger', $config = array() ) {
 		$this->log_path    = $log_path;
 		$this->logger_name = $name;
+
+		// Default configuration.
+		$default_config = array(
+			'enable_rotation'  => true,
+			'max_files'        => 5,
+			'max_file_size_mb' => 10,
+			'min_log_level'    => MonologLogger::INFO,
+		);
+
+		$this->config = wp_parse_args( $config, $default_config );
+
+		// Convert string log levels to Monolog constants.
+		$this->config['min_log_level'] = $this->parse_log_level( $this->config['min_log_level'] );
 
 		if ( empty( $this->log_path ) ) {
 			$upload_dir = wp_upload_dir();
@@ -118,7 +151,31 @@ class Conjure_Logger {
 
 		try {
 			$this->log = new MonologLogger( $this->logger_name );
-			$this->log->pushHandler( new StreamHandler( $this->log_path, MonologLogger::DEBUG ) );
+
+			// Add main file handler with rotation if enabled.
+			if ( $this->config['enable_rotation'] ) {
+				$max_bytes = $this->config['max_file_size_mb'] * 1024 * 1024;
+				$handler   = new RotatingFileHandler(
+					$this->log_path,
+					$this->config['max_files'],
+					$this->config['min_log_level']
+				);
+			} else {
+				$handler = new StreamHandler(
+					$this->log_path,
+					$this->config['min_log_level']
+				);
+			}
+
+			// Use a clean formatter.
+			$formatter = new LineFormatter(
+				"[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
+				'Y-m-d H:i:s',
+				true,
+				true
+			);
+			$handler->setFormatter( $formatter );
+			$this->log->pushHandler( $handler );
 		} catch ( \Exception $e ) {
 			// Fallback: if logger fails, we'll just continue without logging.
 			error_log( 'ConjureWP Logger failed to initialize: ' . $e->getMessage() );
@@ -134,6 +191,92 @@ class Conjure_Logger {
 	 */
 	public function get_log_path() {
 		return $this->log_path;
+	}
+
+
+	/**
+	 * Get all log files (including rotated ones).
+	 *
+	 * @return array Array of log file paths sorted by modification time (newest first).
+	 */
+	public function get_all_log_files() {
+		$log_dir   = dirname( $this->log_path );
+		$log_files = array();
+
+		if ( ! is_dir( $log_dir ) ) {
+			return $log_files;
+		}
+
+		$files = glob( $log_dir . '/main*.log' );
+		if ( ! empty( $files ) ) {
+			// Sort by modification time, newest first.
+			usort(
+				$files,
+				function ( $a, $b ) {
+					return filemtime( $b ) - filemtime( $a );
+				}
+			);
+			$log_files = $files;
+		}
+
+		return $log_files;
+	}
+
+
+	/**
+	 * Get logger configuration.
+	 *
+	 * @return array Logger configuration.
+	 */
+	public function get_config() {
+		return $this->config;
+	}
+
+
+	/**
+	 * Update logger configuration.
+	 *
+	 * @param array $config New configuration values.
+	 */
+	public function update_config( $config ) {
+		$this->config = wp_parse_args( $config, $this->config );
+
+		// Convert string log levels to Monolog constants.
+		if ( isset( $config['min_log_level'] ) ) {
+			$this->config['min_log_level'] = $this->parse_log_level( $this->config['min_log_level'] );
+		}
+
+		// Re-initialize logger with new config.
+		$this->initialize_logger();
+	}
+
+
+	/**
+	 * Parse log level string to Monolog constant.
+	 *
+	 * @param string|int $level Log level string or constant.
+	 * @return int Monolog log level constant.
+	 */
+	private function parse_log_level( $level ) {
+		// If already an integer, return it.
+		if ( is_int( $level ) ) {
+			return $level;
+		}
+
+		// Map string levels to Monolog constants.
+		$level_map = array(
+			'DEBUG'     => MonologLogger::DEBUG,
+			'INFO'      => MonologLogger::INFO,
+			'NOTICE'    => MonologLogger::NOTICE,
+			'WARNING'   => MonologLogger::WARNING,
+			'ERROR'     => MonologLogger::ERROR,
+			'CRITICAL'  => MonologLogger::CRITICAL,
+			'ALERT'     => MonologLogger::ALERT,
+			'EMERGENCY' => MonologLogger::EMERGENCY,
+		);
+
+		$level = strtoupper( $level );
+		return isset( $level_map[ $level ] ) ? $level_map[ $level ] : MonologLogger::INFO;
 	}
 
 

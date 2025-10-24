@@ -33,6 +33,14 @@ $config = array(
 	'edd_item_name'        => '', // EDD_Theme_Updater_Admin item_name.
 	'edd_theme_slug'       => '', // EDD_Theme_Updater_Admin item_slug.
 	'ready_big_button_url' => home_url( '/' ), // Link for the big button on the ready step.
+
+	// Logging configuration.
+	'logging'              => array(
+		'enable_rotation'  => true, // Enable log file rotation.
+		'max_files'        => 5, // Maximum number of rotated log files to keep.
+		'max_file_size_mb' => 10, // Maximum log file size in MB before rotation.
+		'min_log_level'    => 'INFO', // Minimum log level: DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY.
+	),
 );
 
 $strings = array(

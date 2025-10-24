@@ -280,7 +280,10 @@ class Conjure {
 
 	// Get the logger object early, so it can be used in the whole class.
 	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-logger.php';
-	$this->logger = Conjure_Logger::get_instance();
+	
+	// Pass logging config if available.
+	$logger_config = isset( $config['logging'] ) ? $config['logging'] : array();
+	$this->logger = Conjure_Logger::get_instance( $logger_config );
 
 	// Is Dev Mode turned on?
 	$already_setup = get_option( 'conjure_' . $this->slug . '_completed' );

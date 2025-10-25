@@ -109,6 +109,20 @@ $strings = array(
 );
 
 /**
+ * Allow theme developers to override configuration settings.
+ *
+ * @param array $config Configuration settings.
+ */
+$config = apply_filters( 'conjurewp_config', $config );
+
+/**
+ * Allow theme developers to override text strings.
+ *
+ * @param array $strings Text strings.
+ */
+$strings = apply_filters( 'conjurewp_strings', $strings );
+
+/**
  * DEMO IMPORT CONFIGURATION
  *
  * The plugin includes sample demo files in the /demo/ folder for testing only.

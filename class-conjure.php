@@ -2579,6 +2579,14 @@ class Conjure {
 	 * AJAX callback for the 'conjure_update_selected_import_data_info' action.
 	 */
 	public function update_selected_import_data_info() {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+		}
+
 		$selected_index = ! isset( $_POST['selected_index'] ) ? false : intval( $_POST['selected_index'] );
 
 		if ( false === $selected_index ) {
@@ -2626,6 +2634,14 @@ class Conjure {
 	 * AJAX call for cleanup after the importing steps are done -> import finished.
 	 */
 	public function import_finished() {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+		}
+
 		delete_transient( 'conjure_import_file_base_name' );
 		$this->cleanup_uploaded_files();
 

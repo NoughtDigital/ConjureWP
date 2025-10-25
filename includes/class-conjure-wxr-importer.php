@@ -555,6 +555,12 @@ class WXRImporter extends \WP_Importer {
 		wp_defer_term_counting( false );
 		wp_defer_comment_counting( false );
 
+		// Recount terms for all taxonomies
+		$this->recount_terms();
+
+		// Recount comments for all posts
+		$this->recount_comments();
+
 		flush_rewrite_rules();
 
 		/**
@@ -564,6 +570,62 @@ class WXRImporter extends \WP_Importer {
 		 * your cache or re-enable processing, do so here.
 		 */
 		do_action( 'import_end' );
+	}
+
+	/**
+	 * Recount terms in all taxonomies after import.
+	 *
+	 * When term counting is deferred during import, the counts need to be
+	 * manually updated after the import is complete.
+	 */
+	protected function recount_terms() {
+		global $wpdb;
+
+		$taxonomies = get_taxonomies( array(), 'names' );
+
+		foreach ( $taxonomies as $taxonomy ) {
+			// Get all terms for this taxonomy
+			$terms = $wpdb->get_col( $wpdb->prepare(
+				"SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE taxonomy = %s",
+				$taxonomy
+			) );
+
+			if ( ! empty( $terms ) ) {
+				wp_update_term_count_now( $terms, $taxonomy );
+				$this->logger->debug( sprintf(
+					__( 'Updated term count for taxonomy: %s (%d terms)', 'conjurewp' ),
+					$taxonomy,
+					count( $terms )
+				) );
+			}
+		}
+	}
+
+	/**
+	 * Recount comments for all posts after import.
+	 *
+	 * When comment counting is deferred during import, the counts need to be
+	 * manually updated after the import is complete.
+	 */
+	protected function recount_comments() {
+		global $wpdb;
+
+		// Get all post IDs that have comments
+		$post_ids = $wpdb->get_col(
+			"SELECT DISTINCT post_id FROM {$wpdb->comments} WHERE comment_approved = '1'"
+		);
+
+		if ( ! empty( $post_ids ) ) {
+			// Update comment count for each post
+			foreach ( $post_ids as $post_id ) {
+				wp_update_comment_count_now( $post_id );
+			}
+
+			$this->logger->debug( sprintf(
+				__( 'Updated comment counts for %d posts', 'conjurewp' ),
+				count( $post_ids )
+			) );
+		}
 	}
 
 	/**

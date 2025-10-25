@@ -1970,7 +1970,7 @@ class Conjure {
 			$content = $this->get_import_data( $selected_import );
 		}
 
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['content'] ) && isset( $content[ $_POST['content'] ] ) ) {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['content'] ) || ! isset( $content[ $_POST['content'] ] ) ) {
 			$this->logger->error( __( 'The content importer AJAX call failed to start, because of incorrect data', 'conjurewp' ) );
 
 			wp_send_json_error(
@@ -2053,7 +2053,7 @@ class Conjure {
 	 * AJAX call to retrieve total items (posts, pages, CPT, attachments) for the content import.
 	 */
 	public function _ajax_get_total_content_import_items() {
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) && empty( $_POST['selected_index'] ) ) {
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['selected_index'] ) ) {
 			$this->logger->error( __( 'The content importer AJAX call for retrieving total content import items failed to start, because of incorrect data.', 'conjurewp' ) );
 
 			wp_send_json_error(

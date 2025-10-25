@@ -2309,7 +2309,7 @@ class Conjure {
 		// Update the Hello World! post by making it a draft.
 		$hello_world = get_page_by_title( 'Hello World!', OBJECT, 'post' );
 
-		if ( ! empty( $hello_world ) ) {
+		if ( ! empty( $hello_world ) && apply_filters( 'conjure_draft_hello_world', true ) ) {
 			$hello_world->post_status = 'draft';
 			wp_update_post( $hello_world );
 

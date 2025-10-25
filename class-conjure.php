@@ -45,11 +45,11 @@ class Conjure {
 	protected $steps = array();
 
 	/**
-	 * TGMPA instance.
+	 * Demo Plugin Manager instance.
 	 *
-	 * @var    object
+	 * @var Conjure_Demo_Plugin_Manager
 	 */
-	protected $tgmpa;
+	protected $demo_plugin_manager;
 
 	/**
 	 * Importer.
@@ -300,23 +300,24 @@ class Conjure {
 		return;
 	}
 
-		// Get TGMPA.
-		if ( class_exists( 'TGM_Plugin_Activation' ) ) {
-			$this->tgmpa = isset( $GLOBALS['tgmpa'] ) ? $GLOBALS['tgmpa'] : TGM_Plugin_Activation::get_instance();
-		}
+	// Load custom plugin installer.
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-plugin-installer.php';
+	
+	// Load and initialize Demo Plugin Manager.
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-demo-plugin-manager.php';
+	$this->demo_plugin_manager = new Conjure_Demo_Plugin_Manager();
 
-		add_action( 'admin_init', array( $this, 'required_classes' ) );
+	add_action( 'admin_init', array( $this, 'required_classes' ) );
 		add_action( 'admin_init', array( $this, 'redirect' ), 30 );
 		add_action( 'after_switch_theme', array( $this, 'switch_theme' ) );
 		add_action( 'admin_init', array( $this, 'steps' ), 30, 0 );
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'admin_page' ), 30, 0 );
 		add_action( 'admin_init', array( $this, 'ignore' ), 5 );
-		add_action( 'admin_footer', array( $this, 'svg_sprite' ) );
-		add_filter( 'tgmpa_load', array( $this, 'load_tgmpa' ), 10, 1 );
-		add_action( 'wp_ajax_conjure_content', array( $this, '_ajax_content' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_get_total_content_import_items', array( $this, '_ajax_get_total_content_import_items' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_plugins', array( $this, '_ajax_plugins' ), 10, 0 );
+	add_action( 'admin_footer', array( $this, 'svg_sprite' ) );
+	add_action( 'wp_ajax_conjure_content', array( $this, '_ajax_content' ), 10, 0 );
+	add_action( 'wp_ajax_conjure_get_total_content_import_items', array( $this, '_ajax_get_total_content_import_items' ), 10, 0 );
+	add_action( 'wp_ajax_conjure_install_plugin', array( $this, '_ajax_install_plugin' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_child_theme', array( $this, 'generate_child' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_activate_license', array( $this, '_ajax_activate_license' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $this, 'update_selected_import_data_info' ), 10, 0 );
@@ -438,15 +439,6 @@ class Conjure {
 	}
 
 	/**
-	 * Conditionally load TGMPA
-	 *
-	 * @param string $status User's manage capabilities.
-	 */
-	public function load_tgmpa( $status ) {
-		return is_admin() || current_user_can( 'install_themes' );
-	}
-
-	/**
 	 * Determine if the user already has theme content installed.
 	 * This can happen if swapping from a previous theme or updated the current theme.
 	 * We change the UI a bit when updating / swapping to a new theme.
@@ -510,35 +502,17 @@ class Conjure {
 			'something_went_wrong' => esc_html__( 'Something went wrong. Please refresh the page and try again!', 'conjurewp' ),
 		);
 
-		// Localize the javascript.
-		if ( class_exists( 'TGM_Plugin_Activation' ) ) {
-			// Check first if TMGPA is included.
-			wp_localize_script(
-				'conjure',
-				'conjure_params',
-				array(
-					'tgm_plugin_nonce' => array(
-						'update'  => wp_create_nonce( 'tgmpa-update' ),
-						'install' => wp_create_nonce( 'tgmpa-install' ),
-					),
-					'tgm_bulk_url'     => $this->tgmpa->get_tgmpa_url(),
-					'ajaxurl'          => admin_url( 'admin-ajax.php' ),
-					'wpnonce'          => wp_create_nonce( 'conjure_nonce' ),
-					'texts'            => $texts,
-				)
-			);
-		} else {
-			// If TMGPA is not included.
-			wp_localize_script(
-				'conjure',
-				'conjure_params',
-				array(
-					'ajaxurl' => admin_url( 'admin-ajax.php' ),
-					'wpnonce' => wp_create_nonce( 'conjure_nonce' ),
-					'texts'   => $texts,
-				)
-			);
-		}
+	// Localize the javascript.
+	wp_localize_script(
+		'conjure',
+		'conjure_params',
+		array(
+			'ajaxurl'              => admin_url( 'admin-ajax.php' ),
+			'wpnonce'              => wp_create_nonce( 'conjure_nonce' ),
+			'texts'                => $texts,
+			'use_custom_installer' => true, // Always using custom installer.
+		)
+	);
 
 		ob_start();
 
@@ -787,26 +761,25 @@ class Conjure {
 			'view' => array( $this, 'child' ),
 		);
 
-		if ( $this->license_step_enabled ) {
-			$this->steps['license'] = array(
-				'name' => esc_html__( 'License', 'conjurewp' ),
-				'view' => array( $this, 'license' ),
-			);
-		}
-
-		// Show the plugin importer, only if TGMPA is included.
-		if ( class_exists( 'TGM_Plugin_Activation' ) ) {
-			$this->steps['plugins'] = array(
-				'name' => esc_html__( 'Plugins', 'conjurewp' ),
-				'view' => array( $this, 'plugins' ),
-			);
-		}
-
-		// Show the content importer - either with pre-configured files or manual upload.
-		$this->steps['content'] = array(
-			'name' => esc_html__( 'Content', 'conjurewp' ),
-			'view' => array( $this, 'content' ),
+	if ( $this->license_step_enabled ) {
+		$this->steps['license'] = array(
+			'name' => esc_html__( 'License', 'conjurewp' ),
+			'view' => array( $this, 'license' ),
 		);
+	}
+
+	// Show the plugin importer (custom built-in installer).
+	// Demo selection happens within this step for demo-specific plugins.
+	$this->steps['plugins'] = array(
+		'name' => esc_html__( 'Plugins', 'conjurewp' ),
+		'view' => array( $this, 'plugins' ),
+	);
+
+	// Show the content importer - either with pre-configured files or manual upload.
+	$this->steps['content'] = array(
+		'name' => esc_html__( 'Content', 'conjurewp' ),
+		'view' => array( $this, 'content' ),
+	);
 
 		$this->steps['ready'] = array(
 			'name' => esc_html__( 'Ready', 'conjurewp' ),
@@ -1027,21 +1000,21 @@ class Conjure {
 	 */
 	protected function child() {
 
-		// Variables.
-		$is_child_theme     = is_child_theme();
-		$child_theme_option = get_option( 'conjure_' . $this->slug . '_child' );
-		$theme              = $child_theme_option ? wp_get_theme( $child_theme_option )->name : $this->theme . ' Child';
-		$action_url         = $this->child_action_btn_url;
+	// Variables.
+	$child_theme_option = get_option( 'conjure_' . $this->slug . '_child' );
+	$conjure_created_child = ! empty( $child_theme_option );
+	$theme              = $child_theme_option ? wp_get_theme( $child_theme_option )->name : $this->theme . ' Child';
+	$action_url         = $this->child_action_btn_url;
 
-		// Strings passed in from the config file.
-		$strings = $this->strings;
+	// Strings passed in from the config file.
+	$strings = $this->strings;
 
-		// Text strings.
-		$header    = ! $is_child_theme ? $strings['child-header'] : $strings['child-header-success'];
-		$action    = $strings['child-action-link'];
-		$skip      = $strings['btn-skip'];
-		$next      = $strings['btn-next'];
-		$paragraph = ! $is_child_theme ? $strings['child'] : $strings['child-success%s'];
+	// Text strings.
+	$header    = ! $conjure_created_child ? $strings['child-header'] : $strings['child-header-success'];
+	$action    = $strings['child-action-link'];
+	$skip      = $strings['btn-skip'];
+	$next      = $strings['btn-next'];
+	$paragraph = ! $conjure_created_child ? $strings['child'] : $strings['child-success%s'];
 		$install   = $strings['btn-child-install'];
 		?>
 
@@ -1061,21 +1034,21 @@ class Conjure {
 
 		</div>
 
-		<footer class="conjure__content__footer">
+	<footer class="conjure__content__footer">
 
-			<?php if ( ! $is_child_theme ) : ?>
+		<?php if ( ! $conjure_created_child ) : ?>
 
-				<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--skip conjure__button--proceed"><?php echo esc_html( $skip ); ?></a>
+			<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--skip conjure__button--proceed"><?php echo esc_html( $skip ); ?></a>
 
-				<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--next button-next" data-callback="install_child">
-					<span class="conjure__button--loading__text"><?php echo esc_html( $install ); ?></span>
-					<?php echo wp_kses( $this->loading_spinner(), $this->loading_spinner_allowed_html() ); ?>
-				</a>
+			<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--next button-next" data-callback="install_child">
+				<span class="conjure__button--loading__text"><?php echo esc_html( $install ); ?></span>
+				<?php echo wp_kses( $this->loading_spinner(), $this->loading_spinner_allowed_html() ); ?>
+			</a>
 
-			<?php else : ?>
-				<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--next conjure__button--proceed conjure__button--colorchange"><?php echo esc_html( $next ); ?></a>
-			<?php endif; ?>
-			<?php wp_nonce_field( 'conjure' ); ?>
+		<?php else : ?>
+			<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--next conjure__button--proceed conjure__button--colorchange"><?php echo esc_html( $next ); ?></a>
+		<?php endif; ?>
+		<?php wp_nonce_field( 'conjure' ); ?>
 		</footer>
 		<?php
 		$this->logger->debug( __( 'The child theme installation step has been displayed', 'conjurewp' ) );
@@ -1087,14 +1060,12 @@ class Conjure {
 	protected function plugins() {
 
 		// Variables.
-		$url    = wp_nonce_url( add_query_arg( array( 'plugins' => 'go' ) ), 'conjure' );
-		$method = '';
-		$fields = array_keys( $_POST );
-		$creds  = request_filesystem_credentials( esc_url_raw( $url ), $method, false, false, $fields );
+	$url    = wp_nonce_url( add_query_arg( array( 'plugins' => 'go' ) ), 'conjure' );
+	$method = '';
+	$fields = array_keys( $_POST );
+	$creds  = request_filesystem_credentials( esc_url_raw( $url ), $method, false, false, $fields );
 
-		tgmpa_load_bulk_installer();
-
-		if ( false === $creds ) {
+	if ( false === $creds ) {
 			return true;
 		}
 
@@ -1103,24 +1074,45 @@ class Conjure {
 			return true;
 		}
 
-		// Are there plugins that need installing/activating?
-		$plugins             = $this->get_tgmpa_plugins();
-		$required_plugins    = array();
-		$recommended_plugins = array();
-		$count               = count( $plugins['all'] );
-		$class               = $count ? null : 'no-plugins';
+	// Check if we have a selected demo for demo-specific plugins.
+	$selected_demo_index = get_transient( 'conjure_selected_demo_index' );
 
-		// Split the plugins into required and recommended.
-		foreach ( $plugins['all'] as $slug => $plugin ) {
-			if ( ! empty( $plugin['required'] ) ) {
-				$required_plugins[ $slug ] = $plugin;
-			} else {
-				$recommended_plugins[ $slug ] = $plugin;
-			}
+	// Validate the selected demo index exists.
+	if ( false !== $selected_demo_index && ! isset( $this->import_files[ $selected_demo_index ] ) ) {
+		// Invalid demo index, clear it.
+		delete_transient( 'conjure_selected_demo_index' );
+		$selected_demo_index = false;
+	}
+
+	// If no demo selected yet and we have demos, auto-select the first one.
+	if ( false === $selected_demo_index && ! empty( $this->import_files ) ) {
+		$selected_demo_index = 0;
+	}
+
+	// Are there plugins that need installing/activating?
+	$plugins             = $this->get_plugins( $selected_demo_index );
+	$required_plugins    = array();
+	$recommended_plugins = array();
+	$count               = count( $plugins['all'] );
+	$class               = $count ? null : 'no-plugins';
+
+	// Split the plugins into required and recommended.
+	foreach ( $plugins['all'] as $slug => $plugin ) {
+		if ( ! empty( $plugin['required'] ) ) {
+			$required_plugins[ $slug ] = $plugin;
+		} else {
+			$recommended_plugins[ $slug ] = $plugin;
 		}
+	}
 
-		// Strings passed in from the config file.
-		$strings = $this->strings;
+	// Debug logging.
+	$this->logger->info( 'Plugins page - Total: ' . count( $plugins['all'] ) . ', Required: ' . count( $required_plugins ) . ', Recommended: ' . count( $recommended_plugins ) . ', To Install: ' . count( $plugins['install'] ) . ', To Activate: ' . count( $plugins['activate'] ) );
+	foreach ( $plugins['all'] as $slug => $plugin ) {
+		$this->logger->info( "  Plugin '{$slug}': active=" . ( ! empty( $plugin['is_active'] ) ? 'yes' : 'no' ) . ", installed=" . ( ! empty( $plugin['is_installed'] ) ? 'yes' : 'no' ) . ", required=" . ( ! empty( $plugin['required'] ) ? 'yes' : 'no' ) );
+	}
+
+	// Strings passed in from the config file.
+	$strings = $this->strings;
 
 		// Text strings.
 		$header    = $count ? $strings['plugins-header'] : $strings['plugins-header-success'];
@@ -1139,52 +1131,112 @@ class Conjure {
 				<circle class="icon--checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="icon--checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
 			</svg>
 
-			<h1><?php echo esc_html( $header ); ?></h1>
+		<h1><?php echo esc_html( $header ); ?></h1>
 
-			<p><?php echo esc_html( $paragraph ); ?></p>
+		<p><?php echo esc_html( $paragraph ); ?></p>
 
-			<?php if ( $count ) { ?>
-				<a id="conjure__drawer-trigger" class="conjure__button conjure__button--knockout"><span><?php echo esc_html( $action ); ?></span><span class="chevron"></span></a>
-			<?php } ?>
+		<?php
+		// Show demo selector if demos are available and demo-specific plugins are enabled.
+		$show_demo_selector = false;
+		if ( $this->import_files && count( $this->import_files ) > 0 && $this->demo_plugin_manager ) {
+			$show_demo_selector = $this->demo_plugin_manager->is_demo_specific_plugins_enabled();
+		}
 
-		</div>
+		if ( $show_demo_selector && count( $this->import_files ) > 1 ) :
+		?>
+			<div class="conjure__demo-selector" style="margin: 2em 0; padding: 1.5em; background: #f9f9f9; border-radius: 8px; border: 2px solid #e0e0e0;">
+				<label for="conjure-demo-select" style="display: block; margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
+					<?php echo esc_html__( 'Select your demo:', 'conjurewp' ); ?>
+				</label>
+				<select id="conjure-demo-select" class="js-conjure-demo-select-plugins" style="width: 100%; max-width: 400px; padding: 0.75em; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;">
+					<option value=""><?php echo esc_html__( '-- Choose a demo --', 'conjurewp' ); ?></option>
+					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
+						<option value="<?php echo esc_attr( $index ); ?>" <?php selected( $selected_demo_index, $index ); ?>>
+							<?php echo esc_html( $import_file['import_file_name'] ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+				<p class="description" style="margin-top: 0.75em; font-size: 0.95em; color: #666;">
+					<?php echo esc_html__( 'Each demo has different plugin requirements. Choose your demo to see required and recommended plugins.', 'conjurewp' ); ?>
+				</p>
+				<?php if ( $selected_demo_index !== false && $selected_demo_index !== '' ) : ?>
+					<p style="margin-top: 0.75em; padding: 0.5em 0.75em; background: #d4edda; color: #155724; border-radius: 4px; font-size: 0.9em;">
+						✓ <?php echo esc_html__( 'Demo selected! Plugins below are filtered for this demo.', 'conjurewp' ); ?>
+					</p>
+				<?php endif; ?>
+			</div>
+		<?php endif; ?>
 
-		<form action="" method="post">
+		<?php if ( $count ) { ?>
+			<a id="conjure__drawer-trigger" class="conjure__button conjure__button--knockout"><span><?php echo esc_html( $action ); ?></span><span class="chevron"></span></a>
+		<?php } ?>
+
+	</div>
+
+	<form action="" method="post">
 
 			<?php if ( $count ) : ?>
 
 				<ul class="conjure__drawer conjure__drawer--install-plugins">
 
-				<?php if ( ! empty( $required_plugins ) ) : ?>
-					<?php foreach ( $required_plugins as $slug => $plugin ) : ?>
-						<li data-slug="<?php echo esc_attr( $slug ); ?>">
-							<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" checked>
+			<?php if ( ! empty( $required_plugins ) ) : ?>
+				<li class="plugin-section-header" style="background: #f8d7da; padding: 0.5em 0.75em; margin-bottom: 0.5em; border-left: 4px solid #dc3545; font-weight: 600; font-size: 0.85em;">
+					<?php echo esc_html__( 'Required Plugins', 'conjurewp' ); ?>
+					<span style="font-weight: normal; color: #721c24; font-size: 0.9em; display: block; margin-top: 0.25em;">
+						<?php echo esc_html__( 'These plugins are essential for the demo to work correctly', 'conjurewp' ); ?>
+					</span>
+				</li>
+				<?php foreach ( $required_plugins as $slug => $plugin ) : 
+					$is_active = ! empty( $plugin['is_active'] );
+				?>
+					<li data-slug="<?php echo esc_attr( $slug ); ?>" class="required-plugin<?php echo $is_active ? ' plugin-active' : ''; ?>" style="display: flex; align-items: center; padding: 0.75em 1em; border-bottom: 1px solid #eee;">
+						<!-- Hidden input ensures it's always submitted (no checkbox for required) -->
+						<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
 
-							<label for="default_plugins_<?php echo esc_attr( $slug ); ?>">
-								<i></i>
+						<span style="font-size: 1.2em; margin-right: 0.5em;">
+							<?php if ( $is_active ) : ?>
+								✓
+							<?php else : ?>
+								▸
+							<?php endif; ?>
+						</span>
 
-								<span><?php echo esc_html( $plugin['name'] ); ?></span>
+						<span style="flex: 1; font-size: 0.9em;"><?php echo esc_html( $plugin['name'] ); ?></span>
 
-								<span class="badge">
-									<span class="hint--top" aria-label="<?php esc_attr_e( 'Required', 'conjurewp' ); ?>">
-										<?php esc_html_e( 'req', 'conjurewp' ); ?>
-									</span>
-								</span>
-							</label>
-						</li>
-					<?php endforeach; ?>
+						<?php if ( $is_active ) : ?>
+							<span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.7em; font-weight: 600;">
+								✓ <?php esc_html_e( 'Installed', 'conjurewp' ); ?>
+							</span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
 				<?php endif; ?>
 
-				<?php if ( ! empty( $recommended_plugins ) ) : ?>
-					<?php foreach ( $recommended_plugins as $slug => $plugin ) : ?>
-						<li data-slug="<?php echo esc_attr( $slug ); ?>">
-							<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" checked>
+			<?php if ( ! empty( $recommended_plugins ) ) : ?>
+				<li class="plugin-section-header" style="background: #d1ecf1; padding: 0.5em 0.75em; margin: 1em 0 0.5em; border-left: 4px solid #17a2b8; font-weight: 600; font-size: 0.85em;">
+					<?php echo esc_html__( 'Recommended Plugins', 'conjurewp' ); ?>
+					<span style="font-weight: normal; color: #0c5460; font-size: 0.9em; display: block; margin-top: 0.25em;">
+						<?php echo esc_html__( 'Optional plugins that enhance the demo (can be unchecked)', 'conjurewp' ); ?>
+					</span>
+				</li>
+			<?php foreach ( $recommended_plugins as $slug => $plugin ) : 
+				$is_active = ! empty( $plugin['is_active'] );
+			?>
+				<li data-slug="<?php echo esc_attr( $slug ); ?>" class="<?php echo $is_active ? 'plugin-active' : ''; ?>">
+					<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" <?php echo $is_active ? '' : 'checked'; ?>>
 
-							<label for="default_plugins_<?php echo esc_attr( $slug ); ?>">
-								<i></i><span><?php echo esc_html( $plugin['name'] ); ?></span>
-							</label>
-						</li>
-					<?php endforeach; ?>
+					<label for="default_plugins_<?php echo esc_attr( $slug ); ?>" style="font-size: 0.9em;">
+						<i></i>
+						<span><?php echo esc_html( $plugin['name'] ); ?></span>
+						
+						<?php if ( $is_active ) : ?>
+							<span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.7em; font-weight: 600; margin-left: 0.5em;">
+								✓ <?php esc_html_e( 'Installed', 'conjurewp' ); ?>
+							</span>
+						<?php endif; ?>
+					</label>
+				</li>
+			<?php endforeach; ?>
 				<?php endif; ?>
 
 				</ul>
@@ -1402,34 +1454,37 @@ class Conjure {
 	}
 
 	/**
-	 * Get registered TGMPA plugins
+	 * Get plugins for installation
 	 *
-	 * @return    array
+	 * Uses the custom plugin manager to get demo-specific plugins.
+	 *
+	 * @param int|string|null $demo_index Optional. Demo index or slug for demo-specific plugins.
+	 * @return    array Array of plugins organized by status.
 	 */
-	protected function get_tgmpa_plugins() {
+	protected function get_plugins( $demo_index = null ) {
+		// Default empty plugin array.
 		$plugins = array(
-			'all'      => array(), // Meaning: all plugins which still have open actions.
+			'all'      => array(), // All plugins which need action.
 			'install'  => array(),
 			'update'   => array(),
 			'activate' => array(),
 		);
 
-		foreach ( $this->tgmpa->plugins as $slug => $plugin ) {
-			if ( $this->tgmpa->is_plugin_active( $slug ) && false === $this->tgmpa->does_plugin_have_update( $slug ) ) {
-				continue;
-			} else {
-				$plugins['all'][ $slug ] = $plugin;
-				if ( ! $this->tgmpa->is_plugin_installed( $slug ) ) {
-					$plugins['install'][ $slug ] = $plugin;
-				} else {
-					if ( false !== $this->tgmpa->does_plugin_have_update( $slug ) ) {
-						$plugins['update'][ $slug ] = $plugin;
-					}
-					if ( $this->tgmpa->can_plugin_activate( $slug ) ) {
-						$plugins['activate'][ $slug ] = $plugin;
-					}
-				}
+		if ( ! $this->demo_plugin_manager ) {
+			$this->logger->debug( 'Demo plugin manager not available' );
+			return $plugins;
+		}
+
+		// Get demo-specific plugins if demo index provided.
+		if ( null !== $demo_index ) {
+			$demo_plugins = $this->demo_plugin_manager->get_demo_plugins_with_status( $demo_index, $this->import_files );
+			
+			if ( ! empty( $demo_plugins['all'] ) ) {
+				$this->logger->info( 'Using demo-specific plugins for demo index: ' . $demo_index );
+				return $demo_plugins;
 			}
+			
+			$this->logger->debug( 'No demo-specific plugins found for demo index: ' . $demo_index );
 		}
 
 		return $plugins;
@@ -1455,12 +1510,14 @@ class Conjure {
 		// Strings passed in from the config file.
 		$strings = $this->strings;
 
-		// Text strings.
-		$success = $strings['child-json-success%s'];
-		$already = $strings['child-json-already%s'];
+	// Text strings.
+	$success = $strings['child-json-success%s'];
+	$already = $strings['child-json-already%s'];
 
-		$name = $this->theme . ' Child';
-		$slug = sanitize_title( $name );
+	// Get the parent theme (in case we're already on a child theme).
+	$parent_theme = wp_get_theme( $this->theme->template );
+	$name = $parent_theme->name . ' Child';
+	$slug = sanitize_title( $name );
 
 	$path = get_theme_root() . '/' . $slug;
 
@@ -1856,104 +1913,79 @@ class Conjure {
 	}
 
 	/**
-	 * Do plugins' AJAX
+	 * AJAX handler for custom plugin installation.
 	 *
-	 * @internal    Used as a calback.
+	 * Handles plugin installation using the custom installer (non-TGMPA).
 	 */
-	public function _ajax_plugins() {
-
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['slug'] ) ) {
-			exit( 0 );
+	public function _ajax_install_plugin() {
+		// Verify nonce and check permissions.
+		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+			wp_send_json_error( array(
+				'message' => esc_html__( 'Security check failed.', 'conjurewp' ),
+			) );
 		}
 
-		$json      = array();
-		$tgmpa_url = $this->tgmpa->get_tgmpa_url();
-		$plugins   = $this->get_tgmpa_plugins();
-
-		foreach ( $plugins['activate'] as $slug => $plugin ) {
-			if ( $_POST['slug'] === $slug ) {
-				$json = array(
-					'url'           => $tgmpa_url,
-					'plugin'        => array( $slug ),
-					'tgmpa-page'    => $this->tgmpa->menu,
-					'plugin_status' => 'all',
-					'_wpnonce'      => wp_create_nonce( 'bulk-plugins' ),
-					'action'        => 'tgmpa-bulk-activate',
-					'action2'       => - 1,
-					'message'       => esc_html__( 'Activating', 'conjurewp' ),
-				);
-				break;
-			}
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			wp_send_json_error( array(
+				'message' => esc_html__( 'You do not have permission to install plugins.', 'conjurewp' ),
+			) );
 		}
 
-		foreach ( $plugins['update'] as $slug => $plugin ) {
-			if ( $_POST['slug'] === $slug ) {
-				$json = array(
-					'url'           => $tgmpa_url,
-					'plugin'        => array( $slug ),
-					'tgmpa-page'    => $this->tgmpa->menu,
-					'plugin_status' => 'all',
-					'_wpnonce'      => wp_create_nonce( 'bulk-plugins' ),
-					'action'        => 'tgmpa-bulk-update',
-					'action2'       => - 1,
-					'message'       => esc_html__( 'Updating', 'conjurewp' ),
-				);
-				break;
-			}
+		$slug = isset( $_POST['slug'] ) ? sanitize_key( $_POST['slug'] ) : '';
+
+		if ( empty( $slug ) ) {
+			wp_send_json_error( array(
+				'message' => esc_html__( 'Plugin slug not provided.', 'conjurewp' ),
+			) );
 		}
 
-		foreach ( $plugins['install'] as $slug => $plugin ) {
-			if ( $_POST['slug'] === $slug ) {
-				$json = array(
-					'url'           => $tgmpa_url,
-					'plugin'        => array( $slug ),
-					'tgmpa-page'    => $this->tgmpa->menu,
-					'plugin_status' => 'all',
-					'_wpnonce'      => wp_create_nonce( 'bulk-plugins' ),
-					'action'        => 'tgmpa-bulk-install',
-					'action2'       => - 1,
-					'message'       => esc_html__( 'Installing', 'conjurewp' ),
-				);
-				break;
-			}
+		$installer = $this->demo_plugin_manager->get_installer();
+
+		$this->logger->info( "Installing plugin via AJAX: {$slug}" );
+
+		// Install and activate the plugin.
+		$result = $installer->install_and_activate( $slug );
+
+		if ( is_wp_error( $result ) ) {
+			$this->logger->error( "Plugin installation failed: " . $result->get_error_message() );
+
+			wp_send_json_error( array(
+				'message' => $result->get_error_message(),
+			) );
 		}
 
-		if ( $json ) {
-			$this->logger->debug(
-				__( 'A plugin with the following data will be processed', 'conjurewp' ),
-				array(
-					'plugin_slug' => $_POST['slug'],
-					'message'     => $json['message'],
-				)
-			);
+		$this->logger->info( "Successfully installed and activated plugin: {$slug}" );
 
-			$json['hash']    = md5( serialize( $json ) );
-			$json['message'] = esc_html__( 'Installing', 'conjurewp' );
-			wp_send_json( $json );
-		} else {
-			$this->logger->debug(
-				__( 'A plugin with the following data was processed', 'conjurewp' ),
-				array(
-					'plugin_slug' => $_POST['slug'],
-				)
-			);
+	// Check if all plugins are installed.
+	$selected_demo_index = get_transient( 'conjure_selected_demo_index' );
+	$plugins             = $this->get_plugins( $selected_demo_index );
 
-			// Check if all plugins are now complete.
-			$remaining_plugins = $this->get_tgmpa_plugins();
-			if ( empty( $remaining_plugins['all'] ) ) {
-				// All plugins are installed/activated, mark step as completed.
-				$this->mark_step_completed( 'plugins' );
-			}
+	// Check if there's any remaining work to do (install or activate).
+	$has_work_remaining = ! empty( $plugins['install'] ) || ! empty( $plugins['activate'] );
 
-			wp_send_json(
-				array(
-					'done'    => 1,
-					'message' => esc_html__( 'Success', 'conjurewp' ),
-				)
-			);
+	$this->logger->debug( 'After installing ' . $slug . ': install=' . count( $plugins['install'] ) . ', activate=' . count( $plugins['activate'] ) . ', has_work_remaining=' . ( $has_work_remaining ? 'yes' : 'no' ) );
+
+		if ( ! $has_work_remaining ) {
+			// All plugins complete, mark step as done.
+			$this->mark_step_completed( 'plugins' );
+
+			$this->logger->info( 'All plugins installed and activated, step marked as complete' );
+
+			wp_send_json_success( array(
+				'message'   => esc_html__( 'All plugins installed successfully!', 'conjurewp' ),
+				'done'      => true,
+				'completed' => true,
+			) );
 		}
 
-		exit;
+		wp_send_json_success( array(
+			'message' => sprintf(
+				/* translators: %s: plugin slug */
+				esc_html__( 'Successfully installed %s', 'conjurewp' ),
+				$slug
+			),
+			'done' => false,
+		) );
 	}
 
 	/**
@@ -2593,10 +2625,25 @@ class Conjure {
 			wp_send_json_error();
 		}
 
+		// Store the selected demo index for demo-specific plugin installation.
+		set_transient( 'conjure_selected_demo_index', $selected_index, HOUR_IN_SECONDS );
+
+		$this->logger->info( 'Demo selected: ' . $selected_index );
+
 		$import_info      = $this->get_import_data_info( $selected_index );
 		$import_info_html = $this->get_import_steps_html( $import_info );
 
-		wp_send_json_success( $import_info_html );
+		// Get demo-specific plugins if available.
+		$demo_plugins = array();
+		if ( $this->demo_plugin_manager ) {
+			$demo_plugins = $this->demo_plugin_manager->get_demo_plugins_with_status( $selected_index, $this->import_files );
+		}
+
+		wp_send_json_success( array(
+			'import_info_html' => $import_info_html,
+			'demo_plugins'     => $demo_plugins,
+			'has_plugins'      => ! empty( $demo_plugins['all'] ),
+		) );
 	}
 
 	/**
@@ -3170,12 +3217,7 @@ class Conjure {
 				continue;
 			}
 
-			// Skip plugins step if TGMPA is not available.
-			if ( 'plugins' === $step_key && ! class_exists( 'TGM_Plugin_Activation' ) ) {
-				continue;
-			}
-
-			$is_completed = isset( $step_states[ $step_key ] ) && $step_states[ $step_key ];
+		$is_completed = isset( $step_states[ $step_key ] ) && $step_states[ $step_key ];
 			$status_icon = $is_completed ? '✓' : '○';
 
 			$wp_admin_bar->add_node(

@@ -9,7 +9,8 @@ WordPress theme setup wizard with demo content import.
 ## Features
 
 -   Setup wizard with progress tracking
--   Plugin installation (TGMPA)
+-   **Built-in plugin installer** (NEW in 2.0.0) - Zero external dependencies!
+-   **Demo-specific plugin dependencies** - Show only relevant plugins per demo
 -   Child theme generator
 -   Demo content, widgets, customiser import
 -   Revolution Slider & Redux support
@@ -136,6 +137,85 @@ When `CONJUREWP_AUTO_REGISTER_DEMOS` is enabled:
 -   `conjure_content_blog_page_title` - Blog page title
 
 See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` for more examples.
+
+### Plugin Installation (v2.0.0)
+
+**Zero dependencies!** ConjureWP includes a built-in custom plugin installer. Just define plugins in your demos:
+
+```php
+'required_plugins' => array(
+    array(
+        'name'     => 'Contact Form 7',
+        'slug'     => 'contact-form-7',
+        'required' => true, // REQUIRED - can't skip
+    ),
+    array(
+        'name'     => 'Yoast SEO',
+        'slug'     => 'wordpress-seo',
+        'required' => false, // RECOMMENDED - optional
+    ),
+),
+```
+
+**Features:**
+
+-   ✅ Zero dependencies
+-   ✅ WordPress.org + premium plugin support
+-   ✅ Demo-specific plugin filtering
+-   ✅ Required vs recommended plugins
+-   ✅ Automatic installation and activation
+
+**Learn more:** See `CUSTOM-INSTALLER.md` for complete guide
+
+### Demo-Specific Plugin Dependencies
+
+Define different plugins for each demo, improving UX and reducing installation time:
+
+```php
+function mytheme_import_files() {
+    return array(
+        array(
+            'import_file_name'     => 'Business Demo',
+            'local_import_file'    => get_template_directory() . '/demos/business/content.xml',
+
+            // Only Contact Form 7 needed for this demo
+            'required_plugins'     => array(
+                'contact-form-7',
+            ),
+        ),
+        array(
+            'import_file_name'     => 'E-commerce Demo',
+            'local_import_file'    => get_template_directory() . '/demos/shop/content.xml',
+
+            // WooCommerce required, Contact Form 7 optional
+            'required_plugins'     => array(
+                'woocommerce' => array( 'required' => true ),
+                'contact-form-7',
+            ),
+        ),
+        array(
+            'import_file_name'     => 'Minimal Blog',
+            'local_import_file'    => get_template_directory() . '/demos/minimal/content.xml',
+
+            // No plugins needed!
+            'required_plugins'     => array(),
+        ),
+    );
+}
+add_filter( 'conjure_import_files', 'mytheme_import_files' );
+```
+
+**Benefits:**
+
+-   Users see only plugins relevant to their chosen demo
+-   Faster installation (no unnecessary plugins)
+-   Better UX for multi-demo themes
+-   Full backward compatibility
+
+**Learn more:**
+
+-   **New system:** `CUSTOM-INSTALLER.md` and `examples/simple-demo-plugins-no-tgmpa.php`
+-   **Advanced:** `examples/demo-plugin-dependencies.php`
 
 ## WP-CLI Commands
 

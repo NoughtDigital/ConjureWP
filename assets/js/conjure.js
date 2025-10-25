@@ -98,6 +98,7 @@ var Conjure = (function ($) {
 			}
 		});
 
+		// Handle demo selection on CONTENT step (original behavior).
 		$(document).on("change", ".js-conjure-demo-import-select", function () {
 			var selectedIndex = $(this).val();
 
@@ -112,9 +113,32 @@ var Conjure = (function ($) {
 				},
 				function (response) {
 					if (response.success) {
+						// Handle the new response format with import_info_html.
+						var importInfoHtml =
+							response.data.import_info_html || response.data;
 						$(".js-conjure-drawer-import-content").html(
-							response.data
+							importInfoHtml
 						);
+
+						// If demo-specific plugins are available, store them for later use.
+						if (
+							response.data.has_plugins &&
+							response.data.demo_plugins
+						) {
+							// Store in data attribute for potential future use.
+							$(".js-conjure-drawer-import-content").data(
+								"demo-plugins",
+								response.data.demo_plugins
+							);
+
+							// Log for debugging (remove in production if desired).
+							if (console && console.log) {
+								console.log(
+									"Demo-specific plugins loaded:",
+									response.data.demo_plugins
+								);
+							}
+						}
 					} else {
 						alert(conjure_params.texts.something_went_wrong);
 					}
@@ -126,6 +150,39 @@ var Conjure = (function ($) {
 				alert(conjure_params.texts.something_went_wrong);
 			});
 		});
+
+		// Handle demo selection on PLUGINS step (new behavior for demo-specific plugins).
+		$(document).on(
+			"change",
+			".js-conjure-demo-select-plugins",
+			function () {
+				var selectedIndex = $(this).val();
+
+				if (!selectedIndex) {
+					return;
+				}
+
+				// Save the selection and reload to show filtered plugins.
+				$.post(
+					conjure_params.ajaxurl,
+					{
+						action: "conjure_update_selected_import_data_info",
+						wpnonce: conjure_params.wpnonce,
+						selected_index: selectedIndex,
+					},
+					function (response) {
+						if (response.success) {
+							// Reload the page to show filtered plugins.
+							window.location.reload();
+						} else {
+							alert(conjure_params.texts.something_went_wrong);
+						}
+					}
+				).fail(function () {
+					alert(conjure_params.texts.something_went_wrong);
+				});
+			}
+		);
 	}
 
 	function ChildTheme() {
@@ -269,8 +326,25 @@ var Conjure = (function ($) {
 					.removeClass("installing success error")
 					.addClass(response.message.toLowerCase());
 
+				// Check if ALL plugins are complete (server says we're done).
+				if (
+					typeof response.completed !== "undefined" &&
+					response.completed
+				) {
+					// Mark current as done and complete the step.
+					if ($current_node && !$current_node.data("done_item")) {
+						items_completed++;
+						$current_node.data("done_item", 1);
+					}
+					complete();
+				}
 				// The plugin is done (installed, updated and activated).
-				if (typeof response.done != "undefined" && response.done) {
+				else if (typeof response.done != "undefined" && response.done) {
+					// CRITICAL: Mark this plugin as DONE before moving to next to prevent loops.
+					if ($current_node && !$current_node.data("done_item")) {
+						items_completed++;
+						$current_node.data("done_item", 1);
+					}
 					find_next();
 				} else if (typeof response.url != "undefined") {
 					// We have an ajax url action to perform.
@@ -290,20 +364,32 @@ var Conjure = (function ($) {
 					find_next();
 				}
 			} else {
-				// The TGMPA returns a whole page as response, so check, if this plugin is done.
-				process_current();
+				// Unknown response format, move on anyway to prevent infinite loops.
+				if ($current_node && !$current_node.data("done_item")) {
+					items_completed++;
+					$current_node.data("done_item", 1);
+				}
+				find_next();
 			}
 		}
 
 		function process_current() {
 			if (current_item) {
+				// Check for checkbox (recommended plugins) or hidden input (required plugins)
 				var $check = $current_node.find("input:checkbox");
-				if ($check.is(":checked")) {
+				var $hidden = $current_node.find("input[type=hidden]");
+
+				// Install if: checkbox is checked OR hidden input exists (required plugin)
+				if (
+					($check.length > 0 && $check.is(":checked")) ||
+					$hidden.length > 0
+				) {
+					// Use custom installer
 					jQuery
 						.post(
 							conjure_params.ajaxurl,
 							{
-								action: "conjure_plugins",
+								action: "conjure_install_plugin",
 								wpnonce: conjure_params.wpnonce,
 								slug: current_item,
 							},
@@ -325,7 +411,10 @@ var Conjure = (function ($) {
 				}
 				$current_node.find(".spinner").css("visibility", "hidden");
 			}
-			var $li = $(".conjure__drawer--install-plugins li");
+			// Only select plugin items (not headers), and exclude already active plugins
+			var $li = $(
+				".conjure__drawer--install-plugins li[data-slug]:not(.plugin-active)"
+			);
 			$li.each(function () {
 				var $item = $(this);
 

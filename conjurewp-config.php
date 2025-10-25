@@ -91,7 +91,7 @@ $strings = array(
 	'plugins-header-success'   => esc_html__( 'You\'re up to speed!', 'conjurewp' ),
 	'plugins'                  => esc_html__( 'Let\'s install some essential WordPress plugins to get your site up to speed.', 'conjurewp' ),
 	'plugins-success%s'        => esc_html__( 'The required WordPress plugins are all installed and up to date. Press "Next" to continue the setup wizard.', 'conjurewp' ),
-	'plugins-action-link'      => esc_html__( 'Advanced', 'conjurewp' ),
+	'plugins-action-link'      => esc_html__( 'Plugins', 'conjurewp' ),
 
 	'import-header'            => esc_html__( 'Import Content', 'conjurewp' ),
 	'import'                   => esc_html__( 'Let\'s import content to your website, to help you get familiar with the theme.', 'conjurewp' ),

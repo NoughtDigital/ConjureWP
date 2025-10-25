@@ -133,8 +133,10 @@ class Conjure_CLI {
 	 */
 	public function import( $args, $assoc_args ) {
 		// Verify user capability.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			WP_CLI::error( 'You do not have permission to run imports.' );
+		// In CLI context, skip capability check since WP-CLI provides system-level security.
+		// If a user is explicitly set via --user, verify their capability.
+		if ( WP_CLI::get_config( 'user' ) && ! current_user_can( 'manage_options' ) ) {
+			WP_CLI::error( 'You do not have permission to run imports. User must have manage_options capability.' );
 		}
 
 		// Get the demo parameter.

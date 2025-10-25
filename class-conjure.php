@@ -3161,6 +3161,8 @@ class Conjure {
 			'content' => esc_html__( 'Content Import', 'conjurewp' ),
 		);
 
+		$rerun_steps = apply_filters( $this->theme->template . '_conjure_rerun_steps', $rerun_steps, $this->steps );
+
 		// Add individual step reset options.
 		foreach ( $rerun_steps as $step_key => $step_label ) {
 			// Skip license step if not enabled.

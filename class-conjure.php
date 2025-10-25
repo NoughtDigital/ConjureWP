@@ -143,6 +143,13 @@ class Conjure {
 	protected $capability = null;
 
 	/**
+	 * The hook suffix returned by add_submenu_page.
+	 *
+	 * @var string $hook_suffix
+	 */
+	protected $hook_suffix = null;
+
+	/**
 	 * The URL for the "Learn more about child themes" link.
 	 *
 	 * @var string $child_action_btn_url
@@ -567,6 +574,12 @@ class Conjure {
 
 		// Get the current step.
 		$current_step = strtolower( $this->steps[ $this->step ]['name'] );
+
+		// Set the current screen to prevent "get_current_screen called incorrectly" notices.
+		// This ensures compatibility with plugins that use get_current_screen() in admin_head hooks.
+		if ( ! empty( $this->hook_suffix ) ) {
+			set_current_screen( $this->hook_suffix );
+		}
 		?>
 
 		<!DOCTYPE html>

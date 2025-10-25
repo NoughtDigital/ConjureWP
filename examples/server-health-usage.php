@@ -20,7 +20,7 @@ function example_basic_server_check() {
 	// Include the class file.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-conjure-server-health.php';
 
-	// Create instance with default requirements (512MB memory, 40000s execution).
+	// Create instance with default requirements (256MB memory, 300s execution).
 	$server_health = new Conjure_Server_Health();
 
 	// Check if requirements are met.
@@ -190,7 +190,7 @@ function example_wizard_integration() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-conjure-server-health.php';
 
 	// In your wizard welcome step:
-	$server_health = new Conjure_Server_Health( 512, 40000 );
+	$server_health = new Conjure_Server_Health( 256, 300 );
 	
 	$meets_requirements = $server_health->meets_requirements();
 	
@@ -216,6 +216,132 @@ function example_wizard_integration() {
 				Please contact your hosting provider to increase your PHP limits before proceeding.
 			</p>
 		<?php endif; ?>
+	</div>
+	<?php
+}
+
+/**
+ * Example 11: Disable server health checks entirely
+ * 
+ * Add this to your theme's functions.php to completely disable server health checks.
+ */
+function example_disable_health_checks() {
+	add_filter( 'conjure_server_health_enabled', '__return_false' );
+}
+add_action( 'init', 'example_disable_health_checks' );
+
+/**
+ * Example 12: Lower memory requirements for shared hosting
+ * 
+ * Reduce memory requirement to 128MB (suitable for shared hosting).
+ */
+function example_lower_memory_requirement( $min_memory ) {
+	return 128; // 128MB instead of default 256MB.
+}
+add_filter( 'conjure_server_health_min_memory', 'example_lower_memory_requirement' );
+
+/**
+ * Example 13: Reduce execution time requirement
+ * 
+ * Reduce execution time to 180 seconds (3 minutes).
+ */
+function example_reduce_execution_time( $min_execution ) {
+	return 180; // 180 seconds instead of default 300 seconds.
+}
+add_filter( 'conjure_server_health_min_execution', 'example_reduce_execution_time' );
+
+/**
+ * Example 14: Set realistic requirements for a lightweight theme
+ * 
+ * Use both filters together for a theme with minimal requirements.
+ */
+function example_lightweight_theme_requirements() {
+	// Set minimum memory to 128MB.
+	add_filter( 'conjure_server_health_min_memory', function( $min_memory ) {
+		return 128;
+	});
+	
+	// Set minimum execution time to 120 seconds.
+	add_filter( 'conjure_server_health_min_execution', function( $min_execution ) {
+		return 120;
+	});
+}
+add_action( 'init', 'example_lightweight_theme_requirements' );
+
+/**
+ * Example 15: Conditional health checks (disable for specific environments)
+ * 
+ * Disable health checks on staging/development environments.
+ */
+function example_conditional_health_checks( $enabled ) {
+	// Disable on staging and development.
+	if ( defined( 'WP_ENVIRONMENT_TYPE' ) ) {
+		$env = WP_ENVIRONMENT_TYPE;
+		if ( in_array( $env, array( 'development', 'staging' ), true ) ) {
+			return false;
+		}
+	}
+	return $enabled;
+}
+add_filter( 'conjure_server_health_enabled', 'example_conditional_health_checks' );
+
+/**
+ * Example 16: Higher requirements for premium themes with large imports
+ * 
+ * Increase requirements for themes with heavy content imports.
+ */
+function example_premium_theme_requirements() {
+	// Set minimum memory to 512MB.
+	add_filter( 'conjure_server_health_min_memory', function( $min_memory ) {
+		return 512;
+	});
+	
+	// Set minimum execution time to 600 seconds (10 minutes).
+	add_filter( 'conjure_server_health_min_execution', function( $min_execution ) {
+		return 600;
+	});
+}
+add_action( 'init', 'example_premium_theme_requirements' );
+
+/**
+ * Example 17: Get minimum requirements to display in custom UI
+ * 
+ * Display current thresholds to users.
+ */
+function example_display_requirements() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-conjure-server-health.php';
+	
+	$server_health = new Conjure_Server_Health();
+	
+	// Check if enabled.
+	if ( ! $server_health->is_enabled() ) {
+		echo '<p>Server health checks are disabled.</p>';
+		return;
+	}
+	
+	// Get minimum requirements.
+	$min_memory = $server_health->get_min_memory_limit();
+	$min_execution = $server_health->get_min_execution_time();
+	
+	// Get current values.
+	$current_memory = $server_health->get_memory_limit_value();
+	$current_execution = $server_health->get_max_execution_value();
+	
+	?>
+	<div class="requirements-info">
+		<h3>Minimum Requirements</h3>
+		<ul>
+			<li>
+				<strong>Memory:</strong> 
+				<?php echo esc_html( $min_memory ); ?>MB required 
+				(Current: <?php echo esc_html( $current_memory ); ?>MB)
+			</li>
+			<li>
+				<strong>Execution Time:</strong> 
+				<?php echo esc_html( $min_execution ); ?>s required 
+				(Current: <?php echo esc_html( $current_execution ); ?>s)
+			</li>
+		</ul>
 	</div>
 	<?php
 }

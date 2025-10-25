@@ -23,14 +23,21 @@ class Conjure_Server_Health {
 	 *
 	 * @var int
 	 */
-	private $min_memory_limit = 512;
+	private $min_memory_limit = 256;
 
 	/**
 	 * Minimum required PHP max execution time (in seconds).
 	 *
 	 * @var int
 	 */
-	private $min_execution_time = 40000;
+	private $min_execution_time = 300;
+
+	/**
+	 * Whether health checks are enabled.
+	 *
+	 * @var bool
+	 */
+	private $enabled = true;
 
 	/**
 	 * Constructor.
@@ -38,18 +45,52 @@ class Conjure_Server_Health {
 	 * @param int $min_memory      Optional. Minimum memory limit in MB.
 	 * @param int $min_execution   Optional. Minimum execution time in seconds.
 	 */
-	public function __construct( $min_memory = 512, $min_execution = 40000 ) {
+	public function __construct( $min_memory = 256, $min_execution = 300 ) {
+		// Check if health checks are disabled via filter.
+		$this->enabled = apply_filters( 'conjure_server_health_enabled', true );
+
+		// Allow themes/plugins to override default requirements.
+		$min_memory = apply_filters( 'conjure_server_health_min_memory', $min_memory );
+		$min_execution = apply_filters( 'conjure_server_health_min_execution', $min_execution );
+
 		// Validate and sanitize inputs.
 		$this->min_memory_limit   = absint( $min_memory );
 		$this->min_execution_time = absint( $min_execution );
 
-		// Ensure minimum values are set.
+		// Ensure minimum values are set (lower defaults for more realistic thresholds).
 		if ( $this->min_memory_limit < 1 ) {
-			$this->min_memory_limit = 512;
+			$this->min_memory_limit = 256;
 		}
 		if ( $this->min_execution_time < 1 ) {
-			$this->min_execution_time = 40000;
+			$this->min_execution_time = 300;
 		}
+	}
+
+	/**
+	 * Check if health checks are enabled.
+	 *
+	 * @return bool True if enabled, false otherwise.
+	 */
+	public function is_enabled() {
+		return $this->enabled;
+	}
+
+	/**
+	 * Get minimum required memory limit.
+	 *
+	 * @return int Minimum memory limit in MB.
+	 */
+	public function get_min_memory_limit() {
+		return $this->min_memory_limit;
+	}
+
+	/**
+	 * Get minimum required execution time.
+	 *
+	 * @return int Minimum execution time in seconds.
+	 */
+	public function get_min_execution_time() {
+		return $this->min_execution_time;
 	}
 
 	/**
@@ -58,6 +99,11 @@ class Conjure_Server_Health {
 	 * @return bool True if requirements are met, false otherwise.
 	 */
 	public function meets_requirements() {
+		// If health checks are disabled, always return true.
+		if ( ! $this->enabled ) {
+			return true;
+		}
+
 		$memory_limit = $this->get_memory_limit_value();
 		$max_execution = $this->get_max_execution_value();
 
@@ -246,6 +292,11 @@ class Conjure_Server_Health {
 	 * @return string HTML output.
 	 */
 	public function render_health_check( $args = array() ) {
+		// If health checks are disabled, return empty string.
+		if ( ! $this->enabled ) {
+			return '';
+		}
+
 		$defaults = array(
 			'show_title'       => true,
 			'title'            => __( 'Server Health', 'conjure-wp' ),

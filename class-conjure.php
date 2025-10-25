@@ -2976,6 +2976,8 @@ class Conjure {
 			),
 		);
 
+		$upload_options = apply_filters( 'conjure_manual_upload_sections', $upload_options, $uploaded_files );
+
 		ob_start();
 		?>
 

@@ -114,17 +114,39 @@ $strings = array(
  * The plugin includes sample demo files in the /demo/ folder for testing only.
  * These files will be overwritten during plugin updates.
  *
- * For production, store demo content in update-safe locations:
+ * ========================================================================
+ * RECOMMENDED APPROACH: Theme-Level Configuration (Update-Safe)
+ * ========================================================================
  *
- * Option 1: wp-config.php (Recommended)
- *   define( 'CONJUREWP_DEMO_PATH', '/path/to/your/demo/files' );
+ * For theme developers, use filter hooks in your theme's functions.php:
+ *
+ * Option 1: Place demo files in theme directory
+ *   /themes/your-theme/conjurewp-demos/
+ *   (Automatically detected - no configuration needed!)
+ *
+ * Option 2: Custom path via filter hook (for external storage)
+ *   add_filter( 'conjurewp_custom_demo_path', function() {
+ *       return get_template_directory() . '/demo-content';
+ *   });
+ *
+ * Option 3: Auto-register demos via filter hook
+ *   add_filter( 'conjurewp_auto_register_demos', '__return_true' );
+ *
+ * ========================================================================
+ * ALTERNATIVE: Server-Level Configuration (Special Cases Only)
+ * ========================================================================
+ *
+ * For server administrators who need to override theme settings,
+ * add these to wp-config.php (above "That's all, stop editing!" line):
+ *
+ *   define( 'CONJUREWP_DEMO_PATH', '/path/to/demo/files' );
  *   define( 'CONJUREWP_AUTO_REGISTER_DEMOS', true );
  *
- * Option 2: Theme directory (Survives plugin updates)
- *   /themes/your-theme/conjurewp-demos/
+ * Note: Filter hooks (theme-level) take priority over wp-config constants.
  *
- * The plugin automatically checks these locations in priority order.
- * See example-theme-integration.php for complete examples.
+ * ========================================================================
+ *
+ * See /examples/theme-integration.php for complete examples.
  */
 
 /**

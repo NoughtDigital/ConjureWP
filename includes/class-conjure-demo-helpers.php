@@ -27,36 +27,24 @@ class Conjure_Demo_Helpers {
 	/**
 	 * Get the custom demo content directory path.
 	 *
-	 * Priority order:
-	 * 1. wp-config.php constant CONJUREWP_DEMO_PATH
-	 * 2. Filtered custom path (via 'conjurewp_custom_demo_path')
-	 * 3. Theme directory /conjurewp-demos/
-	 * 4. Uploads directory /conjurewp-demos/
+	 * Priority order (theme-first approach):
+	 * 1. Filtered custom path (via 'conjurewp_custom_demo_path') - THEME LEVEL CONTROL
+	 * 2. Theme directory /conjurewp-demos/
+	 * 3. Uploads directory /conjurewp-demos/
+	 * 4. wp-config.php constant CONJUREWP_DEMO_PATH - SERVER LEVEL OVERRIDE
 	 * 5. Plugin directory /demo/ (default, but NOT update-safe)
 	 *
 	 * @param string $theme_slug Optional theme slug to use for theme-specific demos.
 	 * @return string Path to demo content directory.
 	 */
 	public static function get_demo_directory( $theme_slug = '' ) {
-		// Check wp-config.php constant first (highest priority).
-		if ( defined( 'CONJUREWP_DEMO_PATH' ) && is_dir( CONJUREWP_DEMO_PATH ) ) {
-			$path = trailingslashit( CONJUREWP_DEMO_PATH );
-			if ( ! empty( $theme_slug ) ) {
-				$theme_path = $path . $theme_slug;
-				if ( is_dir( $theme_path ) ) {
-					return trailingslashit( $theme_path );
-				}
-			}
-			return $path;
-		}
-
-		// Allow custom path via filter.
-		$custom_path = apply_filters( 'conjurewp_custom_demo_path', '' );
+		// Allow custom path via filter (HIGHEST PRIORITY - theme-level control).
+		$custom_path = apply_filters( 'conjurewp_custom_demo_path', '', $theme_slug );
 		if ( ! empty( $custom_path ) && is_dir( $custom_path ) ) {
 			return trailingslashit( $custom_path );
 		}
 
-		// Check theme directory first (survives plugin updates).
+		// Check theme directory (survives plugin updates).
 		$theme_path = self::get_theme_demo_directory( $theme_slug );
 		if ( is_dir( $theme_path ) ) {
 			return $theme_path;
@@ -66,6 +54,18 @@ class Conjure_Demo_Helpers {
 		$uploads_path = self::get_uploads_demo_directory( $theme_slug );
 		if ( is_dir( $uploads_path ) ) {
 			return $uploads_path;
+		}
+
+		// Check wp-config.php constant (server-level override for special cases).
+		if ( defined( 'CONJUREWP_DEMO_PATH' ) && is_dir( CONJUREWP_DEMO_PATH ) ) {
+			$path = trailingslashit( CONJUREWP_DEMO_PATH );
+			if ( ! empty( $theme_slug ) ) {
+				$theme_path = $path . $theme_slug;
+				if ( is_dir( $theme_path ) ) {
+					return trailingslashit( $theme_path );
+				}
+			}
+			return $path;
 		}
 
 		// Fallback to plugin directory (NOT update-safe - for examples only).
@@ -365,16 +365,29 @@ class Conjure_Demo_Helpers {
 	/**
 	 * Check if auto-registration is enabled.
 	 *
+	 * Priority order (theme-first approach):
+	 * 1. Filter hook 'conjurewp_auto_register_demos' (THEME LEVEL CONTROL)
+	 * 2. wp-config.php constant CONJUREWP_AUTO_REGISTER_DEMOS (SERVER LEVEL OVERRIDE)
+	 * 3. Default: false
+	 *
 	 * @return bool True if auto-registration is enabled.
 	 */
 	public static function is_auto_register_enabled() {
-		// Check wp-config.php constant.
+		// Allow filter to control (HIGHEST PRIORITY - theme-level control).
+		$filter_value = apply_filters( 'conjurewp_auto_register_demos', null );
+		
+		// If filter returns a non-null value, use it.
+		if ( null !== $filter_value ) {
+			return (bool) $filter_value;
+		}
+
+		// Check wp-config.php constant (server-level override).
 		if ( defined( 'CONJUREWP_AUTO_REGISTER_DEMOS' ) ) {
 			return (bool) CONJUREWP_AUTO_REGISTER_DEMOS;
 		}
 
-		// Check filter.
-		return apply_filters( 'conjurewp_auto_register_demos', false );
+		// Default: disabled.
+		return false;
 	}
 
 	/**

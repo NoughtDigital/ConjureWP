@@ -18,6 +18,9 @@ Theme-level integration for controlling automatic redirect behavior when theme i
 **redirect-control-examples.php**
 Comprehensive examples showing how to customize redirect behavior using filter hooks in your theme.
 
+**theme-config-options.php**
+Complete reference of ALL available theme-level configuration options using filter hooks. Shows proper priority order (theme filters > wp-config constants).
+
 **cli-integration.sh**
 Example bash script showing how to use WP-CLI commands for automated imports in CI/CD pipelines.
 
@@ -72,8 +75,11 @@ All files in this directory are for reference only and are not loaded by the plu
 
 1. **For basic theme integration**: Start with `theme-integration.php`
 2. **For quick testing**: Use `demo-theme-integration.php` with the included `/demo/` files
-3. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
-4. **For custom demo paths**: See `wp-config-demo-example.php` in the root
-5. **For all available hooks**: Reference `conjure-filters-sample.php`
+3. **For all theme-level config options**: See `theme-config-options.php` (RECOMMENDED)
+4. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
+5. **For custom demo paths**: See `wp-config-demo-example.php` in the root (server-level)
+6. **For all available hooks**: Reference `conjure-filters-sample.php`
+
+**Important**: Use theme-level filters (not wp-config.php) for theme development. Filters have priority over wp-config constants.
 
 For complete documentation, see the main [README.md](../README.md) in the plugin root.

@@ -60,6 +60,12 @@ class Conjure_Logger {
 	/**
 	 * Returns the *Singleton* instance of this class.
 	 *
+	 * Priority order for config (theme-first approach):
+	 * 1. Passed $config parameter
+	 * 2. Filter hook 'conjurewp_logger_config' (THEME LEVEL CONTROL)
+	 * 3. wp-config.php constant CONJUREWP_LOGGER_CONFIG (SERVER LEVEL OVERRIDE)
+	 * 4. Default config from conjurewp-config.php
+	 *
 	 * @param array $config Optional configuration array (only used on first instantiation).
 	 *
 	 * @return object EasyDigitalDownloadsFastspring *Singleton* instance.
@@ -68,10 +74,16 @@ class Conjure_Logger {
 	 */
 	public static function get_instance( $config = array() ) {
 		if ( null === static::$instance ) {
-			// Check for global config.
+			// If no config passed, check for filter (theme-level control).
+			if ( empty( $config ) ) {
+				$config = apply_filters( 'conjurewp_logger_config', array() );
+			}
+
+			// If still empty, check wp-config.php constant (server-level override).
 			if ( empty( $config ) && defined( 'CONJUREWP_LOGGER_CONFIG' ) ) {
 				$config = CONJUREWP_LOGGER_CONFIG;
 			}
+
 			static::$instance = new static( null, 'conjure-logger', $config );
 		} elseif ( ! empty( $config ) ) {
 			// Allow updating config after instantiation.

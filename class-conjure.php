@@ -2941,7 +2941,7 @@ class Conjure {
 		$mimes['dat']  = 'application/octet-stream';
 		$mimes['wie']  = 'application/json'; // Widget import/export format.
 
-		return $mimes;
+		return apply_filters( 'conjure_allowed_import_mimes', $mimes );
 	}
 
 	/**

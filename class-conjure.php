@@ -372,15 +372,23 @@ class Conjure {
 
 	/**
 	 * Set redirection transient on theme switch.
+	 *
+	 * @since 1.0.0
 	 */
 	public function switch_theme() {
-		if ( ! is_child_theme() ) {
+		// Allow themes to disable redirect via filter (default: true).
+		$redirect_enabled = apply_filters( 'conjure_redirect_on_theme_switch_enabled', true );
+		
+		// Only set redirect transient if enabled and not a child theme.
+		if ( $redirect_enabled && ! is_child_theme() ) {
 			set_transient( $this->theme->template . '_conjure_redirect', 1 );
 		}
 	}
 
 	/**
 	 * Redirection transient.
+	 *
+	 * @since 1.0.0
 	 */
 	public function redirect() {
 
@@ -390,7 +398,13 @@ class Conjure {
 
 		delete_transient( $this->theme->template . '_conjure_redirect' );
 
-		wp_safe_redirect( menu_page_url( $this->conjure_url ) );
+		// Get default wizard URL.
+		$redirect_url = menu_page_url( $this->conjure_url, false );
+
+		// Allow themes to customize redirect URL via filter.
+		$redirect_url = apply_filters( 'conjure_redirect_on_theme_switch_url', $redirect_url, $this->conjure_url );
+
+		wp_safe_redirect( $redirect_url );
 
 		exit;
 	}

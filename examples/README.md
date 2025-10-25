@@ -12,6 +12,12 @@ Complete theme integration example showing all available features including Redu
 **demo-theme-integration.php**
 Quick demo setup using the plugin's included demo files for testing and development.
 
+**theme-redirect-integration.php**
+Theme-level integration for controlling automatic redirect behavior when theme is activated. Perfect for adding custom welcome pages before demo import.
+
+**redirect-control-examples.php**
+Comprehensive examples showing how to customize redirect behavior using filter hooks in your theme.
+
 **cli-integration.sh**
 Example bash script showing how to use WP-CLI commands for automated imports in CI/CD pipelines.
 
@@ -66,7 +72,8 @@ All files in this directory are for reference only and are not loaded by the plu
 
 1. **For basic theme integration**: Start with `theme-integration.php`
 2. **For quick testing**: Use `demo-theme-integration.php` with the included `/demo/` files
-3. **For custom demo paths**: See `wp-config-demo-example.php` in the root
-4. **For all available hooks**: Reference `conjure-filters-sample.php`
+3. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
+4. **For custom demo paths**: See `wp-config-demo-example.php` in the root
+5. **For all available hooks**: Reference `conjure-filters-sample.php`
 
 For complete documentation, see the main [README.md](../README.md) in the plugin root.

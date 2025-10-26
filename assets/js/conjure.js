@@ -39,14 +39,79 @@ var Conjure = (function ($) {
 
 		setTimeout(function () {
 			body.addClass("loaded");
+
+			// Debug: Check drawer content on page load
+			var drawerContent = $(".js-conjure-drawer-import-content");
+			var drawerItems = $(".conjure__drawer--import-content__list-item");
+			console.log("=== Conjure Debug - Page Loaded ===");
+			console.log("Drawer content HTML:", drawerContent.html());
+			console.log("Drawer items count:", drawerItems.length);
+			if (drawerItems.length === 0) {
+				console.error(
+					"ERROR: No import options loaded! Check PHP get_import_data_info() and get_import_steps_html()"
+				);
+			}
 		}, 100);
 
 		drawer_trigger.on("click", function () {
 			body.toggleClass(drawer_opened);
+
+			// Debug: Check if drawer content exists
+			var drawerContent = $(".js-conjure-drawer-import-content");
+			var drawerItems = $(".conjure__drawer--import-content__list-item");
+			console.log("Conjure Debug - Drawer clicked");
+			console.log(
+				"Drawer content element exists:",
+				drawerContent.length > 0
+			);
+			console.log("Drawer items count:", drawerItems.length);
+			if (drawerItems.length > 0) {
+				console.log("First drawer item:", drawerItems.first().html());
+			} else {
+				console.log(
+					"WARNING: No drawer items found! The import options list is empty."
+				);
+			}
 		});
 
 		// Initialize Server Health dropdown
 		init_server_health_dropdown();
+
+		// Allow clicking anywhere on the content list item (outside of the upload zone) to toggle the checkbox.
+		document.addEventListener("click", function (event) {
+			var listItem = event.target.closest(
+				".conjure__drawer--import-content__list-item"
+			);
+
+			if (!listItem) {
+				return;
+			}
+
+			// Ignore clicks that originate inside the upload zone UI.
+			if (event.target.closest(".conjure__upload-zone")) {
+				return;
+			}
+
+			// Let native behaviour handle label and checkbox clicks.
+			if (
+				event.target.closest("label") ||
+				event.target.tagName === "INPUT"
+			) {
+				return;
+			}
+
+			var checkbox = listItem.querySelector(
+				".js-conjure-upload-checkbox"
+			);
+
+			if (!checkbox) {
+				return;
+			}
+
+			event.preventDefault();
+			checkbox.checked = !checkbox.checked;
+			checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+		});
 
 		// Initialize file upload handlers
 		init_file_uploads();
@@ -693,6 +758,26 @@ var Conjure = (function ($) {
 		}
 	}
 
+	function set_upload_item_expanded(checkbox, forcedState) {
+		if (!checkbox) {
+			return;
+		}
+
+		var item = checkbox.closest(".conjure__drawer--upload__item");
+		if (!item) {
+			return;
+		}
+
+		var shouldExpand =
+			typeof forcedState === "boolean" ? forcedState : checkbox.checked;
+
+		if (shouldExpand) {
+			item.classList.add("conjure__drawer--upload__item--expanded");
+		} else {
+			item.classList.remove("conjure__drawer--upload__item--expanded");
+		}
+	}
+
 	function init_file_uploads() {
 		var uploadZones = document.querySelectorAll(".conjure__upload-zone");
 
@@ -701,13 +786,13 @@ var Conjure = (function ($) {
 		}
 
 		// Handle checkbox change to toggle upload zone visibility
-		var checkboxes = document.querySelectorAll(
-			".js-conjure-upload-checkbox"
-		);
+		var checkboxes = document.querySelectorAll(".js-conjure-upload-checkbox");
 		checkboxes.forEach(function (checkbox) {
+			// Ensure initial state matches checkbox value.
+			set_upload_item_expanded(checkbox);
+
 			checkbox.addEventListener("change", function () {
-				var item = checkbox.closest(".conjure__drawer--upload__item");
-				// CSS handles the animation via transitions
+				set_upload_item_expanded(checkbox);
 			});
 		});
 
@@ -722,9 +807,7 @@ var Conjure = (function ($) {
 				// If checkbox is disabled, manually toggle the upload zone
 				if (checkbox.disabled) {
 					e.preventDefault();
-					item.classList.toggle(
-						"conjure__drawer--upload__item--expanded"
-					);
+					item.classList.toggle("conjure__drawer--upload__item--expanded");
 				}
 			});
 		});
@@ -899,6 +982,12 @@ var Conjure = (function ($) {
 					zone.querySelector(".conjure__file-size").textContent =
 						response.data.size;
 					success.style.display = "flex";
+					var removeButton = zone.querySelector(
+						".conjure__remove-file"
+					);
+					if (removeButton) {
+						removeButton.style.display = "inline-flex";
+					}
 
 					// Enable checkbox
 					var checkbox = document.getElementById(
@@ -906,6 +995,7 @@ var Conjure = (function ($) {
 					);
 					checkbox.disabled = false;
 					checkbox.checked = true;
+					set_upload_item_expanded(checkbox, true);
 				} else {
 					// Show error
 					progress.style.display = "none";
@@ -968,6 +1058,12 @@ var Conjure = (function ($) {
 					zone.querySelector(".conjure__file-size").textContent =
 						response.data.size;
 					success.style.display = "flex";
+					var removeButton = zone.querySelector(
+						".conjure__remove-file"
+					);
+					if (removeButton) {
+						removeButton.style.display = "inline-flex";
+					}
 
 					// Enable checkbox
 					var checkbox = document.getElementById(
@@ -975,6 +1071,7 @@ var Conjure = (function ($) {
 					);
 					checkbox.disabled = false;
 					checkbox.checked = true;
+					set_upload_item_expanded(checkbox, true);
 
 					// Clear file input
 					var fileInput = zone.querySelector(".conjure__file-input");
@@ -1029,13 +1126,36 @@ var Conjure = (function ($) {
 					zone.classList.remove("has-file");
 					success.style.display = "none";
 					prompt.style.display = "flex";
+					var removeButton = zone.querySelector(
+						".conjure__remove-file"
+					);
+					if (removeButton) {
+						removeButton.style.display = "none";
+					}
+					var fileName = zone.querySelector(".conjure__file-name");
+					if (fileName) {
+						fileName.textContent = "";
+					}
+					var fileSize = zone.querySelector(".conjure__file-size");
+					if (fileSize) {
+						fileSize.textContent = "";
+					}
 
 					// Disable and uncheck checkbox
 					var checkbox = document.getElementById(
 						"default_content_" + fileType
 					);
-					checkbox.disabled = true;
-					checkbox.checked = false;
+					if (!checkbox) {
+						return;
+					}
+
+					if (checkbox.dataset.manualUpload === "1") {
+						checkbox.disabled = true;
+						checkbox.checked = false;
+						set_upload_item_expanded(checkbox, false);
+					} else {
+						set_upload_item_expanded(checkbox, checkbox.checked);
+					}
 				} else {
 					show_error_message(
 						fileType,

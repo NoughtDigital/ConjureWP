@@ -10,7 +10,7 @@
 	display: block;
 	margin: 1.5em auto 0;
 	max-width: 350px;
-	overflow: hidden;
+	overflow: visible;
 	padding: 60px 33px 35px;
 	position: relative;
 	text-align: center;
@@ -149,6 +149,7 @@
 
 	&--content {
 		min-height: 580px;
+		overflow: visible;
 		
 		form {
 			position: relative;

@@ -3,10 +3,15 @@
 @use "../variables" as *;
 
 .conjure__drawer--upload {
-	overflow-y: auto;
-	padding-right: 8px;
-	padding-bottom: 40px;
-	
+    overflow-y: auto;
+    padding-right: 8px;
+    padding-bottom: 40px;
+    
+    .conjure__drawer--open & {
+        max-height: min(360px, 55vh);
+        overflow-y: auto;
+    }
+
 	// Custom scrollbar styling
 	&::-webkit-scrollbar {
 		width: 6px;
@@ -49,36 +54,38 @@
 		}
 
 		// Show upload zone when checkbox is checked or item is expanded
-		input[type="checkbox"]:checked ~ .conjure__upload-zone-wrapper .conjure__upload-zone,
+		.conjure__upload-zone-wrapper input[type="checkbox"]:checked ~ .conjure__upload-zone,
 		&.conjure__drawer--upload__item--expanded .conjure__upload-zone {
-			max-height: 200px;
+			max-height: 1000px;
+			max-height: max-content;
+			height: auto;
 			min-height: 60px;
 			opacity: 1;
 			margin-top: 5px;
 			margin-bottom: 8px;
 			padding: 10px 12px;
 			border-width: 1px;
+			overflow: visible;
 		}
 
-		// Visual state for expanded zone (when checkbox is disabled but zone is visible)
-		&.conjure__drawer--upload__item--expanded {
-			.conjure__upload-label {
-				i {
-					background-color: $blue;
-					border-color: $blue;
-					transform: scale(1.2);
+		// Visual state when checkbox is checked (file uploaded)
+		.conjure__upload-zone-wrapper input[type="checkbox"]:checked ~ .conjure__upload-label,
+		&.conjure__drawer--upload__item--expanded .conjure__upload-label {
+			i {
+				background-color: $blue;
+				border-color: $blue;
+				transform: scale(1.2);
 
-					&:after {
-						width: 9px;
-						background: $white;
-						transition: width 50ms ease 100ms;
-					}
+				&:after {
+					width: 9px;
+					background: $white;
+					transition: width 50ms ease 100ms;
+				}
 
-					&:before {
-						width: 5px;
-						background: $white;
-						transition: width 50ms ease 100ms;
-					}
+				&:before {
+					width: 5px;
+					background: $white;
+					transition: width 50ms ease 100ms;
 				}
 			}
 		}
@@ -88,6 +95,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 3px;
+	}
+
+	.conjure__drawer--import-content__list-item:not(.has-inline-upload) & {
+		display: block;
+		gap: 0;
 	}
 
 	.conjure__upload-label {
@@ -531,4 +543,3 @@
 		}
 	}
 }
-

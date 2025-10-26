@@ -123,13 +123,24 @@ class Conjure_Demo_Helpers {
 			'customizer.dat',
 		);
 
+		$found_files = array();
 		foreach ( $demo_files as $file ) {
 			if ( file_exists( $directory . $file ) ) {
-				return true;
+				$found_files[] = $file;
 			}
 		}
 
-		return false;
+		$logger = Conjure_Logger::get_instance();
+		$logger->debug(
+			'Checked directory for demo files: ' . basename( $directory ),
+			array(
+				'path' => $directory,
+				'found' => ! empty( $found_files ),
+				'files_found' => $found_files,
+			)
+		);
+
+		return ! empty( $found_files );
 	}
 
 	/**
@@ -264,6 +275,8 @@ class Conjure_Demo_Helpers {
 	 * @return array Array of import configurations.
 	 */
 	public static function auto_discover_demos( $base_path = '' ) {
+		$logger = Conjure_Logger::get_instance();
+		
 		if ( empty( $base_path ) ) {
 			$base_path = self::get_demo_directory();
 		}
@@ -271,23 +284,67 @@ class Conjure_Demo_Helpers {
 		$base_path = trailingslashit( $base_path );
 		$demos = array();
 
+		$logger->debug( 
+			'Auto-discovering demos',
+			array(
+				'base_path' => $base_path,
+				'base_path_exists' => is_dir( $base_path ),
+			)
+		);
+
 		// Check if base path has demo files directly.
 		if ( self::has_demo_files( $base_path ) ) {
+			$logger->info( 'Found demo files in base path: ' . $base_path );
 			$demos[] = self::create_import_config_from_path( $base_path, 'Demo Content' );
 		}
 
-		// Check for subdirectories with demo files.
+		// Check for subdirectories with demo files (xxx-demo/, abc-demo/, etc).
 		if ( is_dir( $base_path ) ) {
 			$subdirs = glob( $base_path . '*', GLOB_ONLYDIR );
+			
+			$logger->debug( 
+				'Scanning subdirectories',
+				array(
+					'subdirs_found' => is_array( $subdirs ) ? count( $subdirs ) : 0,
+					'subdirs' => is_array( $subdirs ) ? array_map( 'basename', $subdirs ) : array(),
+				)
+			);
+			
 			if ( is_array( $subdirs ) ) {
 				foreach ( $subdirs as $subdir ) {
 					if ( self::has_demo_files( $subdir ) ) {
 						$demo_name = ucwords( str_replace( array( '-', '_' ), ' ', basename( $subdir ) ) );
+						$logger->info( 'Found demo in subdirectory: ' . basename( $subdir ) );
 						$demos[] = self::create_import_config_from_path( $subdir, $demo_name );
 					}
 				}
 			}
 		}
+
+		// FALLBACK: If no demos found, check if current theme has demo files in root.
+		// This allows themes without a dedicated demo folder to still work.
+		if ( empty( $demos ) ) {
+			$logger->debug( 'No demos found in base path, checking theme root...' );
+			
+			$theme_root = get_template_directory();
+			
+			$logger->debug( 
+				'Checking theme root for demo files',
+				array(
+					'theme_root' => $theme_root,
+					'theme_root_exists' => is_dir( $theme_root ),
+				)
+			);
+			
+			// Check theme root for demo files.
+			if ( self::has_demo_files( $theme_root ) ) {
+				$theme_name = wp_get_theme()->get( 'Name' );
+				$logger->info( 'Found demo files in theme root: ' . $theme_name );
+				$demos[] = self::create_import_config_from_path( $theme_root, $theme_name );
+			}
+		}
+
+		$logger->info( 'Auto-discovery complete. Found ' . count( $demos ) . ' demo(s)' );
 
 		return $demos;
 	}
@@ -368,7 +425,7 @@ class Conjure_Demo_Helpers {
 	 * Priority order (theme-first approach):
 	 * 1. Filter hook 'conjurewp_auto_register_demos' (THEME LEVEL CONTROL)
 	 * 2. wp-config.php constant CONJUREWP_AUTO_REGISTER_DEMOS (SERVER LEVEL OVERRIDE)
-	 * 3. Default: false
+	 * 3. Default: true (enabled by default)
 	 *
 	 * @return bool True if auto-registration is enabled.
 	 */
@@ -386,8 +443,8 @@ class Conjure_Demo_Helpers {
 			return (bool) CONJUREWP_AUTO_REGISTER_DEMOS;
 		}
 
-		// Default: disabled.
-		return false;
+		// Default: enabled (auto-discover demos from theme directory).
+		return true;
 	}
 
 	/**

@@ -22,6 +22,8 @@
 		display: inline-block;
 		position: relative;
 		width: 100%;
+		padding-right: 18px;
+		box-sizing: border-box;
 
 		span {
 			transition: color 100ms;
@@ -142,6 +144,27 @@
 	}
 }
 
+.checkbox + label.conjure-plugin-option--installed {
+	cursor: default;
+	pointer-events: none;
+}
+
+.checkbox + label.conjure-plugin-option--installed i {
+	background: transparent;
+	border-color: transparent;
+	transform: none;
+	visibility: hidden;
+}
+
+.checkbox + label.conjure-plugin-option--installed .conjure-plugin-row__title {
+	color: rgba($black, 0.55);
+}
+
+.checkbox + label.conjure-plugin-option--installed i:before,
+.checkbox + label.conjure-plugin-option--installed i:after {
+	width: 0;
+}
+
 @keyframes colorchangeInstalling {
 	0% {
 		background: $green;
@@ -175,5 +198,3 @@
 		transform: scale(1.2);
 	}
 }
-
-

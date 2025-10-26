@@ -330,17 +330,42 @@ class Conjure_Plugin_Installer {
 			return true;
 		}
 
-		// Activate the plugin.
-		$result = activate_plugin( $plugin_file, '', false, true );
+		// Wrap activation in try-catch to prevent fatal errors from breaking the import process.
+		try {
+			// Activate the plugin.
+			// Use output buffering to catch any errors or output during activation.
+			ob_start();
+			$result = activate_plugin( $plugin_file, '', false, true );
+			$activation_output = ob_get_clean();
 
-		if ( is_wp_error( $result ) ) {
-			$this->logger->error( "Failed to activate plugin '{$slug}': " . $result->get_error_message() );
-			return $result;
+			if ( ! empty( $activation_output ) ) {
+				$this->logger->warning( "Plugin '{$slug}' produced output during activation: " . $activation_output );
+			}
+
+			if ( is_wp_error( $result ) ) {
+				$this->logger->error( "Failed to activate plugin '{$slug}': " . $result->get_error_message() );
+				return $result;
+			}
+
+			// Verify the plugin is actually active after activation attempt.
+			if ( ! $this->is_plugin_active( $slug ) ) {
+				$error = new WP_Error( 'activation_verification_failed', "Plugin '{$slug}' activation completed but plugin is not active." );
+				$this->logger->error( $error->get_error_message() );
+				return $error;
+			}
+
+			$this->logger->info( "Successfully activated plugin: {$slug}" );
+
+			return true;
+		} catch ( \Exception $e ) {
+			$error_message = "Exception during plugin activation for '{$slug}': " . $e->getMessage();
+			$this->logger->error( $error_message );
+			return new WP_Error( 'activation_exception', $error_message );
+		} catch ( \Error $e ) {
+			$error_message = "Fatal error during plugin activation for '{$slug}': " . $e->getMessage();
+			$this->logger->error( $error_message );
+			return new WP_Error( 'activation_fatal_error', $error_message );
 		}
-
-		$this->logger->info( "Successfully activated plugin: {$slug}" );
-
-		return true;
 	}
 
 	/**

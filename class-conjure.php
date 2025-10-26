@@ -500,10 +500,14 @@ class Conjure {
 		wp_enqueue_media();
 
 		// Enqueue styles.
-		wp_enqueue_style( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/css/conjure' . $suffix . '.css', array( 'wp-admin' ), CONJURE_VERSION );
+		$css_file = trailingslashit( $this->base_path ) . $this->directory . '/assets/css/conjure' . $suffix . '.css';
+		$version = file_exists( $css_file ) ? filemtime( $css_file ) : CONJURE_VERSION;
+		wp_enqueue_style( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/css/conjure' . $suffix . '.css', array( 'wp-admin' ), $version );
 
 		// Enqueue javascript.
-		wp_enqueue_script( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/js/conjure' . $suffix . '.js', array( 'jquery-core', 'jquery-ui-core' ), CONJURE_VERSION, true );
+		$js_file = trailingslashit( $this->base_path ) . $this->directory . '/assets/js/conjure' . $suffix . '.js';
+		$js_version = file_exists( $js_file ) ? filemtime( $js_file ) : CONJURE_VERSION;
+		wp_enqueue_script( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/js/conjure' . $suffix . '.js', array( 'jquery-core', 'jquery-ui-core' ), $js_version, true );
 
 		$texts = array(
 			'something_went_wrong' => esc_html__( 'Something went wrong. Please refresh the page and try again!', 'conjurewp' ),
@@ -1193,62 +1197,61 @@ class Conjure {
 				<ul class="conjure__drawer conjure__drawer--install-plugins">
 
 			<?php if ( ! empty( $required_plugins ) ) : ?>
-				<li class="plugin-section-header" style="background: #f8d7da; padding: 0.5em 0.75em; margin-bottom: 0.5em; border-left: 4px solid #dc3545; font-weight: 600; font-size: 0.85em;">
-					<?php echo esc_html__( 'Required Plugins', 'conjurewp' ); ?>
-					<span style="font-weight: normal; color: #721c24; font-size: 0.9em; display: block; margin-top: 0.25em;">
-						<?php echo esc_html__( 'These plugins are essential for the demo to work correctly', 'conjurewp' ); ?>
+		<li class="plugin-section-header plugin-section-header--required">
+			<?php echo esc_html__( 'Required Plugins', 'conjurewp' ); ?>
+			<span class="plugin-section-header__subtitle">
+				<?php echo esc_html__( 'These plugins are essential for the demo to work correctly', 'conjurewp' ); ?>
+			</span>
+		</li>
+		<?php foreach ( $required_plugins as $slug => $plugin ) :
+			$is_active = ! empty( $plugin['is_active'] );
+		?>
+			<li data-slug="<?php echo esc_attr( $slug ); ?>" class="conjure-plugin-row conjure-plugin-row--required<?php echo $is_active ? ' plugin-active' : ''; ?>">
+				<!-- Hidden input ensures it's always submitted (no checkbox for required) -->
+				<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
+
+				<span class="conjure-plugin-row__indicator" aria-hidden="true">
+					<?php echo $is_active ? '✓' : '▸'; ?>
+				</span>
+
+				<span class="conjure-plugin-row__title"><?php echo esc_html( $plugin['name'] ); ?></span>
+
+				<?php if ( $is_active ) : ?>
+					<span class="badge badge--success">
+						<?php esc_html_e( 'Installed', 'conjurewp' ); ?>
 					</span>
-				</li>
-				<?php foreach ( $required_plugins as $slug => $plugin ) : 
-					$is_active = ! empty( $plugin['is_active'] );
-				?>
-					<li data-slug="<?php echo esc_attr( $slug ); ?>" class="required-plugin<?php echo $is_active ? ' plugin-active' : ''; ?>" style="display: flex; align-items: center; padding: 0.75em 1em; border-bottom: 1px solid #eee;">
-						<!-- Hidden input ensures it's always submitted (no checkbox for required) -->
-						<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
-
-						<span style="font-size: 1.2em; margin-right: 0.5em;">
-							<?php if ( $is_active ) : ?>
-								✓
-							<?php else : ?>
-								▸
-							<?php endif; ?>
-						</span>
-
-						<span style="flex: 1; font-size: 0.9em;"><?php echo esc_html( $plugin['name'] ); ?></span>
-
-						<?php if ( $is_active ) : ?>
-							<span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.7em; font-weight: 600;">
-								✓ <?php esc_html_e( 'Installed', 'conjurewp' ); ?>
-							</span>
-						<?php endif; ?>
-					</li>
-				<?php endforeach; ?>
 				<?php endif; ?>
+			</li>
+		<?php endforeach; ?>
+		<?php endif; ?>
 
-			<?php if ( ! empty( $recommended_plugins ) ) : ?>
-				<li class="plugin-section-header" style="background: #d1ecf1; padding: 0.5em 0.75em; margin: 1em 0 0.5em; border-left: 4px solid #17a2b8; font-weight: 600; font-size: 0.85em;">
-					<?php echo esc_html__( 'Recommended Plugins', 'conjurewp' ); ?>
-					<span style="font-weight: normal; color: #0c5460; font-size: 0.9em; display: block; margin-top: 0.25em;">
-						<?php echo esc_html__( 'Optional plugins that enhance the demo (can be unchecked)', 'conjurewp' ); ?>
+	<?php if ( ! empty( $recommended_plugins ) ) : ?>
+		<li class="plugin-section-header plugin-section-header--recommended">
+			<?php echo esc_html__( 'Recommended Plugins', 'conjurewp' ); ?>
+			<span class="plugin-section-header__subtitle">
+				<?php echo esc_html__( 'Optional plugins that enhance the demo (can be unchecked)', 'conjurewp' ); ?>
+			</span>
+		</li>
+	<?php foreach ( $recommended_plugins as $slug => $plugin ) :
+		$is_active = ! empty( $plugin['is_active'] );
+	?>
+		<li data-slug="<?php echo esc_attr( $slug ); ?>" class="conjure-plugin-row<?php echo $is_active ? ' plugin-active conjure-plugin-row--installed' : ''; ?>">
+			<?php if ( $is_active ) : ?>
+				<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
+			<?php endif; ?>
+			<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" <?php echo $is_active ? 'checked disabled="disabled"' : 'checked'; ?>>
+
+			<label for="default_plugins_<?php echo esc_attr( $slug ); ?>" class="conjure-plugin-option<?php echo $is_active ? ' conjure-plugin-option--installed' : ''; ?>" <?php echo $is_active ? 'aria-disabled="true"' : ''; ?>>
+				<i></i>
+				<span class="conjure-plugin-row__title"><?php echo esc_html( $plugin['name'] ); ?></span>
+				
+				<?php if ( $is_active ) : ?>
+					<span class="badge badge--success">
+						<?php esc_html_e( 'Installed', 'conjurewp' ); ?>
 					</span>
-				</li>
-			<?php foreach ( $recommended_plugins as $slug => $plugin ) : 
-				$is_active = ! empty( $plugin['is_active'] );
-			?>
-				<li data-slug="<?php echo esc_attr( $slug ); ?>" class="<?php echo $is_active ? 'plugin-active' : ''; ?>">
-					<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" <?php echo $is_active ? '' : 'checked'; ?>>
-
-					<label for="default_plugins_<?php echo esc_attr( $slug ); ?>" style="font-size: 0.9em;">
-						<i></i>
-						<span><?php echo esc_html( $plugin['name'] ); ?></span>
-						
-						<?php if ( $is_active ) : ?>
-							<span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.7em; font-weight: 600; margin-left: 0.5em;">
-								✓ <?php esc_html_e( 'Installed', 'conjurewp' ); ?>
-							</span>
-						<?php endif; ?>
-					</label>
-				</li>
+				<?php endif; ?>
+			</label>
+		</li>
 			<?php endforeach; ?>
 				<?php endif; ?>
 
@@ -1279,7 +1282,61 @@ class Conjure {
 	 * Page setup
 	 */
 	protected function content() {
-		$import_info = $this->get_import_data_info();
+		// Check if any demo files are registered.
+		if ( empty( $this->import_files ) ) {
+			$this->logger->error( 
+				'No demo import files are registered! The conjure_import_files filter returned empty.',
+				array( 
+					'is_manual_upload_mode' => $this->is_manual_upload_mode(),
+				)
+			);
+		}
+
+		// Get the selected demo index from transient or default to 0.
+		$selected_demo_index = get_transient( 'conjure_selected_demo_index' );
+		
+		// If no demo is selected or invalid, use the first demo.
+		if ( false === $selected_demo_index || ! isset( $this->import_files[ $selected_demo_index ] ) ) {
+			$selected_demo_index = 0;
+			// Store it for consistency.
+			if ( ! empty( $this->import_files ) ) {
+				set_transient( 'conjure_selected_demo_index', $selected_demo_index, HOUR_IN_SECONDS );
+			}
+		}
+
+		$this->logger->debug( 
+			'Content step loading',
+			array(
+				'selected_demo_index' => $selected_demo_index,
+				'total_import_files' => count( $this->import_files ),
+				'import_files_keys' => ! empty( $this->import_files ) ? array_keys( $this->import_files[0] ) : array(),
+			)
+		);
+
+		$import_info = $this->get_import_data_info( $selected_demo_index );
+
+		// If import info is false or empty, log error and provide fallback.
+		if ( false === $import_info || empty( $import_info ) ) {
+			$this->logger->error( 
+				'Failed to load import data info for content step',
+				array( 
+					'selected_index' => $selected_demo_index,
+					'import_files_count' => count( $this->import_files ),
+					'import_files_empty' => empty( $this->import_files ),
+					'is_manual_upload_mode' => $this->is_manual_upload_mode(),
+				)
+			);
+			
+			// Check if we're in manual upload mode.
+			if ( ! $this->is_manual_upload_mode() ) {
+				// Provide a minimal fallback to prevent blank screen.
+				$import_info = array(
+					'content' => true,
+				);
+			} else {
+				$import_info = array();
+			}
+		}
 
 		// Strings passed in from the config file.
 		$strings = $this->strings;
@@ -1324,23 +1381,24 @@ class Conjure {
 			);
 			?>
 
-			<?php if ( 1 < count( $this->import_files ) ) : ?>
+		<?php if ( 1 < count( $this->import_files ) ) : ?>
 
-				<div class="conjure__select-control-wrapper">
+			<div class="conjure__select-control-wrapper">
 
-					<select class="conjure__select-control js-conjure-demo-import-select">
-						<?php foreach ( $this->import_files as $index => $import_file ) : ?>
-							<option value="<?php echo esc_attr( $index ); ?>"><?php echo esc_html( $import_file['import_file_name'] ); ?></option>
-						<?php endforeach; ?>
-					</select>
+				<select class="conjure__select-control js-conjure-demo-import-select">
+					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
+						<option value="<?php echo esc_attr( $index ); ?>" <?php selected( $index, $selected_demo_index ); ?>><?php echo esc_html( $import_file['import_file_name'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
 
-					<div class="conjure__select-control-help">
-						<span class="hint--top" aria-label="<?php echo esc_attr__( 'Select Demo', 'conjurewp' ); ?>">
-							<?php echo wp_kses( $this->svg( array( 'icon' => 'downarrow' ) ), $this->svg_allowed_html() ); ?>
-						</span>
-					</div>
+				<div class="conjure__select-control-help">
+					<span class="hint--top" aria-label="<?php echo esc_attr__( 'Select Demo', 'conjurewp' ); ?>">
+						<?php echo wp_kses( $this->svg( array( 'icon' => 'downarrow' ) ), $this->svg_allowed_html() ); ?>
+					</span>
 				</div>
-			<?php endif; ?>
+				<span class="js-conjure-select-spinner" style="display:none;">Loading...</span>
+			</div>
+		<?php endif; ?>
 
 			<a id="conjure__drawer-trigger" class="conjure__button conjure__button--knockout"><span><?php echo esc_html( $action ); ?></span><span class="chevron"></span></a>
 
@@ -1356,9 +1414,54 @@ class Conjure {
 
 			<?php else : ?>
 
-				<ul class="conjure__drawer conjure__drawer--import-content js-conjure-drawer-import-content">
-					<?php echo $this->get_import_steps_html( $import_info ); ?>
-				</ul>
+			<ul class="conjure__drawer conjure__drawer--import-content conjure__drawer--upload js-conjure-drawer-import-content">
+				<?php 
+				// Check if no demos are registered.
+				if ( empty( $this->import_files ) && ! $this->is_manual_upload_mode() ) {
+					?>
+					<li class="conjure__drawer--import-content__list-item" style="color: #d63638; padding: 20px;">
+						<strong>⚠️ No Demo Files Registered</strong><br><br>
+						No demo import files have been registered. To use ConjureWP, you need to:<br><br>
+						<ol style="margin-left: 20px;">
+							<li>Add demo files to your theme (content.xml, widgets.json, etc.)</li>
+							<li>Register them using the <code>conjure_import_files</code> filter</li>
+						</ol>
+						<br>
+						See: <code>conjurewp-config.php</code> or <code>examples/</code> directory for examples.
+					</li>
+					<?php
+				} else {
+					$import_steps_html = $this->get_import_steps_html( $import_info );
+					
+					// Debug: Log if HTML is empty.
+					if ( empty( trim( $import_steps_html ) ) ) {
+						$this->logger->error( 
+							'Import steps HTML is empty!',
+							array(
+								'import_info' => $import_info,
+								'selected_demo_index' => $selected_demo_index,
+								'import_files_count' => count( $this->import_files ),
+								'import_files_data' => ! empty( $this->import_files[$selected_demo_index] ) ? array_keys( $this->import_files[$selected_demo_index] ) : 'index not set',
+							)
+						);
+						?>
+						<li class="conjure__drawer--import-content__list-item" style="color: #d63638; padding: 20px;">
+							<strong>⚠️ No Import Options Found</strong><br><br>
+							The selected demo has no import data configured.<br><br>
+							<strong>Check:</strong>
+							<ul style="margin-left: 20px;">
+								<li>Demo files exist (content.xml, widgets.json, etc.)</li>
+								<li>File paths are correct in your config</li>
+								<li>Check logs at: <code>wp-content/uploads/conjure-logs/</code></li>
+							</ul>
+						</li>
+						<?php
+					} else {
+						echo $import_steps_html;
+					}
+				}
+				?>
+			</ul>
 
 			<?php endif; ?>
 
@@ -1529,8 +1632,9 @@ class Conjure {
 
 	// Get the parent theme (in case we're already on a child theme).
 	$parent_theme = wp_get_theme( $this->theme->template );
-	$name = $parent_theme->name . ' Child';
-	$slug = sanitize_title( $name );
+	$parent_slug  = $parent_theme->get_stylesheet();
+	$name         = $parent_theme->name . ' Child';
+	$slug         = sanitize_title( $name );
 
 	$path = get_theme_root() . '/' . $slug;
 
@@ -1576,7 +1680,7 @@ class Conjure {
 			);
 		}
 
-		$style_result = $wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $this->theme->template, $this->theme->name, $this->theme->author, $this->theme->version ) );
+		$style_result = $wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $parent_slug, $parent_theme->name, $parent_theme->author, $parent_theme->version ) );
 		if ( ! $style_result ) {
 			$error_message = __( 'Unable to create child theme style.css file.', 'conjurewp' );
 			$this->logger->error( $error_message );
@@ -1588,7 +1692,7 @@ class Conjure {
 			);
 		}
 
-		$functions_result = $wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $this->theme->template ) );
+		$functions_result = $wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $parent_slug ) );
 		if ( ! $functions_result ) {
 			$error_message = __( 'Unable to create child theme functions.php file.', 'conjurewp' );
 			$this->logger->error( $error_message );
@@ -1820,7 +1924,9 @@ class Conjure {
 	 */
 	public function generate_child_functions_php( $slug ) {
 
-		$slug_no_hyphens = strtolower( preg_replace( '#[^a-zA-Z]#', '', $slug ) );
+		// Strip any existing '-child' suffix to prevent child_child_child issues.
+		$clean_slug = preg_replace( '/-child$/', '', $slug );
+		$slug_no_hyphens = strtolower( preg_replace( '#[^a-zA-Z]#', '', $clean_slug ) );
 
 		$output = "
 			<?php
@@ -1842,10 +1948,10 @@ class Conjure {
 			 * @link https://developer.wordpress.org/themes/advanced-topics/child-themes/
 			 */
 			function {$slug_no_hyphens}_child_enqueue_styles() {
-			    wp_enqueue_style( '{$slug}-style' , get_template_directory_uri() . '/style.css' );
-			    wp_enqueue_style( '{$slug}-child-style',
+			    wp_enqueue_style( '{$clean_slug}-style' , get_template_directory_uri() . '/style.css' );
+			    wp_enqueue_style( '{$clean_slug}-child-style',
 			        get_stylesheet_directory_uri() . '/style.css',
-			        array( '{$slug}-style' ),
+			        array( '{$clean_slug}-style' ),
 			        wp_get_theme()->get('Version')
 			    );
 			}
@@ -2007,87 +2113,220 @@ class Conjure {
 	 * @internal    Used as a callback.
 	 */
 	public function _ajax_content() {
-		static $content = null;
+		// Wrap the entire AJAX handler in try-catch to prevent unhandled errors.
+		try {
+			static $content = null;
 
-		$selected_import = intval( $_POST['selected_index'] );
+			// Validate POST data exists.
+			if ( ! isset( $_POST['selected_index'] ) ) {
+				$this->logger->error( __( 'Content import AJAX missing selected_index', 'conjurewp' ) );
+				wp_send_json_error(
+					array(
+						'error'   => 1,
+						'message' => esc_html__( 'Missing import index!', 'conjurewp' ),
+					)
+				);
+			}
 
-		if ( null === $content ) {
-			$content = $this->get_import_data( $selected_import );
-		}
+			$selected_import = intval( $_POST['selected_index'] );
 
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['content'] ) || ! isset( $content[ $_POST['content'] ] ) ) {
-			$this->logger->error( __( 'The content importer AJAX call failed to start, because of incorrect data', 'conjurewp' ) );
+			if ( null === $content ) {
+				$content = $this->get_import_data( $selected_import );
+				
+				// Check if we got valid import data.
+				if ( empty( $content ) || ! is_array( $content ) ) {
+					$this->logger->error( 
+						__( 'Failed to get import data for selected index', 'conjurewp' ),
+						array( 'selected_import' => $selected_import )
+					);
+					wp_send_json_error(
+						array(
+							'error'   => 1,
+							'message' => esc_html__( 'Failed to load import configuration!', 'conjurewp' ),
+						)
+					);
+				}
+			}
+
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['content'] ) || ! isset( $content[ $_POST['content'] ] ) ) {
+				$this->logger->error( 
+					__( 'The content importer AJAX call failed to start, because of incorrect data', 'conjurewp' ),
+					array(
+						'content_key' => isset( $_POST['content'] ) ? $_POST['content'] : 'not set',
+						'available_keys' => array_keys( $content ),
+					)
+				);
+
+				wp_send_json_error(
+					array(
+						'error'   => 1,
+						'message' => esc_html__( 'Invalid content!', 'conjurewp' ),
+					)
+				);
+			}
+
+			$json         = false;
+			$this_content = $content[ $_POST['content'] ];
+
+			if ( isset( $_POST['proceed'] ) ) {
+				if ( is_callable( $this_content['install_callback'] ) ) {
+					$this->logger->info(
+						__( 'The content import AJAX call will be executed with this import data', 'conjurewp' ),
+						array(
+							'title' => $this_content['title'],
+							'data'  => $this_content['data'],
+						)
+					);
+
+					// Wrap the callback execution in try-catch.
+					try {
+						// Use output buffering to catch any unexpected output.
+						ob_start();
+						$logs = call_user_func( $this_content['install_callback'], $this_content['data'] );
+						$callback_output = ob_get_clean();
+						
+						if ( ! empty( $callback_output ) ) {
+							$this->logger->warning( 
+								__( 'Import callback produced output', 'conjurewp' ),
+								array( 'output' => $callback_output )
+							);
+						}
+
+						if ( $logs ) {
+							$json = array(
+								'done'    => 1,
+								'message' => $this_content['success'],
+								'debug'   => '',
+								'logs'    => $logs,
+								'errors'  => '',
+							);
+
+							// The content import ended, so we should mark that all posts were imported.
+							if ( 'content' === $_POST['content'] ) {
+								$json['num_of_imported_posts'] = 'all';
+							}
+						} else {
+							$this->logger->warning( 
+								__( 'Import callback returned empty/false result', 'conjurewp' ),
+								array( 'content_type' => $_POST['content'] )
+							);
+						}
+					} catch ( \Exception $e ) {
+						$error_message = sprintf(
+							__( 'Exception during content import: %s', 'conjurewp' ),
+							$e->getMessage()
+						);
+						$this->logger->error( $error_message, array( 'trace' => $e->getTraceAsString() ) );
+						
+						wp_send_json_error(
+							array(
+								'error'   => 1,
+								'message' => $error_message,
+								'logs'    => '',
+								'errors'  => $e->getMessage(),
+							)
+						);
+					} catch ( \Error $e ) {
+						$error_message = sprintf(
+							__( 'Fatal error during content import: %s', 'conjurewp' ),
+							$e->getMessage()
+						);
+						$this->logger->error( $error_message, array( 'trace' => $e->getTraceAsString() ) );
+						
+						wp_send_json_error(
+							array(
+								'error'   => 1,
+								'message' => $error_message,
+								'logs'    => '',
+								'errors'  => $e->getMessage(),
+							)
+						);
+					}
+				} else {
+					$this->logger->error(
+						__( 'Import callback is not callable', 'conjurewp' ),
+						array(
+							'callback' => $this_content['install_callback'],
+							'content_type' => $_POST['content'],
+						)
+					);
+				}
+			} else {
+				$json = array(
+					'url'            => admin_url( 'admin-ajax.php' ),
+					'action'         => 'conjure_content',
+					'proceed'        => 'true',
+					'content'        => $_POST['content'],
+					'_wpnonce'       => wp_create_nonce( 'conjure_nonce' ),
+					'selected_index' => $selected_import,
+					'message'        => $this_content['installing'],
+					'logs'           => '',
+					'errors'         => '',
+				);
+			}
+
+			if ( $json ) {
+				$json['hash'] = md5( serialize( $json ) );
+				wp_send_json( $json );
+			} else {
+				$this->logger->error(
+					__( 'The content import AJAX call failed with this passed data', 'conjurewp' ),
+					array(
+						'selected_content_index' => $selected_import,
+						'importing_content'      => $_POST['content'],
+						'importing_data'         => $this_content['data'],
+					)
+				);
+
+				wp_send_json(
+					array(
+						'error'   => 1,
+						'message' => esc_html__( 'Error', 'conjurewp' ),
+						'logs'    => '',
+						'errors'  => '',
+					)
+				);
+			}
+		} catch ( \Exception $e ) {
+			$this->logger->error(
+				__( 'Uncaught exception in content import AJAX handler', 'conjurewp' ),
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
 
 			wp_send_json_error(
 				array(
 					'error'   => 1,
-					'message' => esc_html__( 'Invalid content!', 'conjurewp' ),
+					'message' => sprintf(
+						/* translators: %s: error message */
+						esc_html__( 'Import error: %s', 'conjurewp' ),
+						$e->getMessage()
+					),
+					'logs'    => '',
+					'errors'  => $e->getMessage(),
 				)
 			);
-		}
-
-		$json         = false;
-		$this_content = $content[ $_POST['content'] ];
-
-		if ( isset( $_POST['proceed'] ) ) {
-			if ( is_callable( $this_content['install_callback'] ) ) {
-				$this->logger->info(
-					__( 'The content import AJAX call will be executed with this import data', 'conjurewp' ),
-					array(
-						'title' => $this_content['title'],
-						'data'  => $this_content['data'],
-					)
-				);
-
-				$logs = call_user_func( $this_content['install_callback'], $this_content['data'] );
-				if ( $logs ) {
-					$json = array(
-						'done'    => 1,
-						'message' => $this_content['success'],
-						'debug'   => '',
-						'logs'    => $logs,
-						'errors'  => '',
-					);
-
-					// The content import ended, so we should mark that all posts were imported.
-					if ( 'content' === $_POST['content'] ) {
-						$json['num_of_imported_posts'] = 'all';
-					}
-				}
-			}
-		} else {
-			$json = array(
-				'url'            => admin_url( 'admin-ajax.php' ),
-				'action'         => 'conjure_content',
-				'proceed'        => 'true',
-				'content'        => $_POST['content'],
-				'_wpnonce'       => wp_create_nonce( 'conjure_nonce' ),
-				'selected_index' => $selected_import,
-				'message'        => $this_content['installing'],
-				'logs'           => '',
-				'errors'         => '',
-			);
-		}
-
-		if ( $json ) {
-			$json['hash'] = md5( serialize( $json ) );
-			wp_send_json( $json );
-		} else {
+		} catch ( \Error $e ) {
 			$this->logger->error(
-				__( 'The content import AJAX call failed with this passed data', 'conjurewp' ),
+				__( 'Fatal error in content import AJAX handler', 'conjurewp' ),
 				array(
-					'selected_content_index' => $selected_import,
-					'importing_content'      => $_POST['content'],
-					'importing_data'         => $this_content['data'],
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
 				)
 			);
 
-			wp_send_json(
+			wp_send_json_error(
 				array(
 					'error'   => 1,
-					'message' => esc_html__( 'Error', 'conjurewp' ),
+					'message' => sprintf(
+						/* translators: %s: error message */
+						esc_html__( 'Fatal import error: %s', 'conjurewp' ),
+						$e->getMessage()
+					),
 					'logs'    => '',
-					'errors'  => '',
+					'errors'  => $e->getMessage(),
 				)
 			);
 		}
@@ -2098,21 +2337,78 @@ class Conjure {
 	 * AJAX call to retrieve total items (posts, pages, CPT, attachments) for the content import.
 	 */
 	public function _ajax_get_total_content_import_items() {
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['selected_index'] ) ) {
-			$this->logger->error( __( 'The content importer AJAX call for retrieving total content import items failed to start, because of incorrect data.', 'conjurewp' ) );
+		// Wrap in try-catch to prevent errors from breaking the AJAX response.
+		try {
+			// Catch any output from plugins that might interfere with JSON response.
+			ob_start();
 
-			wp_send_json_error(
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['selected_index'] ) ) {
+				ob_end_clean();
+				$this->logger->error( __( 'The content importer AJAX call for retrieving total content import items failed to start, because of incorrect data.', 'conjurewp' ) );
+
+				wp_send_json_error(
+					array(
+						'error'   => 1,
+						'message' => esc_html__( 'Invalid data!', 'conjurewp' ),
+					)
+				);
+			}
+
+			$selected_import = intval( $_POST['selected_index'] );
+			$import_files    = $this->get_import_files_paths( $selected_import );
+
+			// Check if we have valid content file.
+			if ( empty( $import_files['content'] ) || ! file_exists( $import_files['content'] ) ) {
+				ob_end_clean();
+				$this->logger->warning( 'Content file not found for counting import items' );
+				wp_send_json_success( 0 );
+			}
+
+			$total_items = $this->importer->get_number_of_posts_to_import( $import_files['content'] );
+
+			// Clean any buffered output before sending JSON.
+			$buffered_output = ob_get_clean();
+			if ( ! empty( $buffered_output ) ) {
+				$this->logger->warning( 
+					'Unexpected output during content item counting',
+					array( 'output' => $buffered_output )
+				);
+			}
+
+			wp_send_json_success( $total_items );
+
+		} catch ( \Exception $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Exception in _ajax_get_total_content_import_items',
 				array(
-					'error'   => 1,
-					'message' => esc_html__( 'Invalid data!', 'conjurewp' ),
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
 				)
 			);
+
+			// Return 0 instead of error to allow import to proceed without progress bar.
+			wp_send_json_success( 0 );
+
+		} catch ( \Error $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Fatal error in _ajax_get_total_content_import_items',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			// Return 0 instead of error to allow import to proceed without progress bar.
+			wp_send_json_success( 0 );
 		}
-
-		$selected_import = intval( $_POST['selected_index'] );
-		$import_files    = $this->get_import_files_paths( $selected_import );
-
-		wp_send_json_success( $this->importer->get_number_of_posts_to_import( $import_files['content'] ) );
 	}
 
 
@@ -2624,39 +2920,107 @@ class Conjure {
 	 * AJAX callback for the 'conjure_update_selected_import_data_info' action.
 	 */
 	public function update_selected_import_data_info() {
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		// Wrap in try-catch to prevent errors from breaking the AJAX response.
+		try {
+			// Catch any output from plugins that might interfere with JSON response.
+			ob_start();
+
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+				ob_end_clean();
+				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+			}
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				ob_end_clean();
+				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+			}
+
+			$selected_index = ! isset( $_POST['selected_index'] ) ? false : intval( $_POST['selected_index'] );
+
+			if ( false === $selected_index ) {
+				ob_end_clean();
+				wp_send_json_error( array( 'message' => esc_html__( 'Invalid demo selection.', 'conjurewp' ) ) );
+			}
+
+			// Store the selected demo index for demo-specific plugin installation.
+			set_transient( 'conjure_selected_demo_index', $selected_index, HOUR_IN_SECONDS );
+
+			$this->logger->info( 'Demo selected: ' . $selected_index );
+
+			$import_info = $this->get_import_data_info( $selected_index );
+			
+			// Check if we got valid import info.
+			if ( false === $import_info ) {
+				ob_end_clean();
+				$this->logger->error( 'Failed to get import data info for demo: ' . $selected_index );
+				wp_send_json_error( array( 'message' => esc_html__( 'Failed to load demo configuration.', 'conjurewp' ) ) );
+			}
+
+			$import_info_html = $this->get_import_steps_html( $import_info );
+
+			// Get demo-specific plugins if available.
+			$demo_plugins = array();
+			if ( $this->demo_plugin_manager ) {
+				$demo_plugins = $this->demo_plugin_manager->get_demo_plugins_with_status( $selected_index, $this->import_files );
+			}
+
+			// Clean any buffered output before sending JSON.
+			$buffered_output = ob_get_clean();
+			if ( ! empty( $buffered_output ) ) {
+				$this->logger->warning( 
+					'Unexpected output during demo selection update',
+					array( 'output' => $buffered_output )
+				);
+			}
+
+			wp_send_json_success( array(
+				'import_info_html' => $import_info_html,
+				'demo_plugins'     => $demo_plugins,
+				'has_plugins'      => ! empty( $demo_plugins['all'] ),
+			) );
+
+		} catch ( \Exception $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Exception in update_selected_import_data_info',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error( array(
+				'message' => sprintf(
+					/* translators: %s: error message */
+					esc_html__( 'Error loading demo: %s', 'conjurewp' ),
+					$e->getMessage()
+				),
+			) );
+
+		} catch ( \Error $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Fatal error in update_selected_import_data_info',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error( array(
+				'message' => sprintf(
+					/* translators: %s: error message */
+					esc_html__( 'Fatal error loading demo: %s', 'conjurewp' ),
+					$e->getMessage()
+				),
+			) );
 		}
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
-		}
-
-		$selected_index = ! isset( $_POST['selected_index'] ) ? false : intval( $_POST['selected_index'] );
-
-		if ( false === $selected_index ) {
-			wp_send_json_error();
-		}
-
-		// Store the selected demo index for demo-specific plugin installation.
-		set_transient( 'conjure_selected_demo_index', $selected_index, HOUR_IN_SECONDS );
-
-		$this->logger->info( 'Demo selected: ' . $selected_index );
-
-		$import_info      = $this->get_import_data_info( $selected_index );
-		$import_info_html = $this->get_import_steps_html( $import_info );
-
-		// Get demo-specific plugins if available.
-		$demo_plugins = array();
-		if ( $this->demo_plugin_manager ) {
-			$demo_plugins = $this->demo_plugin_manager->get_demo_plugins_with_status( $selected_index, $this->import_files );
-		}
-
-		wp_send_json_success( array(
-			'import_info_html' => $import_info_html,
-			'demo_plugins'     => $demo_plugins,
-			'has_plugins'      => ! empty( $demo_plugins['all'] ),
-		) );
 	}
 
 	/**
@@ -2667,6 +3031,15 @@ class Conjure {
 	 * @return string
 	 */
 	public function get_import_steps_html( $import_info ) {
+		// Validate input.
+		if ( ! is_array( $import_info ) || empty( $import_info ) ) {
+			$this->logger->warning( 'get_import_steps_html called with invalid import_info' );
+			return '<li class="conjure__drawer--import-content__list-item">No import options available.</li>';
+		}
+
+		$uploaded_files  = get_transient( 'conjure_uploaded_files' );
+		$upload_options  = $this->get_upload_options( is_array( $uploaded_files ) ? $uploaded_files : array() );
+
 		ob_start();
 		?>
 			<?php foreach ( $import_info as $slug => $available ) : ?>
@@ -2674,13 +3047,33 @@ class Conjure {
 				if ( ! $available ) {
 					continue;
 				}
+
+				$has_upload_section = isset( $upload_options[ $slug ] );
+				$has_file           = $has_upload_section && ! empty( $uploaded_files[ $slug ] );
+				$file_info          = $has_file ? $uploaded_files[ $slug ] : null;
+				$list_item_classes  = array(
+					'conjure__drawer--import-content__list-item',
+					'status',
+					'status--Pending',
+				);
+
+				if ( $has_upload_section ) {
+					$list_item_classes[] = 'conjure__drawer--upload__item';
+					$list_item_classes[] = 'has-inline-upload';
+				}
 				?>
 
-				<li class="conjure__drawer--import-content__list-item status status--Pending" data-content="<?php echo esc_attr( $slug ); ?>">
-					<input type="checkbox" name="default_content[<?php echo esc_attr( $slug ); ?>]" class="checkbox checkbox-<?php echo esc_attr( $slug ); ?>" id="default_content_<?php echo esc_attr( $slug ); ?>" value="1" checked>
-					<label for="default_content_<?php echo esc_attr( $slug ); ?>">
-						<i></i><span><?php echo esc_html( ucfirst( str_replace( '_', ' ', $slug ) ) ); ?></span>
-					</label>
+				<li class="<?php echo esc_attr( implode( ' ', $list_item_classes ) ); ?>" data-content="<?php echo esc_attr( $slug ); ?>" data-upload-type="<?php echo esc_attr( $slug ); ?>">
+					<div class="conjure__upload-zone-wrapper">
+						<input type="checkbox" name="default_content[<?php echo esc_attr( $slug ); ?>]" class="checkbox checkbox-<?php echo esc_attr( $slug ); ?> js-conjure-upload-checkbox" id="default_content_<?php echo esc_attr( $slug ); ?>" value="1">
+						<label for="default_content_<?php echo esc_attr( $slug ); ?>">
+							<i></i><span><?php echo esc_html( ucfirst( str_replace( '_', ' ', $slug ) ) ); ?></span>
+						</label>
+
+						<?php if ( $has_upload_section ) : ?>
+							<?php echo $this->render_upload_zone_markup( $slug, $upload_options[ $slug ], $has_file, $file_info ); ?>
+						<?php endif; ?>
+					</div>
 				</li>
 
 			<?php endforeach; ?>
@@ -2694,21 +3087,80 @@ class Conjure {
 	 * AJAX call for cleanup after the importing steps are done -> import finished.
 	 */
 	public function import_finished() {
-		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+		// Wrap in try-catch to prevent errors from breaking the AJAX response.
+		try {
+			// Catch any output from plugins that might interfere with JSON response.
+			ob_start();
+
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+				ob_end_clean();
+				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+			}
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				ob_end_clean();
+				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+			}
+
+			delete_transient( 'conjure_import_file_base_name' );
+			$this->cleanup_uploaded_files();
+
+			// Mark content import step as completed.
+			$this->mark_step_completed( 'content' );
+
+			// Clean any buffered output before sending JSON.
+			$buffered_output = ob_get_clean();
+			if ( ! empty( $buffered_output ) ) {
+				$this->logger->warning( 
+					'Unexpected output during import finish cleanup',
+					array( 'output' => $buffered_output )
+				);
+			}
+
+			wp_send_json_success();
+
+		} catch ( \Exception $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Exception in import_finished',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error( array(
+				'message' => sprintf(
+					/* translators: %s: error message */
+					esc_html__( 'Error finishing import: %s', 'conjurewp' ),
+					$e->getMessage()
+				),
+			) );
+
+		} catch ( \Error $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Fatal error in import_finished',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error( array(
+				'message' => sprintf(
+					/* translators: %s: error message */
+					esc_html__( 'Fatal error finishing import: %s', 'conjurewp' ),
+					$e->getMessage()
+				),
+			) );
 		}
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
-		}
-
-		delete_transient( 'conjure_import_file_base_name' );
-		$this->cleanup_uploaded_files();
-
-		// Mark content import step as completed.
-		$this->mark_step_completed( 'content' );
-
-		wp_send_json_success();
 	}
 
 	/**
@@ -3012,6 +3464,64 @@ class Conjure {
 	private function get_manual_upload_html() {
 		$uploaded_files = get_transient( 'conjure_uploaded_files' );
 
+		$upload_options = $this->get_upload_options( is_array( $uploaded_files ) ? $uploaded_files : array() );
+
+		ob_start();
+		?>
+
+		<?php foreach ( $upload_options as $type => $option ) : ?>
+			<?php
+			$has_file = ! empty( $uploaded_files[ $type ] );
+			$file_info = $has_file ? $uploaded_files[ $type ] : null;
+			?>
+
+			<li class="conjure__drawer--upload__item" data-upload-type="<?php echo esc_attr( $type ); ?>">
+				<div class="conjure__upload-zone-wrapper">
+					
+						<input 
+							type="checkbox" 
+							name="default_content[<?php echo esc_attr( $type ); ?>]" 
+							class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox" 
+							id="default_content_<?php echo esc_attr( $type ); ?>" 
+							value="1"
+							data-manual-upload="1"
+							<?php checked( $has_file ); ?>
+							<?php disabled( ! $has_file ); ?>
+						>
+					
+					<label for="default_content_<?php echo esc_attr( $type ); ?>" class="conjure__upload-label">
+						<i></i>
+						<span class="conjure__upload-label-content">
+							<span class="conjure__upload-title">
+								<?php echo esc_html( $option['title'] ); ?>
+								<?php if ( ! empty( $option['tooltip'] ) ) : ?>
+									<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
+										<?php echo wp_kses( $this->svg( array( 'icon' => 'help' ) ), $this->svg_allowed_html() ); ?>
+									</span>
+								<?php endif; ?>
+							</span>
+							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+						</span>
+					</label>
+
+					<?php echo $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ); ?>
+
+				</div>
+			</li>
+
+		<?php endforeach; ?>
+
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Retrieve the upload configuration for each content type.
+	 *
+	 * @param array $uploaded_files Files stored in transient storage.
+	 * @return array
+	 */
+	private function get_upload_options( $uploaded_files ) {
 		$upload_options = array(
 			'content' => array(
 				'title'       => esc_html__( 'Content', 'conjurewp' ),
@@ -3034,95 +3544,80 @@ class Conjure {
 				'description' => esc_html__( 'Customizer settings and theme options', 'conjurewp' ),
 				'accept'      => '.dat,.json',
 			),
+			'sliders' => array(
+				'title'       => esc_html__( 'Sliders', 'conjurewp' ),
+				'description' => esc_html__( 'Revolution Slider packages (.zip)', 'conjurewp' ),
+				'accept'      => '.zip',
+			),
+			'redux' => array(
+				'title'       => esc_html__( 'Redux Options', 'conjurewp' ),
+				'description' => esc_html__( 'Redux framework settings', 'conjurewp' ),
+				'accept'      => '.json',
+			),
+			'menus' => array(
+				'title'       => esc_html__( 'Menus', 'conjurewp' ),
+				'description' => esc_html__( 'Navigation menu assignments', 'conjurewp' ),
+				'accept'      => '.json',
+			),
 		);
 
-		$upload_options = apply_filters( 'conjure_manual_upload_sections', $upload_options, $uploaded_files );
+		return apply_filters( 'conjure_manual_upload_sections', $upload_options, $uploaded_files );
+	}
+
+	/**
+	 * Render the reusable upload zone markup.
+	 *
+	 * @param string     $type      Upload type key.
+	 * @param array      $option    Upload option configuration.
+	 * @param bool       $has_file  Whether a file is already stored.
+	 * @param array|null $file_info Information about the stored file.
+	 * @return string
+	 */
+	private function render_upload_zone_markup( $type, $option, $has_file, $file_info ) {
+		$file_name = $has_file && ! empty( $file_info['name'] ) ? $file_info['name'] : '';
+		$file_size = $has_file && ! empty( $file_info['size'] ) ? size_format( $file_info['size'] ) : '';
 
 		ob_start();
 		?>
+		<div class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>"
+			data-type="<?php echo esc_attr( $type ); ?>"
+			data-accept="<?php echo esc_attr( $option['accept'] ); ?>">
 
-		<?php foreach ( $upload_options as $type => $option ) : ?>
-			<?php
-			$has_file = ! empty( $uploaded_files[ $type ] );
-			$file_info = $has_file ? $uploaded_files[ $type ] : null;
-			?>
+			<div class="conjure__upload-prompt" <?php echo $has_file ? 'style="display:none;"' : ''; ?>>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+					<polyline points="17 8 12 3 7 8"></polyline>
+					<line x1="12" y1="3" x2="12" y2="15"></line>
+				</svg>
+				<p class="conjure__upload-text">
+					<strong><?php esc_html_e( 'Click to select file', 'conjurewp' ); ?></strong>
+					<span class="conjure__upload-file-type"><?php echo esc_html( $option['accept'] ); ?></span>
+				</p>
+			</div>
 
-			<li class="conjure__drawer--upload__item" data-upload-type="<?php echo esc_attr( $type ); ?>">
-				<div class="conjure__upload-zone-wrapper">
-					
-					<input 
-						type="checkbox" 
-						name="default_content[<?php echo esc_attr( $type ); ?>]" 
-						class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox" 
-						id="default_content_<?php echo esc_attr( $type ); ?>" 
-						value="1"
-						<?php checked( $has_file ); ?>
-						<?php disabled( ! $has_file ); ?>
-					>
-					
-					<label for="default_content_<?php echo esc_attr( $type ); ?>" class="conjure__upload-label">
-						<i></i>
-						<span class="conjure__upload-label-content">
-							<span class="conjure__upload-title">
-								<?php echo esc_html( $option['title'] ); ?>
-								<?php if ( ! empty( $option['tooltip'] ) ) : ?>
-									<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
-										<?php echo wp_kses( $this->svg( array( 'icon' => 'help' ) ), $this->svg_allowed_html() ); ?>
-									</span>
-								<?php endif; ?>
-							</span>
-							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
-						</span>
-					</label>
-
-				<div class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>" 
-					data-type="<?php echo esc_attr( $type ); ?>"
-					data-accept="<?php echo esc_attr( $option['accept'] ); ?>">
-
-					<div class="conjure__upload-prompt">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-							<polyline points="17 8 12 3 7 8"></polyline>
-							<line x1="12" y1="3" x2="12" y2="15"></line>
-						</svg>
-						<p class="conjure__upload-text">
-							<strong><?php esc_html_e( 'Click to select file', 'conjurewp' ); ?></strong>
-							<span class="conjure__upload-file-type"><?php echo esc_html( $option['accept'] ); ?></span>
-						</p>
-					</div>
-
-						<?php if ( $has_file ) : ?>
-							<div class="conjure__upload-success">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<polyline points="20 6 9 17 4 12"></polyline>
-								</svg>
-								<div class="conjure__file-info">
-									<strong class="conjure__file-name"><?php echo esc_html( $file_info['name'] ); ?></strong>
-									<span class="conjure__file-size"><?php echo esc_html( size_format( $file_info['size'] ) ); ?></span>
-								</div>
-								<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-										<line x1="18" y1="6" x2="6" y2="18"></line>
-										<line x1="6" y1="6" x2="18" y2="18"></line>
-									</svg>
-								</button>
-							</div>
-						<?php endif; ?>
-
-						<div class="conjure__upload-progress" style="display: none;">
-							<div class="conjure__progress-bar-small">
-								<div class="conjure__progress-fill"></div>
-							</div>
-							<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'conjurewp' ); ?></span>
-						</div>
-
-					</div>
-
+			<div class="conjure__upload-success" style="display: <?php echo $has_file ? 'flex' : 'none'; ?>;">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="20 6 9 17 4 12"></polyline>
+				</svg>
+				<div class="conjure__file-info">
+					<strong class="conjure__file-name"><?php echo esc_html( $file_name ); ?></strong>
+					<span class="conjure__file-size"><?php echo esc_html( $file_size ); ?></span>
 				</div>
-			</li>
+				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
+			</div>
 
-		<?php endforeach; ?>
-
+			<div class="conjure__upload-progress" style="display:none;">
+				<div class="conjure__progress-bar-small">
+					<div class="conjure__progress-fill"></div>
+				</div>
+				<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'conjurewp' ); ?></span>
+			</div>
+		</div>
 		<?php
 		return ob_get_clean();
 	}

@@ -164,26 +164,32 @@ $strings = apply_filters( 'conjurewp_strings', $strings );
  */
 
 /**
- * EXAMPLE: Basic theme integration using demo helper
+ * DEMO CONFIGURATION
  *
- * Uncomment this to use the plugin's included demo files for testing:
+ * By default, ConjureWP auto-discovers demos from your theme directory.
+ * 
+ * HOW IT WORKS:
+ * 
+ * 1. MULTIPLE DEMOS (Dropdown will appear):
+ *    Create folders in your theme like:
+ *    /themes/your-theme/conjurewp-demos/xxx-demo/
+ *    /themes/your-theme/conjurewp-demos/abc-demo/
+ *    Each folder should contain: content.xml, widgets.json, customizer.dat
+ * 
+ * 2. SINGLE DEMO (No dropdown):
+ *    Place demo files directly in:
+ *    /themes/your-theme/conjurewp-demos/
+ *    Or in your theme root directory
+ * 
+ * 3. CURRENT THEME AS DEMO (Fallback):
+ *    If no demo files found anywhere, the current theme is used as the demo
+ * 
+ * DISABLE AUTO-DISCOVERY:
+ * If you want to manually register demos, add this to functions.php:
+ * add_filter( 'conjurewp_auto_register_demos', '__return_false' );
+ * 
+ * Then use the conjure_import_files filter to register demos manually.
+ * See examples/ directory for manual registration examples.
  */
-/*
-function conjurewp_demo_import_files( $files ) {
-	$demo_path = CONJUREWP_PLUGIN_DIR . 'demo/';
-
-	return array(
-		array(
-			'import_file_name'             => 'Demo Content',
-			'local_import_file'            => $demo_path . 'content.xml',
-			'local_import_widget_file'     => $demo_path . 'widgets.json',
-			'local_import_customizer_file' => $demo_path . 'customizer.dat',
-			'import_notice'                => __( 'This is a demo import for testing. It will import sample content, widgets, and customiser settings.', 'conjurewp' ),
-			'preview_url'                  => '',
-		),
-	);
-}
-add_filter( 'conjure_import_files', 'conjurewp_demo_import_files' );
-*/
 
 $wizard = new Conjure( $config, $strings );

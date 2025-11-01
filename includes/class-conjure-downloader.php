@@ -199,7 +199,7 @@ class Conjure_Downloader {
 			$this->download_directory_path = $download_directory_path;
 		} else {
 			$upload_dir                    = wp_upload_dir();
-			$this->download_directory_path = apply_filters( 'conjure_upload_file_path', trailingslashit( $upload_dir['path'] ) );
+			$this->download_directory_path = apply_filters( 'conjure_upload_file_path', trailingslashit( $upload_dir['basedir'] ) . 'conjurewp/' );
 		}
 	}
 

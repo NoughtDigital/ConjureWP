@@ -164,7 +164,7 @@ class Conjure_Server_Health {
 		$memory_limit = ini_get( 'memory_limit' );
 
 		if ( ! $memory_limit ) {
-			return __( 'N/A', 'conjure-wp' );
+			return __( 'N/A', 'conjurewp' );
 		}
 
 		return $memory_limit;
@@ -195,7 +195,7 @@ class Conjure_Server_Health {
 		$max_execution = ini_get( 'max_execution_time' );
 
 		if ( ! $max_execution ) {
-			return __( 'N/A', 'conjure-wp' );
+			return __( 'N/A', 'conjurewp' );
 		}
 
 		return $max_execution . 's';
@@ -210,7 +210,7 @@ class Conjure_Server_Health {
 		$max_execution = ini_get( 'max_execution_time' );
 
 		if ( ! $max_execution ) {
-			return '<span class="below-req">' . esc_html__( 'N/A', 'conjure-wp' ) . '</span>';
+			return '<span class="below-req">' . esc_html__( 'N/A', 'conjurewp' ) . '</span>';
 		}
 
 		if ( $max_execution < $this->min_execution_time ) {
@@ -237,7 +237,7 @@ class Conjure_Server_Health {
 		}
 
 		// Sanitize output.
-		return $version ? sanitize_text_field( $version ) : __( 'N/A', 'conjure-wp' );
+		return $version ? sanitize_text_field( $version ) : __( 'N/A', 'conjurewp' );
 	}
 
 	/**
@@ -249,24 +249,24 @@ class Conjure_Server_Health {
 	public function format_filesize( $raw_size ) {
 		// Validate input.
 		if ( ! is_numeric( $raw_size ) || $raw_size < 0 ) {
-			return __( 'unknown', 'conjure-wp' );
+			return __( 'unknown', 'conjurewp' );
 		}
 
 		$raw_size = absint( $raw_size );
 
 		if ( $raw_size / 1099511627776 > 1 ) {
-			return number_format_i18n( $raw_size / 1099511627776, 1 ) . ' ' . __( 'TiB', 'conjure-wp' );
+			return number_format_i18n( $raw_size / 1099511627776, 1 ) . ' ' . __( 'TiB', 'conjurewp' );
 		} elseif ( $raw_size / 1073741824 > 1 ) {
-			return number_format_i18n( $raw_size / 1073741824, 1 ) . ' ' . __( 'GiB', 'conjure-wp' );
+			return number_format_i18n( $raw_size / 1073741824, 1 ) . ' ' . __( 'GiB', 'conjurewp' );
 		} elseif ( $raw_size / 1048576 > 1 ) {
-			return number_format_i18n( $raw_size / 1048576, 1 ) . ' ' . __( 'MiB', 'conjure-wp' );
+			return number_format_i18n( $raw_size / 1048576, 1 ) . ' ' . __( 'MiB', 'conjurewp' );
 		} elseif ( $raw_size / 1024 > 1 ) {
-			return number_format_i18n( $raw_size / 1024, 1 ) . ' ' . __( 'KiB', 'conjure-wp' );
+			return number_format_i18n( $raw_size / 1024, 1 ) . ' ' . __( 'KiB', 'conjurewp' );
 		} elseif ( $raw_size > 1 ) {
-			return number_format_i18n( $raw_size, 0 ) . ' ' . __( 'bytes', 'conjure-wp' );
+			return number_format_i18n( $raw_size, 0 ) . ' ' . __( 'bytes', 'conjurewp' );
 		}
 
-		return __( 'unknown', 'conjure-wp' );
+		return __( 'unknown', 'conjurewp' );
 	}
 
 	/**
@@ -299,7 +299,7 @@ class Conjure_Server_Health {
 
 		$defaults = array(
 			'show_title'       => true,
-			'title'            => __( 'Server Health', 'conjure-wp' ),
+			'title'            => __( 'Server Health', 'conjurewp' ),
 			'requirements_url' => '',
 			'theme_name'       => '',
 		);
@@ -321,19 +321,19 @@ class Conjure_Server_Health {
 			<div class="server-health-content" id="server-health-content">
 				<?php if ( $meets_requirements ) : ?>
 					<p id="check-req">
-						<strong><?php esc_html_e( 'Meets Requirements', 'conjure-wp' ); ?></strong>, 
-						<?php esc_html_e( 'setup & import functions will operate smoothly.', 'conjure-wp' ); ?>
+						<strong><?php esc_html_e( 'Meets Requirements', 'conjurewp' ); ?></strong>, 
+						<?php esc_html_e( 'setup & import functions will operate smoothly.', 'conjurewp' ); ?>
 					</p>
 			<?php else : ?>
 				<p id="check-req">
-					<strong><?php esc_html_e( 'Server Resources Low', 'conjure-wp' ); ?></strong><br />
+					<strong><?php esc_html_e( 'Server Resources Low', 'conjurewp' ); ?></strong><br />
 					<?php
 					if ( ! empty( $args['requirements_url'] ) && filter_var( $args['requirements_url'], FILTER_VALIDATE_URL ) ) {
 						echo wp_kses(
 							sprintf(
 								/* translators: %s: link to theme requirements documentation */
-								__( 'Your server may experience timeout issues during import. Please review the %s to ensure a smooth setup.', 'conjure-wp' ),
-								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'recommended requirements', 'conjure-wp' ) . '</em></a>'
+								__( 'Your server may experience timeout issues during import. Please review the %s to ensure a smooth setup.', 'conjurewp' ),
+								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'recommended requirements', 'conjurewp' ) . '</em></a>'
 							),
 							array(
 								'a' => array(
@@ -345,7 +345,7 @@ class Conjure_Server_Health {
 							)
 						);
 					} else {
-						esc_html_e( 'Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.', 'conjure-wp' );
+						esc_html_e( 'Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.', 'conjurewp' );
 					}
 					?>
 				</p>
@@ -353,11 +353,11 @@ class Conjure_Server_Health {
 
 				<ul class="server-info">
 					<li>
-						<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'conjure-wp' ); ?></span>
+						<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'conjurewp' ); ?></span>
 						<span class="server-value"><?php echo wp_kses_post( $this->get_memory_limit_html() ); ?></span>
 					</li>
 					<li>
-						<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'conjure-wp' ); ?></span>
+						<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'conjurewp' ); ?></span>
 						<span class="server-value"><?php echo wp_kses_post( $this->get_max_execution_time_html() ); ?></span>
 					</li>
 				</ul>
@@ -431,7 +431,7 @@ class Conjure_Server_Health {
 			switch ( $bottleneck ) {
 				case 'memory':
 					$links[] = array(
-						'title' => __( 'How to increase PHP memory limit', 'conjure-wp' ),
+						'title' => __( 'How to increase PHP memory limit', 'conjurewp' ),
 						'url'   => 'https://wordpress.org/documentation/article/editing-wp-config-php/#increase-memory-allocated-to-php',
 						'type'  => 'memory',
 					);
@@ -439,7 +439,7 @@ class Conjure_Server_Health {
 
 				case 'execution_time':
 					$links[] = array(
-						'title' => __( 'How to increase PHP max execution time', 'conjure-wp' ),
+						'title' => __( 'How to increase PHP max execution time', 'conjurewp' ),
 						'url'   => 'https://wordpress.org/support/article/common-wordpress-errors/#maximum-execution-time-exceeded',
 						'type'  => 'execution_time',
 					);
@@ -508,16 +508,16 @@ class Conjure_Server_Health {
 				<label>
 					<input type="checkbox" class="health-telemetry-checkbox" checked disabled>
 					<span class="health-telemetry-title">
-						<?php esc_html_e( 'Server Health', 'conjure-wp' ); ?>
+						<?php esc_html_e( 'Server Health', 'conjurewp' ); ?>
 						<span class="health-indicator health-indicator--<?php echo esc_attr( $meets_requirements ? 'healthy' : 'warning' ); ?>">
 							<span class="health-dot"></span>
 							<span class="health-status-text">
-								<?php echo $meets_requirements ? esc_html__( 'Healthy', 'conjure-wp' ) : esc_html__( 'Needs Attention', 'conjure-wp' ); ?>
+								<?php echo $meets_requirements ? esc_html__( 'Healthy', 'conjurewp' ) : esc_html__( 'Needs Attention', 'conjurewp' ); ?>
 							</span>
 						</span>
 					</span>
 				</label>
-				<span class="health-live-indicator" title="<?php esc_attr_e( 'Live monitoring active', 'conjure-wp' ); ?>">
+				<span class="health-live-indicator" title="<?php esc_attr_e( 'Live monitoring active', 'conjurewp' ); ?>">
 					<span class="health-pulse"></span>
 				</span>
 			</div>
@@ -525,27 +525,27 @@ class Conjure_Server_Health {
 			<div class="health-telemetry-content">
 				<div class="health-metrics">
 					<div class="health-metric">
-						<span class="metric-label"><?php esc_html_e( 'PHP Memory', 'conjure-wp' ); ?></span>
+						<span class="metric-label"><?php esc_html_e( 'PHP Memory', 'conjurewp' ); ?></span>
 						<span class="metric-value health-metric-value-memory" data-current="<?php echo esc_attr( $metrics['memory_limit']['value'] ); ?>" data-min="<?php echo esc_attr( $metrics['memory_limit']['min_required'] ); ?>">
 							<?php echo esc_html( $metrics['memory_limit']['formatted'] ); ?>
 							<?php if ( ! $metrics['memory_limit']['meets_req'] ) : ?>
-								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %dMB', 'conjure-wp' ), $metrics['memory_limit']['min_required'] ) ); ?>)</span>
+								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %dMB', 'conjurewp' ), $metrics['memory_limit']['min_required'] ) ); ?>)</span>
 							<?php endif; ?>
 						</span>
 					</div>
 					
 					<div class="health-metric">
-						<span class="metric-label"><?php esc_html_e( 'PHP Execution Time', 'conjure-wp' ); ?></span>
+						<span class="metric-label"><?php esc_html_e( 'PHP Execution Time', 'conjurewp' ); ?></span>
 						<span class="metric-value health-metric-value-execution" data-current="<?php echo esc_attr( $metrics['max_execution']['value'] ); ?>" data-min="<?php echo esc_attr( $metrics['max_execution']['min_required'] ); ?>">
 							<?php echo esc_html( $metrics['max_execution']['formatted'] ); ?>
 							<?php if ( ! $metrics['max_execution']['meets_req'] ) : ?>
-								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %ds', 'conjure-wp' ), $metrics['max_execution']['min_required'] ) ); ?>)</span>
+								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %ds', 'conjurewp' ), $metrics['max_execution']['min_required'] ) ); ?>)</span>
 							<?php endif; ?>
 						</span>
 					</div>
 
 					<div class="health-metric">
-						<span class="metric-label"><?php esc_html_e( 'MySQL Version', 'conjure-wp' ); ?></span>
+						<span class="metric-label"><?php esc_html_e( 'MySQL Version', 'conjurewp' ); ?></span>
 						<span class="metric-value health-metric-value-mysql">
 							<?php echo esc_html( $metrics['mysql_version'] ); ?>
 						</span>
@@ -555,7 +555,7 @@ class Conjure_Server_Health {
 				<?php if ( ! empty( $metrics['remediation_links'] ) ) : ?>
 					<div class="health-remediation">
 						<p class="health-remediation-title">
-							<strong><?php esc_html_e( 'Recommended Actions:', 'conjure-wp' ); ?></strong>
+							<strong><?php esc_html_e( 'Recommended Actions:', 'conjurewp' ); ?></strong>
 						</p>
 						<ul class="health-remediation-links">
 							<?php foreach ( $metrics['remediation_links'] as $link ) : ?>

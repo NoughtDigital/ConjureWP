@@ -778,6 +778,9 @@ var Conjure = (function ($) {
 		var serverHealthInfo = document.getElementById("server-health-info");
 
 		if (serverHealthHeader && serverHealthInfo) {
+			// Ensure dropdown is closed on wizard entry
+			serverHealthInfo.classList.remove("open");
+			
 			serverHealthHeader.addEventListener("click", function () {
 				serverHealthInfo.classList.toggle("open");
 			});

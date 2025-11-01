@@ -309,7 +309,7 @@ class Conjure_Server_Health {
 
 		ob_start();
 		?>
-		<div id="server-health-info" class="open">
+		<div id="server-health-info">
 			<?php if ( $args['show_title'] ) : ?>
 				<div class="server-health-header" id="server-health-header">
 					<h3><?php echo esc_html( $args['title'] ); ?></h3>

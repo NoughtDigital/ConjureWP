@@ -422,6 +422,28 @@ class Conjure_Demo_Helpers {
 			$config['import_notice'] = file_get_contents( $path . 'README.txt' );
 		}
 
+		// Check for meta.json for additional demo metadata.
+		if ( file_exists( $path . 'meta.json' ) ) {
+			$meta_content = file_get_contents( $path . 'meta.json' );
+			$meta_data = json_decode( $meta_content, true );
+			if ( is_array( $meta_data ) && json_last_error() === JSON_ERROR_NONE ) {
+				// Extract author, estimated import size, and tags from meta.json.
+				if ( ! empty( $meta_data['author'] ) ) {
+					$config['demo_author'] = sanitize_text_field( $meta_data['author'] );
+				}
+				if ( ! empty( $meta_data['estimated_import_size'] ) ) {
+					$config['demo_estimated_import_size'] = sanitize_text_field( $meta_data['estimated_import_size'] );
+				}
+				if ( ! empty( $meta_data['tags'] ) && is_array( $meta_data['tags'] ) ) {
+					$config['demo_tags'] = array_map( 'sanitize_text_field', $meta_data['tags'] );
+				}
+				// Allow additional metadata fields to be passed through.
+				if ( ! empty( $meta_data['description'] ) ) {
+					$config['demo_description'] = sanitize_textarea_field( $meta_data['description'] );
+				}
+			}
+		}
+
 		return apply_filters( 'conjurewp_auto_import_config', $config, $path, $demo_name );
 	}
 

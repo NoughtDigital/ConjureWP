@@ -41,17 +41,17 @@ export default defineConfig({
 						if (assetInfo.name.includes("conjure")) {
 							return "css/conjure.min.css";
 						}
-						return `css / [name].min.[ext]`;
+						return `css/[name].min.[ext]`;
 					}
 					if (/\.(woff|woff2|eot|ttf|otf)$/.test(assetInfo.name)) {
-						return `fonts / [name].[ext]`;
+						return `fonts/[name].[ext]`;
 					}
 					if (
 						/\.(png|jpe?g|gif|svg|webp|ico)$/.test(assetInfo.name)
 					) {
-						return `images / [name].[ext]`;
+						return `images/[name].[ext]`;
 					}
-					return `assets / [name].[ext]`;
+					return `assets/[name].[ext]`;
 				},
 			},
 		},

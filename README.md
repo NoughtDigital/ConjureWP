@@ -159,7 +159,34 @@ When `CONJUREWP_AUTO_REGISTER_DEMOS` is enabled:
 -   Automatically finds all demos in the directory
 -   Detects `content.xml`, `widgets.json`, `customizer.dat`, `redux-options.json`, `slider.zip`
 -   Reads `info.txt` for import notices
--   Finds `preview.jpg/png/gif` for preview images
+-   Finds `preview.jpg/png/gif/webp` for preview images
+
+### Preview Images
+
+Add preview images to display demos in a visual grid (similar to "One Click Demo Import"):
+
+```
+/themes/your-theme/conjurewp-demos/
+├── main-demo/
+│   ├── content.xml
+│   ├── widgets.json
+│   └── preview.jpg      ← Auto-detected
+└── portfolio-demo/
+    ├── content.xml
+    └── preview.png      ← Auto-detected
+```
+
+**Supported formats:** `preview.jpg`, `preview.jpeg`, `preview.png`, `preview.gif`, `preview.webp`
+
+**Manual configuration:** If not using auto-discovery, add `import_preview_image_url`:
+
+```php
+array(
+    'import_file_name'           => 'Business Demo',
+    'local_import_file'          => get_template_directory() . '/demo/content.xml',
+    'import_preview_image_url'   => get_template_directory_uri() . '/demo/preview.jpg',
+),
+```
 
 ### Key Hooks
 

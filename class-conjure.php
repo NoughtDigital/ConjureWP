@@ -1165,26 +1165,32 @@ class Conjure {
 
 		if ( $show_demo_selector && count( $this->import_files ) > 1 ) :
 		?>
-			<div class="conjure__demo-selector" style="margin: 2em 0; padding: 1.5em; background: #f9f9f9; border-radius: 8px; border: 2px solid #e0e0e0;">
-				<label for="conjure-demo-select" style="display: block; margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
+			<div class="conjure__demo-selector">
+				<h3 style="margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
 					<?php echo esc_html__( 'Select your demo:', 'conjurewp' ); ?>
-				</label>
-				<select id="conjure-demo-select" class="js-conjure-demo-select-plugins" style="width: 100%; max-width: 400px; padding: 0.75em; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;">
-					<option value=""><?php echo esc_html__( '-- Choose a demo --', 'conjurewp' ); ?></option>
-					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
-						<option value="<?php echo esc_attr( $index ); ?>" <?php selected( $selected_demo_index, $index ); ?>>
-							<?php echo esc_html( $import_file['import_file_name'] ); ?>
-						</option>
-					<?php endforeach; ?>
-				</select>
-				<p class="description" style="margin-top: 0.75em; font-size: 0.95em; color: #666;">
+				</h3>
+				<p class="conjure__demo-grid-description">
 					<?php echo esc_html__( 'Each demo has different plugin requirements. Choose your demo to see required and recommended plugins.', 'conjurewp' ); ?>
 				</p>
-				<?php if ( $selected_demo_index !== false && $selected_demo_index !== '' ) : ?>
-					<p style="margin-top: 0.75em; padding: 0.5em 0.75em; background: #d4edda; color: #155724; border-radius: 4px; font-size: 0.9em;">
-						✓ <?php echo esc_html__( 'Demo selected! Plugins below are filtered for this demo.', 'conjurewp' ); ?>
-					</p>
-				<?php endif; ?>
+				<div class="conjure__demo-grid">
+					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
+						<div class="conjure__demo-card js-conjure-demo-card-plugins <?php echo ( $selected_demo_index !== false && $selected_demo_index === $index ) ? 'is-selected' : ''; ?>" data-demo-index="<?php echo esc_attr( $index ); ?>">
+							<div class="conjure__demo-card-image">
+								<?php if ( ! empty( $import_file['import_preview_image_url'] ) ) : ?>
+									<img src="<?php echo esc_url( $import_file['import_preview_image_url'] ); ?>" alt="<?php echo esc_attr( $import_file['import_file_name'] ); ?>" loading="lazy">
+								<?php else : ?>
+									<div class="conjure__demo-card-placeholder"></div>
+								<?php endif; ?>
+							</div>
+							<div class="conjure__demo-card-content">
+								<h4 class="conjure__demo-card-title"><?php echo esc_html( $import_file['import_file_name'] ); ?></h4>
+								<?php if ( ! empty( $import_file['import_notice'] ) ) : ?>
+									<p class="conjure__demo-card-description"><?php echo esc_html( $import_file['import_notice'] ); ?></p>
+								<?php endif; ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
 			</div>
 		<?php endif; ?>
 
@@ -1387,18 +1393,31 @@ class Conjure {
 
 		<?php if ( 1 < count( $this->import_files ) ) : ?>
 
-			<div class="conjure__select-control-wrapper">
-
-				<select class="conjure__select-control js-conjure-demo-import-select">
+			<div class="conjure__demo-selector">
+				<h3 style="margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
+					<?php echo esc_html__( 'Select your demo:', 'conjurewp' ); ?>
+				</h3>
+				<p class="conjure__demo-grid-description">
+					<?php echo esc_html__( 'Choose which demo content to import.', 'conjurewp' ); ?>
+				</p>
+				<div class="conjure__demo-grid">
 					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
-						<option value="<?php echo esc_attr( $index ); ?>" <?php selected( $index, $selected_demo_index ); ?>><?php echo esc_html( $import_file['import_file_name'] ); ?></option>
+						<div class="conjure__demo-card js-conjure-demo-card-import <?php echo ( $selected_demo_index !== false && $selected_demo_index === $index ) ? 'is-selected' : ''; ?>" data-demo-index="<?php echo esc_attr( $index ); ?>">
+							<div class="conjure__demo-card-image">
+								<?php if ( ! empty( $import_file['import_preview_image_url'] ) ) : ?>
+									<img src="<?php echo esc_url( $import_file['import_preview_image_url'] ); ?>" alt="<?php echo esc_attr( $import_file['import_file_name'] ); ?>" loading="lazy">
+								<?php else : ?>
+									<div class="conjure__demo-card-placeholder"></div>
+								<?php endif; ?>
+							</div>
+							<div class="conjure__demo-card-content">
+								<h4 class="conjure__demo-card-title"><?php echo esc_html( $import_file['import_file_name'] ); ?></h4>
+								<?php if ( ! empty( $import_file['import_notice'] ) ) : ?>
+									<p class="conjure__demo-card-description"><?php echo esc_html( $import_file['import_notice'] ); ?></p>
+								<?php endif; ?>
+							</div>
+						</div>
 					<?php endforeach; ?>
-				</select>
-
-				<div class="conjure__select-control-help">
-					<span class="hint--top" aria-label="<?php echo esc_attr__( 'Select Demo', 'conjurewp' ); ?>">
-						<?php echo wp_kses( $this->svg( array( 'icon' => 'downarrow' ) ), $this->svg_allowed_html() ); ?>
-					</span>
 				</div>
 				<span class="js-conjure-select-spinner" style="display:none;">Loading...</span>
 			</div>

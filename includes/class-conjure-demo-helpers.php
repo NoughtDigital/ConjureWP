@@ -402,16 +402,42 @@ class Conjure_Demo_Helpers {
 		}
 
 		// Preview image.
-		$preview_extensions = array( 'jpg', 'jpeg', 'png', 'gif' );
+		$preview_extensions = array( 'jpg', 'jpeg', 'png', 'gif', 'webp' );
 		foreach ( $preview_extensions as $ext ) {
-			if ( file_exists( $path . 'preview.' . $ext ) ) {
+			$preview_file = $path . 'preview.' . $ext;
+			if ( file_exists( $preview_file ) ) {
 				// Convert to URL if possible.
 				$upload_dir = wp_upload_dir();
+				
+				// Check if path is in uploads directory.
 				if ( strpos( $path, $upload_dir['basedir'] ) === 0 ) {
 					$relative_path = str_replace( $upload_dir['basedir'], '', $path );
 					$config['import_preview_image_url'] = $upload_dir['baseurl'] . $relative_path . 'preview.' . $ext;
 				}
-				break;
+				// Check if path is in parent theme directory.
+				elseif ( strpos( $path, get_template_directory() ) === 0 ) {
+					$relative_path = str_replace( get_template_directory(), '', $path );
+					$config['import_preview_image_url'] = get_template_directory_uri() . $relative_path . 'preview.' . $ext;
+				}
+				// Check if path is in child theme directory.
+				elseif ( is_child_theme() && strpos( $path, get_stylesheet_directory() ) === 0 ) {
+					$relative_path = str_replace( get_stylesheet_directory(), '', $path );
+					$config['import_preview_image_url'] = get_stylesheet_directory_uri() . $relative_path . 'preview.' . $ext;
+				}
+				// For other paths, try to construct URL from path structure.
+				else {
+					// Try to convert absolute path to relative URL.
+					$wp_content_dir = WP_CONTENT_DIR;
+					if ( strpos( $path, $wp_content_dir ) === 0 ) {
+						$relative_path = str_replace( $wp_content_dir, '', $path );
+						$config['import_preview_image_url'] = content_url( $relative_path . 'preview.' . $ext );
+					}
+				}
+				
+				// If we successfully set a URL, break.
+				if ( ! empty( $config['import_preview_image_url'] ) ) {
+					break;
+				}
 			}
 		}
 

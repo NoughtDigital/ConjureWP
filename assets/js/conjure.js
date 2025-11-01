@@ -166,9 +166,18 @@ var Conjure = (function ($) {
 			}
 		});
 
-		// Handle demo selection on CONTENT step (original behavior).
-		$(document).on("change", ".js-conjure-demo-import-select", function () {
-			var selectedIndex = $(this).val();
+		// Handle demo selection on CONTENT step (grid card click).
+		$(document).on("click", ".js-conjure-demo-card-import", function () {
+			var $card = $(this);
+			var selectedIndex = $card.data("demo-index");
+
+			if (selectedIndex === undefined || selectedIndex === null) {
+				return;
+			}
+
+			// Update selected state visually.
+			$(".js-conjure-demo-card-import").removeClass("is-selected");
+			$card.addClass("is-selected");
 
 			$(".js-conjure-select-spinner").show();
 
@@ -219,38 +228,39 @@ var Conjure = (function ($) {
 			});
 		});
 
-		// Handle demo selection on PLUGINS step (new behavior for demo-specific plugins).
-		$(document).on(
-			"change",
-			".js-conjure-demo-select-plugins",
-			function () {
-				var selectedIndex = $(this).val();
+		// Handle demo selection on PLUGINS step (grid card click).
+		$(document).on("click", ".js-conjure-demo-card-plugins", function () {
+			var $card = $(this);
+			var selectedIndex = $card.data("demo-index");
 
-				if (!selectedIndex) {
-					return;
-				}
-
-				// Save the selection and reload to show filtered plugins.
-				$.post(
-					conjure_params.ajaxurl,
-					{
-						action: "conjure_update_selected_import_data_info",
-						wpnonce: conjure_params.wpnonce,
-						selected_index: selectedIndex,
-					},
-					function (response) {
-						if (response.success) {
-							// Reload the page to show filtered plugins.
-							window.location.reload();
-						} else {
-							alert(conjure_params.texts.something_went_wrong);
-						}
-					}
-				).fail(function () {
-					alert(conjure_params.texts.something_went_wrong);
-				});
+			if (selectedIndex === undefined || selectedIndex === null) {
+				return;
 			}
-		);
+
+			// Update selected state visually.
+			$(".js-conjure-demo-card-plugins").removeClass("is-selected");
+			$card.addClass("is-selected");
+
+			// Save the selection and reload to show filtered plugins.
+			$.post(
+				conjure_params.ajaxurl,
+				{
+					action: "conjure_update_selected_import_data_info",
+					wpnonce: conjure_params.wpnonce,
+					selected_index: selectedIndex,
+				},
+				function (response) {
+					if (response.success) {
+						// Reload the page to show filtered plugins.
+						window.location.reload();
+					} else {
+						alert(conjure_params.texts.something_went_wrong);
+					}
+				}
+			).fail(function () {
+				alert(conjure_params.texts.something_went_wrong);
+			});
+		});
 	}
 
 	function ChildTheme() {
@@ -564,11 +574,13 @@ var Conjure = (function ($) {
 					} else {
 						current_item_hash = response.hash;
 
-						// Fix the undefined selected_index issue on new AJAX calls.
-						if (typeof response.selected_index === "undefined") {
-							response.selected_index =
-								$(".js-conjure-demo-import-select").val() || 0;
-						}
+					// Fix the undefined selected_index issue on new AJAX calls.
+					if (typeof response.selected_index === "undefined") {
+						var selectedCard = $(".js-conjure-demo-card-import.is-selected");
+						response.selected_index = selectedCard.length
+							? selectedCard.data("demo-index") || 0
+							: $(".js-conjure-demo-card-import").first().data("demo-index") || 0;
+					}
 
 						jQuery
 							.post(response.url, response, ajax_callback)
@@ -593,20 +605,23 @@ var Conjure = (function ($) {
 			if (current_item) {
 				var $check = $current_node.find("input:checkbox");
 				if ($check.is(":checked")) {
-					jQuery
-						.post(
-							conjure_params.ajaxurl,
-							{
-								action: "conjure_content",
-								wpnonce: conjure_params.wpnonce,
-								content: current_item,
-								selected_index:
-									$(".js-conjure-demo-import-select").val() ||
-									0,
-							},
-							ajax_callback
-						)
-						.fail(ajax_callback);
+						var selectedCard = $(".js-conjure-demo-card-import.is-selected");
+						var selectedIndex = selectedCard.length
+							? selectedCard.data("demo-index") || 0
+							: $(".js-conjure-demo-card-import").first().data("demo-index") || 0;
+
+						jQuery
+							.post(
+								conjure_params.ajaxurl,
+								{
+									action: "conjure_content",
+									wpnonce: conjure_params.wpnonce,
+									content: current_item,
+									selected_index: selectedIndex,
+								},
+								ajax_callback
+							)
+							.fail(ajax_callback);
 				} else {
 					$current_node.addClass("skipping");
 					setTimeout(find_next, 300);
@@ -651,13 +666,17 @@ var Conjure = (function ($) {
 				return false;
 			}
 
+			var selectedCard = $(".js-conjure-demo-card-import.is-selected");
+			var selectedIndex = selectedCard.length
+				? selectedCard.data("demo-index") || 0
+				: $(".js-conjure-demo-card-import").first().data("demo-index") || 0;
+
 			jQuery.post(
 				conjure_params.ajaxurl,
 				{
 					action: "conjure_get_total_content_import_items",
 					wpnonce: conjure_params.wpnonce,
-					selected_index:
-						$(".js-conjure-demo-import-select").val() || 0,
+					selected_index: selectedIndex,
 				},
 				function (response) {
 					total_content_import_items = response.data;
@@ -715,11 +734,15 @@ var Conjure = (function ($) {
 					.find("input")
 					.prop("disabled", true);
 				complete = function () {
+					var selectedCard = $(".js-conjure-demo-card-import.is-selected");
+					var selectedIndex = selectedCard.length
+						? selectedCard.data("demo-index") || 0
+						: $(".js-conjure-demo-card-import").first().data("demo-index") || 0;
+
 					$.post(conjure_params.ajaxurl, {
 						action: "conjure_import_finished",
 						wpnonce: conjure_params.wpnonce,
-						selected_index:
-							$(".js-conjure-demo-import-select").val() || 0,
+						selected_index: selectedIndex,
 					});
 
 					setTimeout(function () {

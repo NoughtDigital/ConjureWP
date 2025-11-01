@@ -15,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Conjure_Hooks {
 	/**
+	 * Cached term ID mapping from the importer.
+	 *
+	 * @var array|null
+	 */
+	private $cached_term_ids = null;
+
+	/**
 	 * The class constructor.
 	 */
 	public function __construct() {
@@ -35,17 +42,34 @@ class Conjure_Hooks {
 			return $widget;
 		}
 
-		// Get import data, with new menu IDs.
-		$importer = new ConjureWP\Importer\Importer( array( 'fetch_attachments' => true ), new ConjureWP\Importer\WPImporterLogger() );
-		$importer->restore_import_data_transient();
-
-		$importer_mapping = $importer->get_mapping();
-		$term_ids         = empty( $importer_mapping['term_id'] ) ? array() : $importer_mapping['term_id'];
+		// Get cached term ID mapping (lazy-loaded on first use).
+		$term_ids = $this->get_term_ids_mapping();
 
 		// Set the new menu ID for the widget.
 		$widget['nav_menu'] = empty( $term_ids[ $widget['nav_menu'] ] ) ? $widget['nav_menu'] : $term_ids[ $widget['nav_menu'] ];
 
 		return $widget;
+	}
+
+	/**
+	 * Get the term ID mapping from the importer, caching the result.
+	 *
+	 * @return array The term ID mapping array.
+	 */
+	private function get_term_ids_mapping() {
+		// Return cached mapping if already loaded.
+		if ( null !== $this->cached_term_ids ) {
+			return $this->cached_term_ids;
+		}
+
+		// Load and cache the mapping on first use.
+		$importer = new ConjureWP\Importer\Importer( array( 'fetch_attachments' => true ), new ConjureWP\Importer\WPImporterLogger() );
+		$importer->restore_import_data_transient();
+
+		$importer_mapping = $importer->get_mapping();
+		$this->cached_term_ids = empty( $importer_mapping['term_id'] ) ? array() : $importer_mapping['term_id'];
+
+		return $this->cached_term_ids;
 	}
 
 	/**

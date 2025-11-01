@@ -1188,11 +1188,12 @@ var Conjure = (function ($) {
 		$button.data("done-loading", "yes");
 
 		$button.addClass("conjure__button--loading");
+		$button.prop("disabled", true);
 
 		return {
 			done: function () {
 				completed = true;
-				$button.attr("disabled", false);
+				$button.prop("disabled", false);
 			},
 		};
 	}

@@ -3173,10 +3173,49 @@ class Conjure {
 		$conjure_dir = trailingslashit( $upload_dir['basedir'] ) . 'conjure-uploads/';
 
 		if ( ! file_exists( $conjure_dir ) ) {
-			wp_mkdir_p( $conjure_dir );
+			$mkdir_result = wp_mkdir_p( $conjure_dir );
+			
+			if ( ! $mkdir_result || ! file_exists( $conjure_dir ) ) {
+				$error_message = sprintf(
+					__( 'Failed to create upload directory: %s', 'conjurewp' ),
+					$conjure_dir
+				);
+				
+				$this->logger->error( $error_message );
+				
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					trigger_error( $error_message, E_USER_ERROR );
+				}
+				
+				return false;
+			}
+			
 			// Add .htaccess for security.
 			$htaccess_content = 'deny from all';
-			file_put_contents( $conjure_dir . '.htaccess', $htaccess_content );
+			$htaccess_file = $conjure_dir . '.htaccess';
+			$htaccess_result = file_put_contents( $htaccess_file, $htaccess_content );
+			
+			if ( false === $htaccess_result ) {
+				$error_message = sprintf(
+					__( 'Failed to create .htaccess file in upload directory: %s', 'conjurewp' ),
+					$conjure_dir
+				);
+				
+				$this->logger->error( $error_message );
+			}
+			
+			// Add index.php to prevent directory listing.
+			$index_file = $conjure_dir . 'index.php';
+			$index_result = file_put_contents( $index_file, '<?php // Silence is golden.' );
+			
+			if ( false === $index_result ) {
+				$error_message = sprintf(
+					__( 'Failed to create index.php file in upload directory: %s', 'conjurewp' ),
+					$conjure_dir
+				);
+				
+				$this->logger->error( $error_message );
+			}
 		}
 
 		return $conjure_dir;
@@ -3240,6 +3279,11 @@ class Conjure {
 
 		// Move file to upload directory.
 		$upload_dir = $this->get_upload_dir();
+		
+		if ( false === $upload_dir ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'conjurewp' ) ) );
+		}
+		
 		$filename = $file_type . '-' . time() . '.' . $file_extension;
 		$destination = $upload_dir . $filename;
 
@@ -3334,6 +3378,11 @@ class Conjure {
 
 		// Copy file to upload directory.
 		$upload_dir = $this->get_upload_dir();
+		
+		if ( false === $upload_dir ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'conjurewp' ) ) );
+		}
+		
 		$filename = $file_type . '-' . time() . '.' . $file_extension;
 		$destination = $upload_dir . $filename;
 

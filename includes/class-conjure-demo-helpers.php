@@ -192,11 +192,17 @@ class Conjure_Demo_Helpers {
 			);
 		}
 
-		// Add .htaccess for security.
+		// Add .htaccess for security (Apache/LiteSpeed).
 		$htaccess_file = $directory . '.htaccess';
 		if ( ! file_exists( $htaccess_file ) ) {
-			$htaccess_content = "# Protect demo content files\n<Files *.xml>\n  Order Allow,Deny\n  Deny from all\n</Files>";
+			$htaccess_content = "# Deny all access to demo directory\nRequire all denied";
 			file_put_contents( $htaccess_file, $htaccess_content );
+		}
+
+		// Add index.php placeholder to prevent directory listing.
+		$index_file = $directory . 'index.php';
+		if ( ! file_exists( $index_file ) ) {
+			file_put_contents( $index_file, "<?php\n// Silence is golden.\n" );
 		}
 
 		return true;

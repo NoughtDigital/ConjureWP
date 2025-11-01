@@ -120,6 +120,17 @@ function my_theme_after_import_setup( $selected_import ) {
 3. Uploads directory `/conjurewp-demos/`
 4. Plugin directory `/demo/` (examples only)
 
+### Securing Demo Directories
+
+Demo directories in the uploads folder are automatically protected with `.htaccess` (Apache/LiteSpeed) and `index.php` placeholders. For nginx, add this to your server configuration:
+
+```nginx
+location ~* /wp-content/uploads/conjurewp-demos/ {
+    deny all;
+    return 403;
+}
+```
+
 ### Auto-Discovery
 
 When `CONJUREWP_AUTO_REGISTER_DEMOS` is enabled:

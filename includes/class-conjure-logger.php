@@ -10,7 +10,6 @@
 
 use Monolog\Logger as MonologLogger;
 use Monolog\Handler\StreamHandler;
-use Monolog\Handler\RotatingFileHandler;
 use Monolog\Formatter\LineFormatter;
 
 /**
@@ -164,20 +163,11 @@ class Conjure_Logger {
 		try {
 			$this->log = new MonologLogger( $this->logger_name );
 
-			// Add main file handler with rotation if enabled.
-			if ( $this->config['enable_rotation'] ) {
-				$max_bytes = $this->config['max_file_size_mb'] * 1024 * 1024;
-				$handler   = new RotatingFileHandler(
-					$this->log_path,
-					$this->config['max_files'],
-					$this->config['min_log_level']
-				);
-			} else {
-				$handler = new StreamHandler(
-					$this->log_path,
-					$this->config['min_log_level']
-				);
-			}
+			// Use StreamHandler with manual size-based rotation.
+			$handler = new StreamHandler(
+				$this->log_path,
+				$this->config['min_log_level']
+			);
 
 			// Use a clean formatter.
 			$formatter = new LineFormatter(
@@ -192,6 +182,96 @@ class Conjure_Logger {
 			// Fallback: if logger fails, we'll just continue without logging.
 			error_log( 'ConjureWP Logger failed to initialize: ' . $e->getMessage() );
 			return false;
+		}
+	}
+
+
+	/**
+	 * Check and rotate log file if it exceeds size limit.
+	 *
+	 * @return void
+	 */
+	private function maybe_rotate() {
+		if ( ! $this->config['enable_rotation'] ) {
+			return;
+		}
+
+		if ( ! $this->config['max_file_size_mb'] || $this->config['max_file_size_mb'] <= 0 ) {
+			return;
+		}
+
+		if ( ! file_exists( $this->log_path ) ) {
+			return;
+		}
+
+		$max_bytes = $this->config['max_file_size_mb'] * 1024 * 1024;
+		$file_size = filesize( $this->log_path );
+
+		if ( $file_size >= $max_bytes ) {
+			$this->rotate_log_file();
+		}
+	}
+
+
+	/**
+	 * Rotate the log file and clean up old files.
+	 *
+	 * @return void
+	 */
+	private function rotate_log_file() {
+		// Close existing handler to flush any pending writes.
+		if ( $this->log ) {
+			$handlers = $this->log->getHandlers();
+			foreach ( $handlers as $handler ) {
+				$handler->close();
+			}
+		}
+
+		$log_dir   = dirname( $this->log_path );
+		$log_base  = basename( $this->log_path, '.log' );
+		$date      = gmdate( 'Y-m-d' );
+		$timestamp = time();
+
+		// Generate rotated filename with date and timestamp to avoid collisions.
+		$rotated_file = $log_dir . '/' . $log_base . '-' . $date . '-' . $timestamp . '.log';
+
+		// Rename current log file.
+		if ( file_exists( $this->log_path ) ) {
+			rename( $this->log_path, $rotated_file );
+		}
+
+		// Clean up old log files if we exceed max_files.
+		$this->cleanup_old_logs();
+
+		// Reinitialize handler with new file.
+		$this->initialize_logger();
+	}
+
+
+	/**
+	 * Remove old log files beyond the max_files limit.
+	 *
+	 * @return void
+	 */
+	private function cleanup_old_logs() {
+		$log_files = $this->get_all_log_files();
+
+		if ( count( $log_files ) > $this->config['max_files'] ) {
+			// Sort by modification time, oldest first.
+			usort(
+				$log_files,
+				function ( $a, $b ) {
+					return filemtime( $a ) - filemtime( $b );
+				}
+			);
+
+			// Remove oldest files beyond the limit.
+			$files_to_remove = array_slice( $log_files, 0, count( $log_files ) - $this->config['max_files'] );
+			foreach ( $files_to_remove as $file ) {
+				if ( file_exists( $file ) ) {
+					unlink( $file );
+				}
+			}
 		}
 	}
 
@@ -304,6 +384,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->debug( $message, $context );
 	}
 
@@ -319,6 +400,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->info( $message, $context );
 	}
 
@@ -335,6 +417,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->notice( $message, $context );
 	}
 
@@ -351,6 +434,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->warning( $message, $context );
 	}
 
@@ -367,6 +451,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->error( $message, $context );
 	}
 
@@ -383,6 +468,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->alert( $message, $context );
 	}
 
@@ -399,6 +485,7 @@ class Conjure_Logger {
 		if ( ! $this->log ) {
 			return false;
 		}
+		$this->maybe_rotate();
 		return $this->log->emergency( $message, $context );
 	}
 

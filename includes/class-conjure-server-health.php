@@ -229,7 +229,7 @@ class Conjure_Server_Health {
 		global $wpdb;
 
 		// Suppress errors and use WordPress DB version as fallback.
-		$version = $wpdb->get_var( $wpdb->prepare( 'SELECT VERSION()' ) );
+		$version = $wpdb->get_var( 'SELECT VERSION()' );
 
 		if ( empty( $version ) ) {
 			// Fallback to WordPress database version.

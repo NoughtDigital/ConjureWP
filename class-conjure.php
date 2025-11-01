@@ -302,6 +302,9 @@ class Conjure {
 		add_action( 'admin_notices', array( $this, 'display_admin_notices' ) );
 	}
 
+	// Register REST API endpoints (always available for hosting dashboards).
+	add_action( 'rest_api_init', array( $this, 'register_rest_api' ) );
+
 	if ( true !== $this->dev_mode && $already_setup ) {
 		// Return if Conjure has already completed it's setup (but admin bar hooks are already registered above if enabled).
 		return;
@@ -339,11 +342,11 @@ class Conjure {
 		add_action( 'admin_init', array( $this, 'register_import_files' ) );
 		add_filter( 'upload_mimes', array( $this, 'allow_import_file_types' ) );
 
-		// Register WP-CLI commands if WP-CLI is available.
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			add_action( 'admin_init', array( $this, 'register_cli_commands' ) );
-		}
+	// Register WP-CLI commands if WP-CLI is available.
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		add_action( 'admin_init', array( $this, 'register_cli_commands' ) );
 	}
+}
 
 	/**
 	 * Require necessary classes.
@@ -2786,6 +2789,18 @@ class Conjure {
 		$cli = new Conjure_CLI( $this );
 		WP_CLI::add_command( 'conjure list', array( $cli, 'list_demos' ) );
 		WP_CLI::add_command( 'conjure import', array( $cli, 'import' ) );
+	}
+
+	/**
+	 * Register REST API endpoints.
+	 */
+	public function register_rest_api() {
+		// Load the REST API class.
+		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-rest-api.php';
+
+		// Initialize and register REST API routes.
+		$rest_api = new Conjure_REST_API( $this );
+		$rest_api->register_routes();
 	}
 
 	/**

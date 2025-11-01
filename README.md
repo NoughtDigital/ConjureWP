@@ -42,6 +42,27 @@ Activate via WordPress admin, then configure imports using filters.
 
 ## Configuration
 
+### Production Defaults
+
+**Important:** For production builds, `dev_mode` and verbose logging are **disabled by default** to prevent accidental exposure of reset tools or DEBUG-level log noise.
+
+In `conjurewp-config.php`:
+
+-   `dev_mode`: Defaults to `false` - prevents wizard from being rerun after completion (hides reset tools)
+-   `logging['min_log_level']`: Defaults to `'INFO'` - suppresses DEBUG-level verbose logging
+
+To enable these features during development:
+
+```php
+// In conjurewp-config.php
+'dev_mode' => true, // Enable development mode
+'logging' => array(
+    'min_log_level' => 'DEBUG', // Enable verbose logging
+),
+```
+
+**Note:** Only enable `dev_mode` and DEBUG logging in development environments. In production, keep these disabled to avoid exposing internal tools or generating excessive log noise.
+
 ### Custom Demo Content (Update-Safe)
 
 The plugin's `/demo/` folder is for examples only and gets overwritten during updates. For production, use update-safe locations:

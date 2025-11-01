@@ -785,11 +785,11 @@ var Conjure = (function ($) {
 	}
 
 	function init_health_telemetry_live_checks() {
-		var healthTelemetry = document.querySelector(
-			".conjure__drawer--health-telemetry"
+		var serverHealthInfo = document.querySelector(
+			"#server-health-info"
 		);
 
-		if (!healthTelemetry) {
+		if (!serverHealthInfo) {
 			return;
 		}
 
@@ -812,132 +812,104 @@ var Conjure = (function ($) {
 						var metrics = response.data;
 
 						// Update memory metric
-						var memoryEl = healthTelemetry.querySelector(
+						var memoryEl = serverHealthInfo.querySelector(
 							".health-metric-value-memory"
 						);
 						if (memoryEl && metrics.memory_limit) {
 							var memoryHtml = metrics.memory_limit.formatted;
 							if (!metrics.memory_limit.meets_req) {
-								memoryHtml +=
-									' <span class="metric-warning">(Min: ' +
-									metrics.memory_limit.min_required +
-									"MB)</span>";
+								memoryHtml =
+									'<span class="below-req">' +
+									memoryHtml +
+									'</span>';
+							} else {
+								memoryHtml =
+									'<span class="meets-req">' +
+									memoryHtml +
+									'</span>';
 							}
 							memoryEl.innerHTML = memoryHtml;
 							memoryEl.setAttribute(
 								"data-current",
 								metrics.memory_limit.value
 							);
+							memoryEl.setAttribute(
+								"data-min",
+								metrics.memory_limit.min_required
+							);
 						}
 
 						// Update execution time metric
-						var executionEl = healthTelemetry.querySelector(
+						var executionEl = serverHealthInfo.querySelector(
 							".health-metric-value-execution"
 						);
 						if (executionEl && metrics.max_execution) {
 							var executionHtml = metrics.max_execution.formatted;
 							if (!metrics.max_execution.meets_req) {
-								executionHtml +=
-									' <span class="metric-warning">(Min: ' +
-									metrics.max_execution.min_required +
-									"s)</span>";
+								executionHtml =
+									'<span class="below-req">' +
+									executionHtml +
+									"</span>";
+							} else {
+								executionHtml =
+									'<span class="meets-req">' +
+									executionHtml +
+									"</span>";
 							}
 							executionEl.innerHTML = executionHtml;
 							executionEl.setAttribute(
 								"data-current",
 								metrics.max_execution.value
 							);
+							executionEl.setAttribute(
+								"data-min",
+								metrics.max_execution.min_required
+							);
 						}
 
 						// Update MySQL version
-						var mysqlEl = healthTelemetry.querySelector(
+						var mysqlEl = serverHealthInfo.querySelector(
 							".health-metric-value-mysql"
 						);
 						if (mysqlEl && metrics.mysql_version) {
-							mysqlEl.textContent = metrics.mysql_version;
+							mysqlEl.innerHTML =
+								'<span class="meets-req">' +
+								metrics.mysql_version +
+								"</span>";
 						}
 
-						// Update health status
+						// Update health status and meter
 						var meetsRequirements =
 							metrics.meets_requirements === true ||
 							metrics.meets_requirements === "1";
-						healthTelemetry.setAttribute(
-							"data-health-status",
-							meetsRequirements ? "healthy" : "warning"
-						);
 
-						var healthIndicator = healthTelemetry.querySelector(
-							".health-indicator"
+						var healthMeter = serverHealthInfo.querySelector(
+							"#health-meter"
 						);
-						if (healthIndicator) {
-							healthIndicator.className =
-								"health-indicator health-indicator--" +
-								(meetsRequirements ? "healthy" : "warning");
+						if (healthMeter) {
+							healthMeter.className = meetsRequirements
+								? "meets-requirements"
+								: "does-not-meet-requirements";
 						}
 
-						var statusText = healthTelemetry.querySelector(
-							".health-status-text"
-						);
-						if (statusText) {
-							statusText.textContent = meetsRequirements
-								? "Healthy"
-								: "Needs Attention";
-						}
-
-						// Update remediation links
-						var remediationSection = healthTelemetry.querySelector(
-							".health-remediation"
-						);
-						if (remediationSection) {
-							if (
-								!metrics.remediation_links ||
-								metrics.remediation_links.length === 0
-							) {
-								remediationSection.style.display = "none";
+						// Update check-req message
+						var checkReq = serverHealthInfo.querySelector("#check-req");
+						if (checkReq) {
+							var checkReqHtml = "";
+							if (meetsRequirements) {
+								checkReqHtml =
+									'<strong>' +
+									"Meets Requirements" +
+									"</strong>, " +
+									"setup & import functions will operate smoothly.";
 							} else {
-								remediationSection.style.display = "block";
-								var linksList = remediationSection.querySelector(
-									".health-remediation-links"
-								);
-								if (linksList) {
-									linksList.innerHTML = "";
-									metrics.remediation_links.forEach(function (
-										link
-									) {
-										var li = document.createElement("li");
-										var a = document.createElement("a");
-										a.href = link.url;
-										a.target = "_blank";
-										a.rel = "noopener noreferrer";
-										a.className = "health-remediation-link";
-										a.setAttribute(
-											"data-bottleneck",
-											link.type
-										);
-										a.textContent = link.title;
-										var externalSpan = document.createElement(
-											"span"
-										);
-										externalSpan.className =
-											"health-link-external";
-										externalSpan.textContent = "↗";
-										a.appendChild(externalSpan);
-										li.appendChild(a);
-										linksList.appendChild(li);
-									});
-								}
+								checkReqHtml =
+									'<strong>' +
+									"Server Resources Low" +
+									"</strong><br />" +
+									"Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.";
 							}
-						}
-
-						// Pulse animation to indicate live update
-						var pulseEl = healthTelemetry.querySelector(
-							".health-pulse"
-						);
-						if (pulseEl) {
-							pulseEl.classList.add("pulse-active");
-							setTimeout(function () {
-								pulseEl.classList.remove("pulse-active");
-							}, 500);
+							checkReq.innerHTML = checkReqHtml;
 						}
 					}
 				}
@@ -951,6 +923,29 @@ var Conjure = (function ($) {
 
 		// Set up periodic checks
 		checkInterval = setInterval(updateHealthMetrics, checkIntervalMs);
+
+		// Stop checks when page is hidden (optional optimization)
+		document.addEventListener("visibilitychange", function () {
+			if (document.hidden) {
+				if (checkInterval) {
+					clearInterval(checkInterval);
+					checkInterval = null;
+				}
+			} else {
+				if (!checkInterval) {
+					updateHealthMetrics();
+					checkInterval = setInterval(updateHealthMetrics, checkIntervalMs);
+				}
+			}
+		});
+
+		// Cleanup on page unload
+		window.addEventListener("beforeunload", function () {
+			if (checkInterval) {
+				clearInterval(checkInterval);
+				checkInterval = null;
+			}
+		});
 
 		// Stop checks when drawer is closed (optional optimization)
 		var drawer = document.querySelector(
@@ -972,7 +967,7 @@ var Conjure = (function ($) {
 						} else if (
 							isOpen &&
 							!checkInterval &&
-							document.contains(healthTelemetry)
+							document.contains(serverHealthInfo)
 						) {
 							checkInterval = setInterval(
 								updateHealthMetrics,

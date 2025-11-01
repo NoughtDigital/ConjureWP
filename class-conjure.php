@@ -332,6 +332,7 @@ class Conjure {
 		add_action( 'wp_ajax_conjure_upload_file', array( $this, '_ajax_upload_file' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_upload_from_media', array( $this, '_ajax_upload_from_media' ), 10, 0 );
 		add_action( 'wp_ajax_conjure_delete_uploaded_file', array( $this, '_ajax_delete_uploaded_file' ), 10, 0 );
+		add_action( 'wp_ajax_conjure_get_health_metrics', array( $this, '_ajax_get_health_metrics' ), 10, 0 );
 		add_filter( 'pt-importer/new_ajax_request_response_data', array( $this, 'pt_importer_new_ajax_request_response_data' ) );
 		add_action( 'import_end', array( $this, 'after_content_import_setup' ) );
 		add_action( 'import_start', array( $this, 'before_content_import_setup' ) );
@@ -1416,6 +1417,17 @@ class Conjure {
 
 			<ul class="conjure__drawer conjure__drawer--import-content conjure__drawer--upload js-conjure-drawer-import-content">
 				<?php 
+				// Add health telemetry at the top of the drawer.
+				// Hook at line 2574 area for extensibility via conjure_health_telemetry_in_drawer filter.
+				$health_telemetry_html = '';
+				if ( $server_health && $server_health->is_enabled() ) {
+					$health_telemetry_html = $server_health->render_drawer_telemetry();
+				}
+				$health_telemetry_html = apply_filters( 'conjure_health_telemetry_in_drawer', $health_telemetry_html, $server_health, $this );
+				if ( ! empty( $health_telemetry_html ) ) {
+					echo wp_kses_post( $health_telemetry_html );
+				}
+
 				// Check if no demos are registered.
 				if ( empty( $this->import_files ) && ! $this->is_manual_upload_mode() ) {
 					?>
@@ -2411,6 +2423,97 @@ class Conjure {
 		}
 	}
 
+	/**
+	 * AJAX handler for live health metrics checks.
+	 */
+	public function _ajax_get_health_metrics() {
+		// Wrap in try-catch to prevent errors from breaking the AJAX response.
+		try {
+			// Catch any output from plugins that might interfere with JSON response.
+			ob_start();
+
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
+				ob_end_clean();
+				wp_send_json_error(
+					array(
+						'message' => esc_html__( 'Security check failed.', 'conjurewp' ),
+					)
+				);
+			}
+
+			if ( ! current_user_can( 'manage_options' ) ) {
+				ob_end_clean();
+				wp_send_json_error(
+					array(
+						'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ),
+					)
+				);
+			}
+
+			require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-server-health.php';
+			$server_health = new Conjure_Server_Health();
+
+			$metrics = $server_health->get_telemetry_metrics();
+
+			// Clean any buffered output before sending JSON.
+			$buffered_output = ob_get_clean();
+			if ( ! empty( $buffered_output ) ) {
+				$this->logger->warning( 
+					'Unexpected output during health metrics check',
+					array( 'output' => $buffered_output )
+				);
+			}
+
+			wp_send_json_success( $metrics );
+
+		} catch ( \Exception $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+
+			$this->logger->error(
+				'Exception in _ajax_get_health_metrics',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %s: error message */
+						esc_html__( 'Health check error: %s', 'conjurewp' ),
+						$e->getMessage()
+					),
+				)
+			);
+
+		} catch ( \Error $e ) {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			
+			$this->logger->error(
+				'Fatal error in _ajax_get_health_metrics',
+				array(
+					'message' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				)
+			);
+
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %s: error message */
+						esc_html__( 'Fatal health check error: %s', 'conjurewp' ),
+						$e->getMessage()
+					),
+				)
+			);
+		}
+	}
+
 
 	/**
 	 * Get import data from the selected import.
@@ -2573,6 +2676,9 @@ class Conjure {
 			);
 		}
 
+		// Hook at line 2574: Allow filtering of base content before returning.
+		// Health telemetry is handled separately in drawer rendering, but this hook
+		// can be used to add health check items to import content if needed.
 		$content = apply_filters( 'conjure_get_base_content', $content, $this );
 
 		return $content;

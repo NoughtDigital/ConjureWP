@@ -140,3 +140,209 @@
 	}
 }
 
+.conjure__drawer--health-telemetry {
+	margin-bottom: 15px;
+	padding: 15px;
+	background: #f8f9fd;
+	border-radius: 3px;
+	border-left: 3px solid #7faf1b;
+	list-style: none;
+
+	&[data-health-status="warning"] {
+		border-left-color: #bc0000;
+	}
+
+	.health-telemetry-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
+		position: relative;
+
+		label {
+			cursor: default;
+			display: flex;
+			align-items: center;
+			flex: 1;
+		}
+
+		.health-telemetry-checkbox {
+			margin-right: 8px;
+			cursor: default;
+		}
+
+		.health-telemetry-title {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-weight: 600;
+			font-size: 13px;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: #555;
+		}
+
+		.health-indicator {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 11px;
+			text-transform: none;
+			letter-spacing: 0;
+
+			.health-dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				display: inline-block;
+			}
+
+			&.health-indicator--healthy .health-dot {
+				background-color: #7faf1b;
+			}
+
+			&.health-indicator--warning .health-dot {
+				background-color: #bc0000;
+			}
+
+			.health-status-text {
+				font-weight: 500;
+			}
+		}
+
+		.health-live-indicator {
+			position: relative;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			.health-pulse {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background-color: #7faf1b;
+				display: inline-block;
+				animation: healthPulse 2s ease-in-out infinite;
+
+				&.pulse-active {
+					animation: healthPulseFast 0.5s ease-in-out;
+				}
+			}
+		}
+	}
+
+	.health-telemetry-content {
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid #e0e0e0;
+	}
+
+	.health-metrics {
+		margin-bottom: 12px;
+
+		.health-metric {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 8px;
+			font-size: 12px;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+
+			.metric-label {
+				color: #666;
+				font-weight: 500;
+			}
+
+			.metric-value {
+				font-weight: 600;
+				color: #333;
+
+				.metric-warning {
+					color: #bc0000;
+					font-weight: 500;
+					margin-left: 4px;
+				}
+			}
+		}
+	}
+
+	.health-remediation {
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid #e0e0e0;
+
+		.health-remediation-title {
+			margin: 0 0 8px 0;
+			font-size: 12px;
+			color: #333;
+
+			strong {
+				color: #bc0000;
+			}
+		}
+
+		.health-remediation-links {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+
+			li {
+				margin-bottom: 6px;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+
+			.health-remediation-link {
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				color: #2271b1;
+				text-decoration: none;
+				font-size: 12px;
+				transition: color 0.2s ease;
+
+				&:hover {
+					color: #135e96;
+					text-decoration: underline;
+				}
+
+				.health-link-external {
+					font-size: 10px;
+					opacity: 0.7;
+				}
+			}
+		}
+	}
+}
+
+@keyframes healthPulse {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.5;
+		transform: scale(1.2);
+	}
+}
+
+@keyframes healthPulseFast {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.5);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+

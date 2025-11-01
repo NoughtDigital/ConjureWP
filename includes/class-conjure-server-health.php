@@ -387,5 +387,192 @@ class Conjure_Server_Health {
 		echo $this->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->render_health_check( $args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
+
+	/**
+	 * Get detected bottlenecks.
+	 *
+	 * @return array Array of bottleneck identifiers.
+	 */
+	public function get_bottlenecks() {
+		$bottlenecks = array();
+		
+		if ( ! $this->enabled ) {
+			return $bottlenecks;
+		}
+
+		$memory_limit = $this->get_memory_limit_value();
+		$max_execution = $this->get_max_execution_value();
+
+		if ( $memory_limit < $this->min_memory_limit ) {
+			$bottlenecks[] = 'memory';
+		}
+
+		if ( $max_execution < $this->min_execution_time ) {
+			$bottlenecks[] = 'execution_time';
+		}
+
+		return apply_filters( 'conjure_server_health_bottlenecks', $bottlenecks, $this );
+	}
+
+	/**
+	 * Get remediation links based on detected bottlenecks.
+	 *
+	 * @return array Array of remediation links with title and URL.
+	 */
+	public function get_remediation_links() {
+		$bottlenecks = $this->get_bottlenecks();
+		$links = array();
+
+		if ( empty( $bottlenecks ) ) {
+			return $links;
+		}
+
+		foreach ( $bottlenecks as $bottleneck ) {
+			switch ( $bottleneck ) {
+				case 'memory':
+					$links[] = array(
+						'title' => __( 'How to increase PHP memory limit', 'conjure-wp' ),
+						'url'   => 'https://wordpress.org/documentation/article/editing-wp-config-php/#increase-memory-allocated-to-php',
+						'type'  => 'memory',
+					);
+					break;
+
+				case 'execution_time':
+					$links[] = array(
+						'title' => __( 'How to increase PHP max execution time', 'conjure-wp' ),
+						'url'   => 'https://wordpress.org/support/article/common-wordpress-errors/#maximum-execution-time-exceeded',
+						'type'  => 'execution_time',
+					);
+					break;
+			}
+		}
+
+		return apply_filters( 'conjure_server_health_remediation_links', $links, $bottlenecks, $this );
+	}
+
+	/**
+	 * Get health metrics for telemetry display.
+	 *
+	 * @return array Health metrics data.
+	 */
+	public function get_telemetry_metrics() {
+		if ( ! $this->enabled ) {
+			return array(
+				'enabled' => false,
+			);
+		}
+
+		$memory_limit = $this->get_memory_limit_value();
+		$max_execution = $this->get_max_execution_value();
+		$bottlenecks = $this->get_bottlenecks();
+		$remediation_links = $this->get_remediation_links();
+
+		return array(
+			'enabled'            => true,
+			'meets_requirements' => $this->meets_requirements(),
+			'memory_limit'       => array(
+				'value'      => $memory_limit,
+				'formatted'  => $this->get_memory_limit(),
+				'meets_req'  => $memory_limit >= $this->min_memory_limit,
+				'min_required' => $this->min_memory_limit,
+			),
+			'max_execution'      => array(
+				'value'      => $max_execution,
+				'formatted'  => $this->get_max_execution_time(),
+				'meets_req'  => $max_execution >= $this->min_execution_time,
+				'min_required' => $this->min_execution_time,
+			),
+			'mysql_version'      => $this->get_mysql_version(),
+			'bottlenecks'        => $bottlenecks,
+			'remediation_links'  => $remediation_links,
+		);
+	}
+
+	/**
+	 * Render health telemetry for drawer display.
+	 *
+	 * @return string HTML output for drawer.
+	 */
+	public function render_drawer_telemetry() {
+		if ( ! $this->enabled ) {
+			return '';
+		}
+
+		$metrics = $this->get_telemetry_metrics();
+		$meets_requirements = $metrics['meets_requirements'];
+
+		ob_start();
+		?>
+		<li class="conjure__drawer--health-telemetry" data-health-status="<?php echo esc_attr( $meets_requirements ? 'healthy' : 'warning' ); ?>">
+			<div class="health-telemetry-header">
+				<label>
+					<input type="checkbox" class="health-telemetry-checkbox" checked disabled>
+					<span class="health-telemetry-title">
+						<?php esc_html_e( 'Server Health', 'conjure-wp' ); ?>
+						<span class="health-indicator health-indicator--<?php echo esc_attr( $meets_requirements ? 'healthy' : 'warning' ); ?>">
+							<span class="health-dot"></span>
+							<span class="health-status-text">
+								<?php echo $meets_requirements ? esc_html__( 'Healthy', 'conjure-wp' ) : esc_html__( 'Needs Attention', 'conjure-wp' ); ?>
+							</span>
+						</span>
+					</span>
+				</label>
+				<span class="health-live-indicator" title="<?php esc_attr_e( 'Live monitoring active', 'conjure-wp' ); ?>">
+					<span class="health-pulse"></span>
+				</span>
+			</div>
+			
+			<div class="health-telemetry-content">
+				<div class="health-metrics">
+					<div class="health-metric">
+						<span class="metric-label"><?php esc_html_e( 'PHP Memory', 'conjure-wp' ); ?></span>
+						<span class="metric-value health-metric-value-memory" data-current="<?php echo esc_attr( $metrics['memory_limit']['value'] ); ?>" data-min="<?php echo esc_attr( $metrics['memory_limit']['min_required'] ); ?>">
+							<?php echo esc_html( $metrics['memory_limit']['formatted'] ); ?>
+							<?php if ( ! $metrics['memory_limit']['meets_req'] ) : ?>
+								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %dMB', 'conjure-wp' ), $metrics['memory_limit']['min_required'] ) ); ?>)</span>
+							<?php endif; ?>
+						</span>
+					</div>
+					
+					<div class="health-metric">
+						<span class="metric-label"><?php esc_html_e( 'PHP Execution Time', 'conjure-wp' ); ?></span>
+						<span class="metric-value health-metric-value-execution" data-current="<?php echo esc_attr( $metrics['max_execution']['value'] ); ?>" data-min="<?php echo esc_attr( $metrics['max_execution']['min_required'] ); ?>">
+							<?php echo esc_html( $metrics['max_execution']['formatted'] ); ?>
+							<?php if ( ! $metrics['max_execution']['meets_req'] ) : ?>
+								<span class="metric-warning">(<?php echo esc_html( sprintf( __( 'Min: %ds', 'conjure-wp' ), $metrics['max_execution']['min_required'] ) ); ?>)</span>
+							<?php endif; ?>
+						</span>
+					</div>
+
+					<div class="health-metric">
+						<span class="metric-label"><?php esc_html_e( 'MySQL Version', 'conjure-wp' ); ?></span>
+						<span class="metric-value health-metric-value-mysql">
+							<?php echo esc_html( $metrics['mysql_version'] ); ?>
+						</span>
+					</div>
+				</div>
+
+				<?php if ( ! empty( $metrics['remediation_links'] ) ) : ?>
+					<div class="health-remediation">
+						<p class="health-remediation-title">
+							<strong><?php esc_html_e( 'Recommended Actions:', 'conjure-wp' ); ?></strong>
+						</p>
+						<ul class="health-remediation-links">
+							<?php foreach ( $metrics['remediation_links'] as $link ) : ?>
+								<li>
+									<a href="<?php echo esc_url( $link['url'] ); ?>" target="_blank" rel="noopener noreferrer" class="health-remediation-link" data-bottleneck="<?php echo esc_attr( $link['type'] ); ?>">
+										<?php echo esc_html( $link['title'] ); ?>
+										<span class="health-link-external">↗</span>
+									</a>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+			</div>
+		</li>
+		<?php
+		return ob_get_clean();
+	}
 }
 

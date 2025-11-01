@@ -77,6 +77,9 @@ var Conjure = (function ($) {
 		// Initialize Server Health dropdown
 		init_server_health_dropdown();
 
+		// Initialize health telemetry live checks
+		init_health_telemetry_live_checks();
+
 		// Allow clicking anywhere on the content list item (outside of the upload zone) to toggle the checkbox.
 		document.addEventListener("click", function (event) {
 			var listItem = event.target.closest(
@@ -756,6 +759,219 @@ var Conjure = (function ($) {
 				serverHealthInfo.classList.toggle("open");
 			});
 		}
+	}
+
+	function init_health_telemetry_live_checks() {
+		var healthTelemetry = document.querySelector(
+			".conjure__drawer--health-telemetry"
+		);
+
+		if (!healthTelemetry) {
+			return;
+		}
+
+		var checkInterval = null;
+		var checkIntervalMs = 30000; // Check every 30 seconds
+
+		function updateHealthMetrics() {
+			if (!conjure_params || !conjure_params.ajaxurl || !conjure_params.wpnonce) {
+				return;
+			}
+
+			jQuery.post(
+				conjure_params.ajaxurl,
+				{
+					action: "conjure_get_health_metrics",
+					wpnonce: conjure_params.wpnonce,
+				},
+				function (response) {
+					if (response.success && response.data) {
+						var metrics = response.data;
+
+						// Update memory metric
+						var memoryEl = healthTelemetry.querySelector(
+							".health-metric-value-memory"
+						);
+						if (memoryEl && metrics.memory_limit) {
+							var memoryHtml = metrics.memory_limit.formatted;
+							if (!metrics.memory_limit.meets_req) {
+								memoryHtml +=
+									' <span class="metric-warning">(Min: ' +
+									metrics.memory_limit.min_required +
+									"MB)</span>";
+							}
+							memoryEl.innerHTML = memoryHtml;
+							memoryEl.setAttribute(
+								"data-current",
+								metrics.memory_limit.value
+							);
+						}
+
+						// Update execution time metric
+						var executionEl = healthTelemetry.querySelector(
+							".health-metric-value-execution"
+						);
+						if (executionEl && metrics.max_execution) {
+							var executionHtml = metrics.max_execution.formatted;
+							if (!metrics.max_execution.meets_req) {
+								executionHtml +=
+									' <span class="metric-warning">(Min: ' +
+									metrics.max_execution.min_required +
+									"s)</span>";
+							}
+							executionEl.innerHTML = executionHtml;
+							executionEl.setAttribute(
+								"data-current",
+								metrics.max_execution.value
+							);
+						}
+
+						// Update MySQL version
+						var mysqlEl = healthTelemetry.querySelector(
+							".health-metric-value-mysql"
+						);
+						if (mysqlEl && metrics.mysql_version) {
+							mysqlEl.textContent = metrics.mysql_version;
+						}
+
+						// Update health status
+						var meetsRequirements =
+							metrics.meets_requirements === true ||
+							metrics.meets_requirements === "1";
+						healthTelemetry.setAttribute(
+							"data-health-status",
+							meetsRequirements ? "healthy" : "warning"
+						);
+
+						var healthIndicator = healthTelemetry.querySelector(
+							".health-indicator"
+						);
+						if (healthIndicator) {
+							healthIndicator.className =
+								"health-indicator health-indicator--" +
+								(meetsRequirements ? "healthy" : "warning");
+						}
+
+						var statusText = healthTelemetry.querySelector(
+							".health-status-text"
+						);
+						if (statusText) {
+							statusText.textContent = meetsRequirements
+								? "Healthy"
+								: "Needs Attention";
+						}
+
+						// Update remediation links
+						var remediationSection = healthTelemetry.querySelector(
+							".health-remediation"
+						);
+						if (remediationSection) {
+							if (
+								!metrics.remediation_links ||
+								metrics.remediation_links.length === 0
+							) {
+								remediationSection.style.display = "none";
+							} else {
+								remediationSection.style.display = "block";
+								var linksList = remediationSection.querySelector(
+									".health-remediation-links"
+								);
+								if (linksList) {
+									linksList.innerHTML = "";
+									metrics.remediation_links.forEach(function (
+										link
+									) {
+										var li = document.createElement("li");
+										var a = document.createElement("a");
+										a.href = link.url;
+										a.target = "_blank";
+										a.rel = "noopener noreferrer";
+										a.className = "health-remediation-link";
+										a.setAttribute(
+											"data-bottleneck",
+											link.type
+										);
+										a.textContent = link.title;
+										var externalSpan = document.createElement(
+											"span"
+										);
+										externalSpan.className =
+											"health-link-external";
+										externalSpan.textContent = "↗";
+										a.appendChild(externalSpan);
+										li.appendChild(a);
+										linksList.appendChild(li);
+									});
+								}
+							}
+						}
+
+						// Pulse animation to indicate live update
+						var pulseEl = healthTelemetry.querySelector(
+							".health-pulse"
+						);
+						if (pulseEl) {
+							pulseEl.classList.add("pulse-active");
+							setTimeout(function () {
+								pulseEl.classList.remove("pulse-active");
+							}, 500);
+						}
+					}
+				}
+			).fail(function () {
+				// Silently fail - don't interrupt user experience
+			});
+		}
+
+		// Initial check
+		updateHealthMetrics();
+
+		// Set up periodic checks
+		checkInterval = setInterval(updateHealthMetrics, checkIntervalMs);
+
+		// Stop checks when drawer is closed (optional optimization)
+		var drawer = document.querySelector(
+			".conjure__drawer--import-content"
+		);
+		if (drawer) {
+			var observer = new MutationObserver(function (mutations) {
+				mutations.forEach(function (mutation) {
+					if (
+						mutation.type === "attributes" &&
+						mutation.attributeName === "class"
+					) {
+						var isOpen = drawer.classList.contains(
+							"conjure__drawer--open"
+						);
+						if (!isOpen && checkInterval) {
+							clearInterval(checkInterval);
+							checkInterval = null;
+						} else if (
+							isOpen &&
+							!checkInterval &&
+							document.contains(healthTelemetry)
+						) {
+							checkInterval = setInterval(
+								updateHealthMetrics,
+								checkIntervalMs
+							);
+						}
+					}
+				});
+			});
+
+			observer.observe(drawer, {
+				attributes: true,
+				attributeFilter: ["class"],
+			});
+		}
+
+		// Clean up on page unload
+		window.addEventListener("beforeunload", function () {
+			if (checkInterval) {
+				clearInterval(checkInterval);
+			}
+		});
 	}
 
 	function set_upload_item_expanded(checkbox, forcedState) {

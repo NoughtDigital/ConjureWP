@@ -3,6 +3,7 @@ node_modules/
 vendor/
 
 # Build files
+build/
 dist/
 *.zip
 

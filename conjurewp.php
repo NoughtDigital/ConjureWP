@@ -50,6 +50,11 @@ require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
 require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
 
 /**
+ * Load Freemius integration.
+ */
+require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+
+/**
  * Load the configuration.
  */
 require_once CONJUREWP_PLUGIN_DIR . 'conjurewp-config.php';

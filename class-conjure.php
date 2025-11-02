@@ -220,6 +220,27 @@ class Conjure {
 	public $logger;
 
 	/**
+	 * The URL for the big button on the ready step.
+	 *
+	 * @var string $ready_big_button_url
+	 */
+	protected $ready_big_button_url = null;
+
+	/**
+	 * The theme slug.
+	 *
+	 * @var string $slug
+	 */
+	protected $slug = '';
+
+	/**
+	 * Flag to keep wizard locked on the license step until activation.
+	 *
+	 * @var bool
+	 */
+	protected $license_gate_active = false;
+
+	/**
 	 * Setup plugin version.
 	 *
 	 * @access private
@@ -274,6 +295,10 @@ class Conjure {
 		$this->edd_remote_api_url     = $config['edd_remote_api_url'];
 		$this->dev_mode               = $config['dev_mode'];
 		$this->ready_big_button_url   = $config['ready_big_button_url'];
+
+		if ( class_exists( 'Conjure_Freemius' ) ) {
+			add_filter( 'conjurewp_has_free_access', array( $this, 'grant_access_for_valid_edd_license' ), 10, 2 );
+		}
 
 		// Strings passed in from the config file.
 		$this->strings = $strings;
@@ -482,26 +507,105 @@ class Conjure {
 	 * Add the admin page.
 	 */
 	public function admin_page() {
+		// Log that admin_page was called.
+		$this->logger->debug( 'admin_page() method called', array( 'page' => isset( $_GET['page'] ) ? $_GET['page'] : 'none', 'step' => isset( $_GET['step'] ) ? $_GET['step'] : 'none' ) );
 
 		// Strings passed in from the config file.
 		$strings = $this->strings;
 
 		// Do not proceed, if we're not on the right page.
 		if ( empty( $_GET['page'] ) || $this->conjure_url !== $_GET['page'] ) {
+			$this->logger->debug( 'Not on ConjureWP page, returning early' );
 			return;
+		}
+
+		// Ensure steps are initialized first (needed for proper step handling).
+		if ( empty( $this->steps ) ) {
+			$this->steps();
+		}
+
+		// Check access: free for open-source themes, paid for commercial themes.
+		// Only check if Freemius class exists, otherwise allow access (graceful degradation).
+		if ( class_exists( 'Conjure_Freemius' ) ) {
+			$freemius_access = Conjure_Freemius::has_free_access();
+
+			if ( ! $freemius_access ) {
+				if ( $this->license_step_enabled && isset( $this->steps['license'] ) ) {
+					if ( $this->license_required ) {
+						// License is required, so keep the wizard accessible but force the license step.
+						$this->license_gate_active = true;
+						$this->logger->debug( 'Freemius access requires activation - enforcing license step' );
+					} else {
+						// License step is optional, so allow the wizard to continue but keep the step visible.
+						$this->logger->debug( 'Freemius access missing, but license step is optional - allowing wizard to continue' );
+					}
+				} else {
+					// No license step available, so show the upgrade notice.
+					$this->logger->debug( 'Access denied - showing upgrade notice' );
+					$this->show_upgrade_notice();
+					return;
+				}
+			} else {
+				$this->logger->debug( 'Access granted - proceeding with wizard' );
+			}
+		} else {
+			$this->logger->debug( 'Freemius not detected - proceeding with wizard' );
 		}
 
 		if ( ob_get_length() ) {
 			ob_end_clean();
 		}
 
-		$this->step = isset( $_GET['step'] ) ? sanitize_key( $_GET['step'] ) : current( array_keys( $this->steps ) );
+		// Get the current step, with fallback to first step if empty or invalid.
+		$step_keys = array_keys( $this->steps );
+		$default_step = ! empty( $step_keys ) ? $step_keys[0] : '';
+		$this->step = isset( $_GET['step'] ) && ! empty( $_GET['step'] ) ? sanitize_key( $_GET['step'] ) : $default_step;
+		
+		// Validate step exists in steps array.
+		if ( empty( $this->step ) || ! isset( $this->steps[ $this->step ] ) ) {
+			$this->logger->warning( sprintf( __( 'Invalid step "%s" requested, falling back to default: %s', 'conjurewp' ), $this->step, $default_step ) );
+			$this->logger->warning( 'Available steps: ' . implode( ', ', array_keys( $this->steps ) ) );
+			$this->step = $default_step;
+		}
+
+		if ( $this->license_gate_active && 'license' !== $this->step ) {
+			$this->logger->debug(
+				'Freemius license gate active - forcing license step',
+				array(
+					'requested_step' => $this->step,
+				)
+			);
+			$this->step          = 'license';
+			$_GET['step']        = 'license';
+		}
+
+		// Debug log current step.
+		error_log( 'CONJUREWP DEBUG: Loading step: ' . $this->step );
+		error_log( 'CONJUREWP DEBUG: Steps available: ' . implode( ', ', array_keys( $this->steps ) ) );
+		error_log( 'CONJUREWP DEBUG: License step exists? ' . ( isset( $this->steps['license'] ) ? 'YES' : 'NO' ) );
+		$this->logger->debug( sprintf( __( 'Loading step: %s', 'conjurewp' ), $this->step ) );
+		$this->logger->debug( 'Steps available: ' . print_r( array_keys( $this->steps ), true ) );
+
+		// Prevent deprecated function calls by removing hooks that use them.
+		// This prevents warnings from print_emoji_styles and wp_admin_bar_header.
+		remove_action( 'admin_print_styles', 'print_emoji_styles' );
+		remove_action( 'admin_head', 'wp_admin_bar_header' );
 
 		// Always use minified files built with Vite.
 		$suffix = '.min';
 
 		// Enqueue WordPress media uploader.
 		wp_enqueue_media();
+
+		// Enqueue emoji styles using the modern API (replaces deprecated print_emoji_styles).
+		if ( function_exists( 'wp_enqueue_emoji_styles' ) ) {
+			wp_enqueue_emoji_styles();
+		}
+
+		// Enqueue admin bar header styles using the modern API (replaces deprecated wp_admin_bar_header).
+		if ( function_exists( 'wp_enqueue_admin_bar_header_styles' ) ) {
+			wp_enqueue_admin_bar_header_styles();
+		}
 
 		// Enqueue styles.
 		$css_file = trailingslashit( $this->base_path ) . $this->directory . '/assets/css/conjure' . $suffix . '.css';
@@ -529,16 +633,15 @@ class Conjure {
 		)
 	);
 
-		ob_start();
-
 		/**
 		 * Start the actual page content.
+		 * Note: We don't use output buffering here as the header and body output directly.
 		 */
 		$this->header(); ?>
 
 		<div class="conjure__wrapper">
 
-			<div class="conjure__content conjure__content--<?php echo esc_attr( strtolower( $this->steps[ $this->step ]['name'] ) ); ?>">
+			<div class="conjure__content conjure__content--<?php echo esc_attr( ! empty( $this->step ) && isset( $this->steps[ $this->step ]['name'] ) ? strtolower( $this->steps[ $this->step ]['name'] ) : '' ); ?>">
 
 			<?php
 			// Content Handlers.
@@ -549,12 +652,26 @@ class Conjure {
 				$show_content = call_user_func( $this->steps[ $this->step ]['handler'] );
 			}
 
-				if ( $show_content ) {
-					$this->body();
-				}
-				?>
+			// Debug: Log what step we're about to render.
+			$this->logger->debug( sprintf( __( 'About to render step: %s, show_content: %s', 'conjurewp' ), $this->step, $show_content ? 'yes' : 'no' ) );
+
+			if ( $show_content ) {
+				$this->logger->debug( __( 'Calling body() method', 'conjurewp' ) );
+				$this->body();
+				$this->logger->debug( __( 'Body() method completed', 'conjurewp' ) );
+			} else {
+				$this->logger->debug( __( 'Content suppressed by handler', 'conjurewp' ) );
+			}
+			?>
 
 			<?php $this->step_output(); ?>
+
+			<?php
+			// Debug output to verify page is rendering.
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				echo '<!-- DEBUG: Step = ' . esc_html( $this->step ) . ', Steps available = ' . esc_html( implode( ', ', array_keys( $this->steps ) ) ) . ' -->';
+			}
+			?>
 
 			</div>
 
@@ -573,6 +690,81 @@ class Conjure {
 	}
 
 	/**
+	 * Show upgrade notice for paid themes without license.
+	 */
+	protected function show_upgrade_notice() {
+		// Strings passed in from the config file.
+		$strings = $this->strings;
+
+		// Get theme information.
+		$theme_name = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::get_current_theme_name() : $this->theme->name;
+		
+		// Always use minified files built with Vite.
+		$suffix = '.min';
+
+		// Enqueue styles.
+		$css_file = trailingslashit( $this->base_path ) . $this->directory . '/assets/css/conjure' . $suffix . '.css';
+		$version = file_exists( $css_file ) ? filemtime( $css_file ) : CONJURE_VERSION;
+		wp_enqueue_style( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/css/conjure' . $suffix . '.css', array( 'wp-admin' ), $version );
+
+		ob_start();
+		$this->header();
+		?>
+
+		<div class="conjure__wrapper">
+			<div class="conjure__content conjure__content--upgrade">
+				<div class="conjure__content--transition">
+					<?php echo wp_kses( $this->svg( array( 'icon' => 'license' ) ), $this->svg_allowed_html() ); ?>
+					
+					<h1><?php esc_html_e( 'ConjureWP License Required', 'conjurewp' ); ?></h1>
+					
+					<p>
+						<?php
+						printf(
+							/* translators: %s: Theme name */
+							esc_html__( 'ConjureWP is free for open-source themes, but requires a license for commercial/premium themes like %s.', 'conjurewp' ),
+							esc_html( $theme_name )
+						);
+						?>
+					</p>
+					
+					<p>
+						<?php esc_html_e( 'To use ConjureWP with your premium theme, please purchase a license or switch to an open-source theme.', 'conjurewp' ); ?>
+					</p>
+
+					<?php if ( function_exists( 'conjure_wp' ) ) : ?>
+						<?php $fs = conjure_wp(); ?>
+						<?php if ( $fs ) : ?>
+							<div class="conjure__upgrade-actions" style="margin-top: 30px;">
+								<?php if ( ! $fs->is_registered() ) : ?>
+									<a href="<?php echo esc_url( $fs->get_activation_url() ); ?>" class="conjure__button conjure__button--next">
+										<?php esc_html_e( 'Get Started', 'conjurewp' ); ?>
+									</a>
+								<?php elseif ( ! $fs->has_active_valid_license() ) : ?>
+									<a href="<?php echo esc_url( $fs->get_upgrade_url() ); ?>" class="conjure__button conjure__button--next">
+										<?php esc_html_e( 'Upgrade Now', 'conjurewp' ); ?>
+									</a>
+								<?php endif; ?>
+							</div>
+						<?php endif; ?>
+					<?php else : ?>
+						<p style="margin-top: 20px; color: #d63638;">
+							<strong><?php esc_html_e( 'Note:', 'conjurewp' ); ?></strong>
+							<?php esc_html_e( 'Freemius SDK is not properly configured. Please contact the plugin developer.', 'conjurewp' ); ?>
+						</p>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<?php echo sprintf( '<a class="return-to-dashboard" href="%s">%s</a>', esc_url( admin_url( '/' ) ), esc_html( $strings['return-to-dashboard'] ) ); ?>
+		</div>
+
+		<?php
+		$this->footer();
+		exit;
+	}
+
+	/**
 	 * Output the header.
 	 */
 	protected function header() {
@@ -581,7 +773,10 @@ class Conjure {
 		$strings = $this->strings;
 
 		// Get the current step.
-		$current_step = strtolower( $this->steps[ $this->step ]['name'] );
+		$current_step = '';
+		if ( ! empty( $this->step ) && isset( $this->steps[ $this->step ] ) && isset( $this->steps[ $this->step ]['name'] ) ) {
+			$current_step = strtolower( $this->steps[ $this->step ]['name'] );
+		}
 
 		// Set the current screen to prevent "get_current_screen called incorrectly" notices.
 		// This ensures compatibility with plugins that use get_current_screen() in admin_head hooks.
@@ -608,7 +803,22 @@ class Conjure {
 	 * Output the content for the current step.
 	 */
 	protected function body() {
-		isset( $this->steps[ $this->step ] ) ? call_user_func( $this->steps[ $this->step ]['view'] ) : false;
+		if ( empty( $this->step ) || ! isset( $this->steps[ $this->step ] ) ) {
+			$this->logger->error( sprintf( __( 'Invalid step requested: %s', 'conjurewp' ), $this->step ) );
+			return;
+		}
+
+		if ( ! isset( $this->steps[ $this->step ]['view'] ) || ! is_callable( $this->steps[ $this->step ]['view'] ) ) {
+			$this->logger->error( sprintf( __( 'Step view is not callable: %s', 'conjurewp' ), $this->step ) );
+			return;
+		}
+
+		try {
+			call_user_func( $this->steps[ $this->step ]['view'] );
+		} catch ( Exception $e ) {
+			$this->logger->error( sprintf( __( 'Error rendering step %s: %s', 'conjurewp' ), $this->step, $e->getMessage() ) );
+			echo '<div class="error"><p>' . esc_html__( 'An error occurred while loading this step. Please check the error logs.', 'conjurewp' ) . '</p></div>';
+		}
 	}
 
 	/**
@@ -787,6 +997,9 @@ class Conjure {
 			'name' => esc_html__( 'License', 'conjurewp' ),
 			'view' => array( $this, 'license' ),
 		);
+		$this->logger->debug( 'License step added to steps array', array( 'license_step_enabled' => $this->license_step_enabled ) );
+	} else {
+		$this->logger->debug( 'License step NOT added - license_step_enabled is false' );
 	}
 
 	// Show the plugin importer (custom built-in installer).
@@ -926,6 +1139,22 @@ class Conjure {
 	 * Theme EDD license step.
 	 */
 	protected function license() {
+		// Debug: Check if method is being called at all.
+		error_log( 'CONJUREWP: License step method called' );
+		$this->logger->debug( __( 'License step view method called', 'conjurewp' ) );
+
+		// Debug: Log license step configuration.
+		$this->logger->debug( 
+			'License step configuration', 
+			array(
+				'license_step_enabled' => $this->license_step_enabled,
+				'theme_license_help_url' => $this->theme_license_help_url,
+				'license_required' => $this->license_required,
+				'edd_item_name' => $this->edd_item_name,
+				'edd_theme_slug' => $this->edd_theme_slug,
+			)
+		);
+
 		$is_theme_registered = $this->is_theme_registered();
 		$action_url          = $this->theme_license_help_url;
 		$required            = $this->license_required;
@@ -933,7 +1162,7 @@ class Conjure {
 		$is_theme_registered_class = ( $is_theme_registered ) ? ' is-registered' : null;
 
 		// Theme Name.
-		$theme = ucfirst( $this->theme );
+		$theme = ucfirst( $this->theme->name );
 
 		// Remove "Child" from the current theme name, if it's installed.
 		$theme = str_replace( ' Child', '', $theme );
@@ -987,7 +1216,7 @@ class Conjure {
 
 			<?php if ( ! $is_theme_registered ) : ?>
 
-				<?php if ( ! $required ) : ?>
+				<?php if ( ! $required && ! $this->license_gate_active ) : ?>
 					<a href="<?php echo esc_url( $this->step_next_link() ); ?>" class="conjure__button conjure__button--skip conjure__button--proceed"><?php echo esc_html( $skip ); ?></a>
 				<?php endif ?>
 
@@ -1005,6 +1234,25 @@ class Conjure {
 		$this->logger->debug( __( 'The license activation step has been displayed', 'conjurewp' ) );
 	}
 
+
+	/**
+	 * Allow Freemius gating to accept a valid EDD license.
+	 *
+	 * @param bool   $has_access Current access flag from Freemius.
+	 * @param string $theme_name Theme name passed through the filter (informational).
+	 * @return bool
+	 */
+	public function grant_access_for_valid_edd_license( $has_access, $theme_name = '' ) {
+		if ( $has_access ) {
+			return true;
+		}
+
+		if ( empty( $this->edd_theme_slug ) ) {
+			return $has_access;
+		}
+
+		return $this->is_theme_registered() ? true : $has_access;
+	}
 
 	/**
 	 * Check, if the theme is currently registered.

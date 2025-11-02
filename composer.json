@@ -21,7 +21,8 @@
   ],
   "require": {
     "php": ">=7.4.0",
-    "monolog/monolog": "^2.9||^3.0"
+    "monolog/monolog": "^2.9||^3.0",
+    "freemius/wordpress-sdk": "^2.12"
   },
   "config": {
     "platform": {

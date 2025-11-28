@@ -7,6 +7,9 @@ build/
 dist/
 *.zip
 
+# API Documentation (generated)
+docs-api/
+
 # IDE
 .idea/
 .vscode/

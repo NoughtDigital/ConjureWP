@@ -34,6 +34,8 @@
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.7",
-    "wp-coding-standards/wpcs": "^3.0"
+    "wp-coding-standards/wpcs": "^3.0",
+    "code-lts/doctum": "^5.5",
+    "erusev/parsedown": "^1.7.4"
   }
 }

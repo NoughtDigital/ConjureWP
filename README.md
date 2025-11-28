@@ -1,5 +1,3 @@
-![ConjureWP](conjurewp.jpg)
-
 # ConjureWP
 
 WordPress theme setup wizard with demo content import.
@@ -577,15 +575,32 @@ Once enabled, administrators will see a **"Conjure WP"** menu in the WordPress a
 ## Build Commands
 
 ```bash
-npm run build    # Production
-npm run dev      # Development with watch
+npm run build       # Build assets (CSS/JS)
+npm run build:wp    # Build WordPress.org distribution zip
+npm run dev         # Development with watch
 ```
 
 ## Deployment
 
+### WordPress.org Deployment
+
+Build a WordPress.org compatible distribution:
+
+```bash
+npm run build:wp
+```
+
+This creates `dist/conjurewp.zip` with:
+- Production-optimised assets
+- Required vendor dependencies (Freemius SDK, Monolog)
+- No development files (tests, examples, build configs)
+- WordPress.org ready structure
+
+Upload the generated zip to WordPress.org SVN repository.
+
 ### Freemius Deployment
 
-This plugin is configured for Freemius deployment, which automatically generates:
+This plugin is also configured for Freemius deployment, which automatically generates:
 
 -   **Free version**: WordPress.org compatible (Freemius SDK stripped)
 -   **Premium version**: Includes Freemius SDK and licensing
@@ -597,8 +612,6 @@ This plugin is configured for Freemius deployment, which automatically generates
 3. Upload ZIP to Freemius dashboard (or use GitHub Actions)
 4. Freemius processes and creates both versions
 5. Set release status to "Released"
-
-See `FREEMIUS-DEPLOYMENT.txt` for complete deployment guide.
 
 **Free Version:**
 

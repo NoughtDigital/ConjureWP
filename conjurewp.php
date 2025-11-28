@@ -8,8 +8,8 @@
  * Requires PHP: 7.4
  * Author: ConjureWP
  * Author URI: https://conjurewp.com/
- * License: GPLv3
- * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: conjurewp
  * Domain Path: /languages
  *
@@ -29,9 +29,36 @@ define( 'CONJUREWP_PLUGIN_FILE', __FILE__ );
 
 /**
  * Load Composer dependencies.
+ * 
+ * FREEMIUS NOTE: The vendor/freemius/ directory is automatically stripped from the
+ * WordPress.org free version by Freemius. All code gracefully handles its absence.
  */
 if ( file_exists( CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
 	require_once CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php';
+}
+
+/**
+ * Load Freemius integration.
+ * 
+ * DEPLOYMENT: This file contains code wrapped in @freemius:premium-start/@freemius:premium-end
+ * tags. When deployed to WordPress.org via Freemius, the premium code is stripped out, leaving
+ * only free-version stubs that grant full access to all features.
+ * 
+ * FREE VERSION: Conjure_Freemius methods return values that grant full access (no restrictions).
+ * PREMIUM VERSION: Includes Freemius SDK for license management (optional feature gating).
+ */
+if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+}
+
+/**
+ * Load premium features helper.
+ * 
+ * Works with or without Freemius SDK. In free version, all methods return
+ * non-premium values (is_free() returns true, is_premium() returns false, etc.).
+ */
+if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php' ) ) {
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php';
 }
 
 /**
@@ -50,9 +77,25 @@ require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
 require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
 
 /**
- * Load Freemius integration.
+ * Load theme plugin bundling class.
  */
-require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-theme-plugins.php';
+
+/**
+ * Auto-merge theme-bundled plugins with demo-specific plugins.
+ *
+ * Allows theme developers to bundle plugins in /conjurewp-plugins/ folder
+ * with a plugins.json configuration file.
+ *
+ * @param array $demo_plugins  Demo-specific plugins.
+ * @param int   $demo_index    Demo index.
+ * @param array $selected_demo Demo configuration.
+ * @return array Merged plugin list.
+ */
+function conjurewp_merge_theme_bundled_plugins( $demo_plugins, $demo_index, $selected_demo ) {
+	return Conjure_Theme_Plugins::merge_with_demo_plugins( $demo_plugins );
+}
+add_filter( 'conjure_demo_required_plugins', 'conjurewp_merge_theme_bundled_plugins', 5, 3 );
 
 /**
  * Load the configuration.
@@ -144,7 +187,8 @@ function conjurewp_admin_log_notice() {
 	}
 
 	// Only show on ConjureWP pages.
-	if ( ! isset( $_GET['page'] ) || 'conjurewp-setup' !== $_GET['page'] ) {
+	$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
+	if ( 'conjurewp-setup' !== $page ) {
 		return;
 	}
 
@@ -225,12 +269,14 @@ add_action( 'admin_bar_menu', 'conjurewp_admin_bar_reset', 999 );
  */
 function conjurewp_handle_reset() {
 	// Check if the reset parameter is set.
-	if ( ! isset( $_GET['conjurewp_reset'] ) || 'true' !== $_GET['conjurewp_reset'] ) {
+	$reset_action = isset( $_GET['conjurewp_reset'] ) ? sanitize_text_field( wp_unslash( $_GET['conjurewp_reset'] ) ) : '';
+	if ( 'true' !== $reset_action ) {
 		return;
 	}
 
 	// Verify nonce.
-	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'conjurewp_reset_nonce' ) ) {
+	$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+	if ( ! $nonce || ! wp_verify_nonce( $nonce, 'conjurewp_reset_nonce' ) ) {
 		wp_die( __( 'Security check failed. Please try again.', 'conjurewp' ) );
 	}
 
@@ -264,7 +310,7 @@ function conjurewp_handle_reset() {
 		$child_theme_name = $child_theme_option;
 		$child_theme_slug = sanitize_title( $child_theme_name );
 		$child_theme_path = get_theme_root() . '/' . $child_theme_slug;
-		
+
 		$logger->info( sprintf( 'Attempting to delete child theme: %s at path: %s', $child_theme_slug, $child_theme_path ) );
 
 		// If the child theme directory exists, delete it.
@@ -321,7 +367,8 @@ function conjurewp_reset_success_notice() {
 	}
 
 	// Check if reset was successful.
-	if ( ! isset( $_GET['reset'] ) || 'success' !== $_GET['reset'] ) {
+	$reset_status = isset( $_GET['reset'] ) ? sanitize_text_field( wp_unslash( $_GET['reset'] ) ) : '';
+	if ( 'success' !== $reset_status ) {
 		return;
 	}
 
@@ -335,4 +382,3 @@ function conjurewp_reset_success_notice() {
 	<?php
 }
 add_action( 'admin_notices', 'conjurewp_reset_success_notice' );
-

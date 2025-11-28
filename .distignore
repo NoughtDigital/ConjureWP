@@ -1,0 +1,100 @@
+# Dist ignore file for WordPress.org deployment
+# Files and directories listed here will be excluded from the WordPress.org package
+
+# Development dependencies
+/node_modules/
+/vendor/freemius/
+/vendor/bin/
+/vendor/dealerdirect/
+/vendor/phpcsstandards/
+/vendor/squizlabs/
+/vendor/wp-coding-standards/
+
+# Development files
+/.git/
+/.github/
+/.gitignore
+/.gitattributes
+/.editorconfig
+/.eslintrc
+/.eslintrc.json
+/.prettierrc
+/.prettierrc.json
+/.browserslistrc
+/.nvmrc
+/.distignore
+/.freemiusignore
+
+# Build tools and config
+/node_modules/
+package.json
+package-lock.json
+composer.json
+composer.lock
+phpcs.xml
+vite.config.js
+webpack.config.js
+tsconfig.json
+
+# Build scripts
+/scripts/
+/build/
+
+# Source files (we only need compiled versions)
+/assets/scss/
+
+# Documentation (WordPress.org has its own readme.txt)
+README.md
+CODE_OF_CONDUCT.md
+WP-CLI.md
+/docs/
+
+# Change logs and deployment notes
+CHANGES-PREMIUM-GATING.txt
+DEPLOYMENT-SUMMARY.txt
+FEATURES-UPDATE-SUMMARY.txt
+FREEMIUS-DEPLOYMENT.txt
+IMPROVEMENTS-AND-COMPLIANCE.txt
+PREMIUM-FEATURES.txt
+WORDPRESS-ORG-COMPLIANCE.txt
+
+# Examples and demo files
+/examples/
+/demo/
+
+# Test files
+/tests/
+phpunit.xml
+phpunit.xml.dist
+test-*.php
+*-test.php
+
+# CLI scripts
+cli-*.php
+
+# Distribution packages
+/dist/
+*.zip
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+wp-config-demo-example.php
+

@@ -456,5 +456,197 @@ class Conjure_CLI {
 
 		WP_CLI::success( 'Redux options imported successfully.' );
 	}
+
+	/**
+	 * Validate theme plugin configuration.
+	 *
+	 * Checks if the theme has a valid plugins.json configuration file
+	 * and validates its structure and contents.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp conjure validate-theme-plugins
+	 *
+	 * @when after_wp_load
+	 */
+	public function validate_theme_plugins( $args, $assoc_args ) {
+		WP_CLI::line( '' );
+		WP_CLI::line( 'Validating theme plugin configuration...' );
+		WP_CLI::line( '' );
+
+		// Check if theme has bundled plugins.
+		$plugin_dir = Conjure_Theme_Plugins::get_theme_plugin_dir();
+
+		if ( ! $plugin_dir ) {
+			WP_CLI::warning( 'No conjurewp-plugins directory found in the current theme.' );
+			WP_CLI::line( sprintf( 'Expected location: %s/conjurewp-plugins/', get_template_directory() ) );
+			return;
+		}
+
+		WP_CLI::success( sprintf( 'Found plugin directory: %s', $plugin_dir ) );
+
+		// Check for configuration file.
+		$config_file = trailingslashit( $plugin_dir ) . 'plugins.json';
+		
+		if ( ! file_exists( $config_file ) ) {
+			WP_CLI::error( 'Configuration file (plugins.json) not found in plugin directory.' );
+			return;
+		}
+
+		WP_CLI::success( 'Found plugins.json configuration file.' );
+
+		// Validate configuration.
+		$validation_result = Conjure_Theme_Plugins::validate_config( $config_file );
+
+		if ( is_wp_error( $validation_result ) ) {
+			WP_CLI::error( sprintf( 'Configuration validation failed: %s', $validation_result->get_error_message() ) );
+			return;
+		}
+
+		WP_CLI::success( sprintf( 'Configuration is valid! Found %d plugin(s) defined.', $validation_result['plugins'] ) );
+		WP_CLI::line( '' );
+
+		// Get and display plugin details.
+		$plugins = Conjure_Theme_Plugins::get_bundled_plugins();
+
+		if ( ! empty( $plugins ) ) {
+			WP_CLI::line( 'Plugin Details:' );
+			WP_CLI::line( '' );
+
+			$items = array();
+			foreach ( $plugins as $plugin ) {
+				$source = 'WordPress.org';
+				if ( ! empty( $plugin['bundled'] ) ) {
+					$source = 'Bundled ZIP';
+				} elseif ( ! empty( $plugin['external'] ) ) {
+					$source = 'External URL';
+				}
+
+				$items[] = array(
+					'Name'     => $plugin['name'],
+					'Slug'     => $plugin['slug'],
+					'Required' => $plugin['required'] ? 'Yes' : 'No',
+					'Source'   => $source,
+					'Version'  => ! empty( $plugin['version'] ) ? $plugin['version'] : '-',
+				);
+			}
+
+			WP_CLI\Utils\format_items( 'table', $items, array( 'Name', 'Slug', 'Required', 'Source', 'Version' ) );
+			WP_CLI::line( '' );
+			WP_CLI::success( 'Theme plugin validation complete!' );
+		}
+	}
+
+	/**
+	 * List theme bundled plugins.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp conjure list-theme-plugins
+	 *
+	 * @when after_wp_load
+	 */
+	public function list_theme_plugins( $args, $assoc_args ) {
+		$plugins = Conjure_Theme_Plugins::get_bundled_plugins();
+
+		if ( empty( $plugins ) ) {
+			WP_CLI::warning( 'No theme bundled plugins found.' );
+			return;
+		}
+
+		WP_CLI::line( sprintf( 'Found %d theme bundled plugin(s):', count( $plugins ) ) );
+		WP_CLI::line( '' );
+
+		$items = array();
+		foreach ( $plugins as $plugin ) {
+			$items[] = array(
+				'Name'     => $plugin['name'],
+				'Slug'     => $plugin['slug'],
+				'Required' => $plugin['required'] ? 'Yes' : 'No',
+			);
+		}
+
+		WP_CLI\Utils\format_items( 'table', $items, array( 'Name', 'Slug', 'Required' ) );
+	}
+
+	/**
+	 * Test plugin download from external URL.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--slug=<slug>]
+	 * : The plugin slug to test.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp conjure test-plugin-download --slug=elementor-pro
+	 *
+	 * @when after_wp_load
+	 */
+	public function test_plugin_download( $args, $assoc_args ) {
+		$slug = WP_CLI\Utils\get_flag_value( $assoc_args, 'slug', null );
+
+		if ( null === $slug ) {
+			WP_CLI::error( 'You must specify a plugin slug using --slug=<slug>' );
+		}
+
+		WP_CLI::line( sprintf( 'Testing download for plugin: %s', $slug ) );
+		WP_CLI::line( '' );
+
+		// Get plugin from theme configuration.
+		$plugins = Conjure_Theme_Plugins::get_bundled_plugins();
+		$plugin = null;
+
+		foreach ( $plugins as $p ) {
+			if ( $p['slug'] === $slug ) {
+				$plugin = $p;
+				break;
+			}
+		}
+
+		if ( ! $plugin ) {
+			WP_CLI::error( sprintf( 'Plugin "%s" not found in theme configuration.', $slug ) );
+		}
+
+		WP_CLI::line( sprintf( 'Plugin Name: %s', $plugin['name'] ) );
+		WP_CLI::line( sprintf( 'Required: %s', $plugin['required'] ? 'Yes' : 'No' ) );
+
+		if ( ! empty( $plugin['source'] ) ) {
+			WP_CLI::line( sprintf( 'Source: %s', $plugin['source'] ) );
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Testing download...' );
+
+			// Test if file exists or URL is accessible.
+			if ( ! empty( $plugin['bundled'] ) ) {
+				if ( file_exists( $plugin['source'] ) ) {
+					WP_CLI::success( sprintf( 'Bundled file exists: %s', $plugin['source'] ) );
+					WP_CLI::line( sprintf( 'File size: %s', size_format( filesize( $plugin['source'] ) ) ) );
+				} else {
+					WP_CLI::error( sprintf( 'Bundled file not found: %s', $plugin['source'] ) );
+				}
+			} elseif ( ! empty( $plugin['external'] ) ) {
+				$response = wp_remote_head( $plugin['source'] );
+				
+				if ( is_wp_error( $response ) ) {
+					WP_CLI::error( sprintf( 'Failed to reach URL: %s', $response->get_error_message() ) );
+				}
+
+				$code = wp_remote_retrieve_response_code( $response );
+				
+				if ( 200 === $code ) {
+					WP_CLI::success( 'External URL is accessible.' );
+					$content_length = wp_remote_retrieve_header( $response, 'content-length' );
+					if ( $content_length ) {
+						WP_CLI::line( sprintf( 'File size: %s', size_format( $content_length ) ) );
+					}
+				} else {
+					WP_CLI::error( sprintf( 'URL returned HTTP %d', $code ) );
+				}
+			}
+		} else {
+			WP_CLI::line( 'Source: WordPress.org' );
+			WP_CLI::success( 'This plugin will be downloaded from WordPress.org repository.' );
+		}
+	}
 }
 

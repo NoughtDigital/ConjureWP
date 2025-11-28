@@ -2,6 +2,25 @@
 
 This directory contains test/demo files for testing the ConjureWP import functionality.
 
+## ⚠️ IMPORTANT: Not Update-Safe
+
+**These files are in the plugin directory and will be deleted when you update the plugin.**
+
+For production use, place your demo files in:
+
+1. **Theme directory** (recommended): `/wp-content/themes/your-theme/conjurewp-demos/`
+   - Survives plugin updates ✓
+   - Easy to manage with your theme ✓
+
+2. **Uploads directory** (most safe): `/wp-content/uploads/conjurewp-demos/`
+   - Survives both plugin AND theme updates ✓
+   - Never gets deleted ✓
+
+ConjureWP will automatically check these locations in priority order:
+1. Theme directory (first)
+2. Uploads directory (second)
+3. Plugin directory (last fallback - examples only)
+
 ## Files Included
 
 ### Core Import Files

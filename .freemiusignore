@@ -1,0 +1,49 @@
+# Freemius Ignore File
+# Files and directories listed here will be excluded from BOTH free and premium versions.
+# Use this to exclude development files, tests, etc. that users don't need.
+
+# Development files
+.git
+.gitignore
+.github
+.DS_Store
+node_modules/
+.vscode/
+.idea/
+
+# Build tools
+package.json
+package-lock.json
+vite.config.js
+phpcs.xml
+composer.json
+composer.lock
+
+# Documentation (users don't need these in the plugin)
+CODE_OF_CONDUCT.md
+WP-CLI.md
+
+# Build scripts
+scripts/
+
+# Test files
+test-*.php
+cli-fix-counts.php
+
+# Source files (compiled versions are in build/)
+assets/scss/
+
+# Demo files (examples only - themes should provide their own)
+demo/
+
+# Distribution directory
+dist/
+
+# Examples (documentation only)
+examples/
+docs/
+
+# Config sample files
+wp-config-demo-example.php
+conjure-config-sample.php
+

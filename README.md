@@ -4,18 +4,53 @@
 
 WordPress theme setup wizard with demo content import.
 
-> **Development Status:** Not production ready. Based on [MerlinWP](https://github.com/richtabor/MerlinWP).
+> **Free on WordPress.org** | Premium features available via Freemius. Based on [MerlinWP](https://github.com/richtabor/MerlinWP).
 
 ## Features
 
--   Setup wizard with progress tracking
--   **Built-in plugin installer** (NEW in 2.0.0) - Zero external dependencies!
+### Core Features (Free)
+
+-   **Setup wizard** - Step-by-step guided installation with progress tracking
+-   **Child theme generator** - Create safe child themes automatically
+-   **Built-in plugin installer** - Shows required/recommended plugins from WordPress.org and custom sources
+-   **Demo content import** - Posts, pages, media, categories, tags
+-   **Widget importer** - Automatically configure widgets and sidebars
+-   **Customiser importer** - Theme settings and customisations
 -   **Demo-specific plugin dependencies** - Show only relevant plugins per demo
--   Child theme generator
--   Demo content, widgets, customiser import
--   Revolution Slider & Redux support
--   Self-contained importer (no external dependencies)
--   **WP-CLI commands for automated imports** (CI/CD, hosting automation)
+-   **Theme bundled plugins** - Auto-merge plugins from theme's `/conjurewp-plugins/` folder
+-   **Server health check** - PHP memory limit, execution time, MySQL version monitoring
+-   **Comprehensive logging** - Detailed logs with rotation, filtering, and admin viewer
+-   **Admin tools** - Log viewer, clear/download logs, wizard reset controls
+-   **WP-CLI commands** - Full command-line support for automated deployments
+-   **REST API** - HTTP endpoints for hosting dashboards and automation
+-   **Auto-discovery** - Automatically detects demo content in theme directory
+-   **Update-safe storage** - Store demos outside plugin directory
+-   **Security hardened** - `.htaccess` protection, nonce verification, capability checks
+
+### Premium Features ⭐
+
+-   **Automatic plugin installation** - One-click installation of all required plugins (no manual downloads)
+-   **Revolution Slider import** - Import slider configurations for advanced demo replication
+-   **Redux Framework import** - Import theme option panel settings
+-   **Priority support** - Get help when you need it
+-   **Lifetime integration** - For theme developers to bundle with themes
+
+### Free vs Premium
+
+| Feature | Free | Premium |
+|---------|------|---------|
+| Setup wizard & progress tracking | ✓ | ✓ |
+| Child theme generator | ✓ | ✓ |
+| Content/widget/customiser import | ✓ | ✓ |
+| Plugin installer (manual) | ✓ | ✓ |
+| Plugin installer (automatic) | ✗ | ✓ |
+| Revolution Slider import | ✗ | ✓ |
+| Redux Framework import | ✗ | ✓ |
+| WP-CLI commands | ✓ | ✓ |
+| REST API | ✓ | ✓ |
+| Server health monitoring | ✓ | ✓ |
+| Comprehensive logging | ✓ | ✓ |
+| Support | Community | Priority |
 
 ## Requirements
 
@@ -199,14 +234,22 @@ See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` f
 
 ### Plugin Installation (v2.0.0)
 
-**Zero dependencies!** ConjureWP includes a built-in custom plugin installer. Just define plugins in your demos:
+**Zero dependencies!** ConjureWP includes a built-in custom plugin installer supporting:
+
+-   ✅ WordPress.org plugins (free from repository)
+-   ✅ Custom/Premium plugins (bundled with theme or via URL)
+-   ✅ Demo-specific plugin filtering
+-   ✅ Required vs recommended plugins
+-   ✅ Automatic installation and activation (Premium feature)
+
+**WordPress.org Plugin:**
 
 ```php
 'required_plugins' => array(
     array(
         'name'     => 'Contact Form 7',
         'slug'     => 'contact-form-7',
-        'required' => true, // REQUIRED - can't skip
+        'required' => true, // REQUIRED - users must install
     ),
     array(
         'name'     => 'Yoast SEO',
@@ -216,15 +259,32 @@ See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` f
 ),
 ```
 
-**Features:**
+**Custom/Premium Plugin:**
 
--   ✅ Zero dependencies
--   ✅ WordPress.org + premium plugin support
--   ✅ Demo-specific plugin filtering
--   ✅ Required vs recommended plugins
--   ✅ Automatic installation and activation
+```php
+'required_plugins' => array(
+    array(
+        'name'     => 'Elementor Pro',
+        'slug'     => 'elementor-pro',
+        'source'   => get_template_directory() . '/plugins/elementor-pro.zip', // Local path
+        'required' => true,
+    ),
+    array(
+        'name'     => 'Premium Slider',
+        'slug'     => 'premium-slider',
+        'source'   => 'https://yoursite.com/downloads/slider.zip', // External URL
+        'required' => false,
+    ),
+),
+```
 
-**Learn more:** See `CUSTOM-INSTALLER.md` for complete guide
+**📖 Complete Guide:** See [docs/PLUGIN-CONFIGURATION.md](/docs/PLUGIN-CONFIGURATION.md) for:
+
+-   WordPress.org plugin configuration
+-   Bundling custom/premium plugins
+-   External plugin URLs and authentication
+-   Demo-specific plugin dependencies
+-   Advanced filtering and troubleshooting
 
 ### Demo-Specific Plugin Dependencies
 
@@ -273,8 +333,42 @@ add_filter( 'conjure_import_files', 'mytheme_import_files' );
 
 **Learn more:**
 
--   **New system:** `CUSTOM-INSTALLER.md` and `examples/simple-demo-plugins-no-tgmpa.php`
--   **Advanced:** `examples/demo-plugin-dependencies.php`
+-   **New system:** See `examples/simple-demo-plugins-no-tgmpa.php`
+-   **Advanced:** Demo-specific filtering examples in `/examples/` directory
+
+### Theme Bundled Plugins
+
+Automatically bundle plugins with your theme for seamless distribution.
+
+**Setup:**
+
+1. Create `/conjurewp-plugins/` folder in your theme
+2. Add `plugins.json` configuration:
+
+```json
+{
+    "plugins": [
+        {
+            "name": "My Premium Plugin",
+            "slug": "my-premium-plugin",
+            "source": "my-premium-plugin.zip",
+            "required": true,
+            "version": "1.0.0"
+        }
+    ]
+}
+```
+
+3. Place plugin ZIP files in the same folder
+
+**Features:**
+
+-   Automatic merging with demo-specific plugins
+-   Support for WordPress.org and custom plugins
+-   Version detection and update prompts
+-   Required vs recommended designation
+
+See `examples/theme-bundled-plugins/README-THEME-PLUGINS.txt` for complete documentation.
 
 ## WP-CLI Commands
 
@@ -321,21 +415,134 @@ wp conjure import --demo=0
 
 For complete documentation, see [WP-CLI.md](WP-CLI.md).
 
+## REST API
+
+ConjureWP exposes REST API endpoints for hosting dashboards and automation tools to trigger imports without shell access.
+
+### Available Endpoints
+
+**List Demos:**
+
+```bash
+GET /wp-json/conjurewp/v1/demos
+```
+
+**Import Demo:**
+
+```bash
+POST /wp-json/conjurewp/v1/import
+{
+    "demo": "demo-slug-or-index",
+    "skip_content": false,
+    "skip_widgets": false,
+    "skip_options": false,
+    "skip_sliders": false,
+    "skip_redux": false
+}
+```
+
+**Authentication:** Requires `manage_options` capability (administrator).
+
+**Use Cases:**
+
+-   Hosting control panels triggering demo imports
+-   CI/CD pipelines without WP-CLI access
+-   Custom admin dashboards
+-   Remote site management tools
+
 ## Admin Tools
 
-Admin bar options when active:
+### Admin Bar Menu
 
--   **Run Setup Wizard** - Launch wizard
--   **Reset Setup Wizard** - Delete child theme, clear progress
+When logged in as administrator, access ConjureWP tools via the admin bar:
 
-## Debugging
+-   **Run Setup Wizard** - Launch the setup wizard
+-   **Reset Setup Wizard** - Delete child theme and clear all progress
 
-Logs: `wp-content/uploads/conjure-wp/main.log`
+### Log Viewer (Tools → ConjureWP Logs)
 
-Common fixes:
+-   View all log files in browser
+-   Filter by log level (DEBUG, INFO, WARNING, ERROR)
+-   Download logs for support
+-   Clear individual or all logs
+-   Automatic log rotation (configurable)
 
--   Increase memory: `define('WP_MEMORY_LIMIT', '256M');`
--   Increase timeout: `define('WP_MAX_EXECUTION_TIME', 300);`
+### Developer Tools
+
+Enable advanced reset controls in `wp-config.php`:
+
+```php
+define( 'CONJURE_TOOLS_ENABLED', true );
+```
+
+Provides granular reset options for individual steps (child theme, licence, plugins, content).
+
+## Server Health Monitoring
+
+ConjureWP includes built-in server health checks to detect potential import issues before they occur.
+
+### Monitored Metrics
+
+-   **PHP Memory Limit** - Recommends 256MB minimum
+-   **PHP Max Execution Time** - Recommends 300 seconds minimum
+-   **MySQL Version** - Displays current version
+
+### Customisation
+
+```php
+// Adjust requirements in your theme
+add_filter( 'conjure_server_health_min_memory', function() {
+    return 512; // MB
+});
+
+add_filter( 'conjure_server_health_min_execution', function() {
+    return 600; // seconds
+});
+
+// Disable health checks
+add_filter( 'conjure_server_health_enabled', '__return_false' );
+```
+
+See `examples/server-health-usage.php` for more examples.
+
+## Debugging & Logging
+
+### Log Files
+
+Logs are stored in: `wp-content/uploads/conjure-wp/main.log`
+
+Features:
+
+-   Automatic rotation when files exceed 10MB
+-   Keeps 5 most recent log files
+-   Configurable log levels (DEBUG, INFO, WARNING, ERROR, etc.)
+-   Protected by `.htaccess` (Apache) and `index.php`
+
+### Viewing Logs
+
+1. **Admin viewer:** Tools → ConjureWP Logs
+2. **Direct access:** SSH/FTP to log directory
+3. **Download:** Use admin viewer's download button
+
+### Log Configuration
+
+In `conjurewp-config.php`:
+
+```php
+'logging' => array(
+    'enable_rotation'  => true,
+    'max_files'        => 5,
+    'max_file_size_mb' => 10,
+    'min_log_level'    => 'INFO', // DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY
+),
+```
+
+### Common Fixes
+
+-   **Memory issues:** `define('WP_MEMORY_LIMIT', '256M');` in `wp-config.php`
+-   **Timeout issues:** `define('WP_MAX_EXECUTION_TIME', 300);` in `wp-config.php`
+-   **Import stalls:** Check logs for specific errors
+-   **Plugin conflicts:** Disable other plugins temporarily
 
 ## Rerunning Individual Steps (Power Users)
 
@@ -373,6 +580,86 @@ Once enabled, administrators will see a **"Conjure WP"** menu in the WordPress a
 npm run build    # Production
 npm run dev      # Development with watch
 ```
+
+## Deployment
+
+### Freemius Deployment
+
+This plugin is configured for Freemius deployment, which automatically generates:
+
+-   **Free version**: WordPress.org compatible (Freemius SDK stripped)
+-   **Premium version**: Includes Freemius SDK and licensing
+
+**Quick Deploy:**
+
+1. Update version in `conjurewp.php`
+2. Create git tag: `git tag v1.0.0 && git push origin v1.0.0`
+3. Upload ZIP to Freemius dashboard (or use GitHub Actions)
+4. Freemius processes and creates both versions
+5. Set release status to "Released"
+
+See `FREEMIUS-DEPLOYMENT.txt` for complete deployment guide.
+
+**Free Version:**
+
+-   All core features included
+-   No licensing restrictions
+-   100% WordPress.org compatible
+-   No external API calls
+
+**Premium Version:**
+
+-   Same features as free
+-   Freemius SDK for license management
+-   Optional: can gate additional features if needed
+
+## Documentation
+
+### User Documentation
+
+-   **[Licence Activation Guide](/docs/LICENCE-ACTIVATION.md)** - Understanding ConjureWP licensing, free vs premium features, and how to activate your licence. Clears up confusion between ConjureWP and theme licensing.
+-   **[WP-CLI Documentation](WP-CLI.md)** - Complete WP-CLI command reference for automated imports
+
+### Developer Documentation
+
+-   **[Plugin Configuration Guide](/docs/PLUGIN-CONFIGURATION.md)** - Complete guide to configuring WordPress.org and custom/premium plugins for your theme demos. Includes demo-specific dependencies, required vs recommended plugins, and troubleshooting.
+-   **[Lifetime Integration Guide](/docs/LIFETIME-INTEGRATION.md)** - For theme developers who purchased lifetime ConjureWP integration. Allows your users to access premium features without needing their own licence.
+
+### Code Examples (`/examples/` directory)
+
+**Theme Integration:**
+
+-   `theme-integration.php` - Basic theme integration
+-   `demo-theme-integration.php` - Complete demo setup
+-   `theme-config-options.php` - Configuration examples
+-   `theme-redirect-integration.php` - Custom redirect handling
+
+**Plugin Configuration:**
+
+-   `simple-demo-plugins-no-tgmpa.php` - Plugin installer examples
+-   `theme-bundled-plugins/` - Bundle plugins with theme
+
+**Advanced Features:**
+
+-   `server-health-usage.php` - Server health monitoring
+-   `premium-features-usage.php` - Premium feature detection
+-   `redirect-control-examples.php` - Control wizard redirects
+-   `conjure-logging-config-sample.php` - Logging configuration
+
+**Automation & Testing:**
+
+-   `cli-integration.sh` - WP-CLI automation scripts
+-   `test-cli-import.sh` - Test CLI imports
+-   `test-import-setup.php` - Validate import configuration
+-   `verify-setup.sh` - Setup verification
+
+See [examples/README.md](examples/README.md) for the complete list with descriptions.
+
+### Additional Resources
+
+-   **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+-   **GitHub Repository** - [github.com/NoughtDigital/ConjureWP](https://github.com/NoughtDigital/ConjureWP)
+-   **Support** - [conjurewp.com](https://conjurewp.com/)
 
 ## Credits
 

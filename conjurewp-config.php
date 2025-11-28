@@ -26,9 +26,36 @@ $config = array(
 	'capability'           => 'manage_options', // The capability required for this menu to be displayed to the user.
 	'child_action_btn_url' => 'https://developer.wordpress.org/themes/advanced-topics/child-themes/', // URL for the 'child-action-link'.
 	'dev_mode'             => false, // Enable development mode for testing (disabled by default for production builds).
-	'license_step'         => true, // EDD license activation step.
-	'license_required'     => false, // Require the license activation step.
+	'license_step'         => true, // EDD licence activation step for ConjureWP premium features.
+	'license_required'     => false, // Require the licence activation step (set false to allow users to skip).
 	'license_help_url'     => 'https://yourstore.com/my-account/', // URL for the 'license-tooltip'.
+	
+	/**
+	 * PREMIUM FEATURES (ConjureWP Licence Required):
+	 * - Automatic plugin installation
+	 * - Advanced demo importing capabilities
+	 * - Priority support
+	 * - Remote plugin updates
+	 * 
+	 * FREE FEATURES (No Licence Required):
+	 * - Basic theme setup wizard
+	 * - Child theme creation
+	 * - Manual content import (upload .xml files)
+	 * - Customiser settings import
+	 * - Widget import
+	 * 
+	 * LIFETIME INTEGRATION (For Theme Developers):
+	 * Theme developers who purchased lifetime ConjureWP integration can bypass
+	 * the licence requirement for their users. Add to your theme's functions.php:
+	 * 
+	 *   add_filter( 'conjurewp_has_lifetime_integration', '__return_true' );
+	 * 
+	 * Or whitelist specific themes in wp-config.php:
+	 * 
+	 *   define( 'CONJUREWP_LIFETIME_THEMES', array( 'your-theme-slug' ) );
+	 * 
+	 * Note: This is separate from theme licences (EDD) configured below.
+	 */
 	'edd_remote_api_url'   => 'https://yourstore.com', // EDD_Theme_Updater_Admin remote_api_url.
 	'edd_item_name'        => 'Your Theme Name', // EDD_Theme_Updater_Admin item_name.
 	'edd_theme_slug'       => 'your-theme-slug', // EDD_Theme_Updater_Admin item_slug.
@@ -60,17 +87,17 @@ $strings = array(
 	'btn-content-install'      => esc_html__( 'Install', 'conjurewp' ),
 	'btn-import'               => esc_html__( 'Import', 'conjurewp' ),
 	'btn-license-activate'     => esc_html__( 'Activate', 'conjurewp' ),
-	'btn-license-skip'         => esc_html__( 'Later', 'conjurewp' ),
+	'btn-license-skip'         => esc_html__( 'Free Version', 'conjurewp' ),
 
+	/* translators: Theme Name (kept for backwards compatibility, but consider removing %s) */
+	'license-header%s'         => esc_html__( 'Enter Your ConjureWP Licence Key', 'conjurewp' ),
+	/* translators: Theme Name (kept for backwards compatibility, but consider removing %s) */
+	'license-header-success%s' => esc_html__( 'ConjureWP Premium Activated', 'conjurewp' ),
 	/* translators: Theme Name */
-	'license-header%s'         => esc_html__( 'Activate %s', 'conjurewp' ),
-	/* translators: Theme Name */
-	'license-header-success%s' => esc_html__( '%s is Activated', 'conjurewp' ),
-	/* translators: Theme Name */
-	'license%s'                => esc_html__( 'Enter your license key to enable remote updates and theme support.', 'conjurewp' ),
-	'license-label'            => esc_html__( 'License key', 'conjurewp' ),
-	'license-success%s'        => esc_html__( 'The theme is already registered, so you can go to the next step!', 'conjurewp' ),
-	'license-json-success%s'   => esc_html__( 'Your theme is activated! Remote updates and theme support are enabled.', 'conjurewp' ),
+	'license%s'                => esc_html__( 'Enter your ConjureWP licence key to unlock premium features like automatic plugin installation and advanced importing. Theme licences are separate.', 'conjurewp' ),
+	'license-label'            => esc_html__( 'ConjureWP licence key', 'conjurewp' ),
+	'license-success%s'        => esc_html__( 'ConjureWP is already registered, so you can go to the next step!', 'conjurewp' ),
+	'license-json-success%s'   => esc_html__( 'ConjureWP is activated! Premium features are now enabled.', 'conjurewp' ),
 	'license-tooltip'          => esc_html__( 'Need help?', 'conjurewp' ),
 
 	/* translators: Theme Name */

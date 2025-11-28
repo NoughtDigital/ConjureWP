@@ -389,20 +389,44 @@ class Conjure_Plugin_Installer {
 	}
 
 	/**
-	 * Batch install and activate multiple plugins.
+	 * Batch install and activate multiple plugins with progress tracking.
 	 *
 	 * @param array $slugs Array of plugin slugs.
 	 * @return array Results array with success/error for each plugin.
 	 */
 	public function batch_install( $slugs ) {
 		$results = array();
+		$total = count( $slugs );
+		$current = 0;
 
 		foreach ( $slugs as $slug ) {
+			$current++;
+			
+			// Get plugin name.
+			$plugin = $this->get_plugin( $slug );
+			$plugin_name = $plugin ? $plugin['name'] : $slug;
+			
+			// Log progress.
+			$this->logger->info(
+				sprintf(
+					/* translators: 1: current number, 2: total number, 3: plugin name */
+					__( 'Installing plugin %1$d of %2$d: %3$s', 'conjurewp' ),
+					$current,
+					$total,
+					$plugin_name
+				)
+			);
+
+			// Allow external progress tracking.
+			do_action( 'conjurewp_plugin_install_progress', $slug, $current, $total );
+
 			$result = $this->install_and_activate( $slug );
 
 			$results[ $slug ] = array(
 				'success' => ! is_wp_error( $result ),
-				'message' => is_wp_error( $result ) ? $result->get_error_message() : 'Success',
+				'message' => is_wp_error( $result ) ? $result->get_error_message() : __( 'Successfully installed and activated', 'conjurewp' ),
+				'name'    => $plugin_name,
+				'progress' => round( ( $current / $total ) * 100, 0 ),
 			);
 		}
 

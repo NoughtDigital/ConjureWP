@@ -76,9 +76,10 @@ All files in this directory are for reference only and are not loaded by the plu
 1. **For basic theme integration**: Start with `theme-integration.php`
 2. **For quick testing**: Use `demo-theme-integration.php` with the included `/demo/` files
 3. **For all theme-level config options**: See `theme-config-options.php` (RECOMMENDED)
-4. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
-5. **For custom demo paths**: See `wp-config-demo-example.php` in the root (server-level)
-6. **For all available hooks**: Reference `conjure-filters-sample.php`
+4. **For lifetime integration**: See `/docs/LIFETIME-INTEGRATION.md` (if you purchased lifetime access)
+5. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
+6. **For custom demo paths**: See `wp-config-demo-example.php` in the root (server-level)
+7. **For all available hooks**: Reference `conjure-filters-sample.php`
 
 **Important**: Use theme-level filters (not wp-config.php) for theme development. Filters have priority over wp-config constants.
 

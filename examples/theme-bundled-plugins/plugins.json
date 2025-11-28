@@ -1,0 +1,47 @@
+{
+  "plugins": [
+    {
+      "name": "Contact Form 7",
+      "slug": "contact-form-7",
+      "required": true,
+      "description": "Required for contact forms (from WordPress.org)"
+    },
+    {
+      "name": "Elementor Pro",
+      "slug": "elementor-pro",
+      "file": "elementor-pro.zip",
+      "required": true,
+      "version": "3.16.0",
+      "description": "Premium page builder (bundled ZIP in theme folder)"
+    },
+    {
+      "name": "Theme Custom Extensions",
+      "slug": "mytheme-extensions",
+      "url": "https://github.com/yourname/mytheme-extensions/releases/download/v1.0.0/mytheme-extensions.zip",
+      "required": true,
+      "version": "1.0.0",
+      "description": "Custom functionality from GitHub releases"
+    },
+    {
+      "name": "Private Theme Plugin",
+      "slug": "mytheme-private",
+      "url": "https://updates.yoursite.com/downloads/mytheme-private.zip",
+      "required": true,
+      "version": "2.0.0",
+      "description": "Private plugin from your update server"
+    },
+    {
+      "name": "Yoast SEO",
+      "slug": "wordpress-seo",
+      "required": false,
+      "description": "Recommended for SEO (from WordPress.org)"
+    },
+    {
+      "name": "WooCommerce",
+      "slug": "woocommerce",
+      "required": false,
+      "description": "Optional e-commerce (from WordPress.org)"
+    }
+  ]
+}
+

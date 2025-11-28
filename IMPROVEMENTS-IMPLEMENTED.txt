@@ -1,0 +1,341 @@
+CONJUREWP IMPROVEMENTS IMPLEMENTATION SUMMARY
+=============================================
+Implementation Date: 28 November 2025
+All improvements from IMPROVEMENTS-AND-COMPLIANCE.txt (lines 64-240) have been completed.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+1. SECURITY ENHANCEMENTS ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. Rate Limiting for Downloads
+   File: includes/class-conjure-downloader.php
+   - Added check_rate_limit() method
+   - Limits to 10 downloads per hour per IP (configurable via filter)
+   - Uses WordPress transients for tracking
+   - Filter: 'conjurewp_rate_limit_max_downloads'
+   - Logs rate limit violations
+
+B. JSON Structure Validation
+   File: includes/class-conjure-theme-plugins.php
+   - Added validate_json_structure() method
+   - Validates required fields (slug, name)
+   - Type checking for all fields
+   - Rejects malformed configurations early
+   - Returns detailed WP_Error messages
+
+C. Filename Sanitization
+   File: includes/class-conjure-downloader.php
+   - Added sanitize_file_name() to download_file() method
+   - Prevents directory traversal attacks
+   - Already implemented in class-conjure-admin-tools.php for log downloads
+
+═══════════════════════════════════════════════════════════════════════════════
+
+2. CODE QUALITY IMPROVEMENTS ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. Enhanced PHPDoc Blocks
+   - Added comprehensive @since tags
+   - Added detailed parameter descriptions
+   - Added return type documentation
+   - Added method purpose descriptions
+   Files modified:
+   - includes/class-conjure-theme-plugins.php
+   - includes/class-conjure-downloader.php
+
+B. Improved Error Handling
+   - Consistent use of WP_Error across all methods
+   - Better error messages with context
+   - Detailed logging for all errors
+   Files modified:
+   - includes/class-conjure-downloader.php
+   - includes/class-conjure-theme-plugins.php
+
+C. Type Documentation
+   - Added detailed return type annotations
+   - Documented array structures
+   - Better parameter type hints in PHPDoc
+
+═══════════════════════════════════════════════════════════════════════════════
+
+3. PERFORMANCE OPTIMISATIONS ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. Theme Plugin Config Caching
+   File: includes/class-conjure-theme-plugins.php
+   - Added get_theme_plugin_config() caching with transients
+   - Default: 1 hour TTL
+   - Filter: 'conjurewp_theme_plugins_cache_duration'
+   - Added clear_config_cache() method
+   - Reduces file reads on every page load
+
+B. Download Retry with Exponential Backoff
+   File: includes/class-conjure-downloader.php
+   - Added download_with_retry() method
+   - Default: 3 attempts (configurable)
+   - Exponential backoff: 2^(attempt-1) seconds
+   - Filter: 'conjurewp_download_max_attempts'
+   - Detailed logging of retry attempts
+
+═══════════════════════════════════════════════════════════════════════════════
+
+4. USER EXPERIENCE ENHANCEMENTS ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. Better Error Messages
+   File: includes/class-conjure-downloader.php
+   - Contextual error messages with file paths
+   - HTTP error codes in messages
+   - Directory permission hints
+   - Suggests solutions (e.g., "check directory permissions")
+
+B. Progress Indicators
+   File: includes/class-conjure-plugin-installer.php
+   - Added progress tracking to batch_install()
+   - Shows "Installing plugin X of Y: Name"
+   - Percentage completion in results
+   - Action hook: 'conjurewp_plugin_install_progress'
+   - Detailed progress logging
+
+C. Retry Mechanisms
+   File: includes/class-conjure-downloader.php
+   - Automatic retry on download failure
+   - Exponential backoff between attempts
+   - Clear logging of retry attempts
+   - Final error shows all attempts
+
+D. Validation Notices
+   File: includes/class-conjure-admin-tools.php
+   - Added show_theme_plugin_validation_notice()
+   - Shows configuration status in admin
+   - Warning for missing bundled files
+   - Cached for 24 hours to avoid performance impact
+   - Only shown on relevant admin pages
+
+═══════════════════════════════════════════════════════════════════════════════
+
+5. DEVELOPER EXPERIENCE ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. Additional Hooks/Filters
+   Added to includes/class-conjure-theme-plugins.php:
+   - 'conjurewp_bundled_plugins' - Filter final plugins array
+   - 'conjurewp_theme_plugin_dir' - Customise plugin directory name
+   - 'conjurewp_theme_plugin_dir_path' - Filter directory path
+   - 'conjurewp_theme_plugins_cache_duration' - Customise cache duration
+   
+   Added to includes/class-conjure-downloader.php:
+   - 'conjurewp_download_max_attempts' - Customise retry attempts
+   - 'conjurewp_download_timeout' - Customise download timeout (default 300s)
+   - 'conjurewp_rate_limit_max_downloads' - Customise rate limit
+   
+   Added to includes/class-conjure-plugin-installer.php:
+   - 'conjurewp_plugin_install_progress' - Track plugin installation progress
+
+B. Debug Mode
+   File: includes/class-conjure-logger.php
+   - Added is_debug_mode() method
+   - Checks WP_DEBUG constant
+   - Checks CONJUREWP_DEBUG constant
+   - Filter: 'conjurewp_debug_mode'
+   - Automatically switches to DEBUG log level when active
+   - Provides verbose output in debug mode
+
+C. Testing Utilities
+   File: includes/class-conjure-theme-plugins.php
+   - Added test_plugin_config() method
+   - Validates configuration
+   - Checks bundled files exist
+   - Tests external URL accessibility
+   - Returns detailed results array
+   
+   File: examples/test-theme-plugins.php (NEW)
+   - Visual testing utility for theme developers
+   - Beautiful HTML interface
+   - Shows configuration status
+   - Lists all plugins with details
+   - Provides actionable feedback
+
+D. WP-CLI Commands
+   File: includes/class-conjure-cli.php
+   - Added validate_theme_plugins command
+   - Added list_theme_plugins command
+   - Added test_plugin_download command
+   
+   File: class-conjure.php
+   - Registered new CLI commands
+   
+   Usage:
+   wp conjure validate-theme-plugins
+   wp conjure list-theme-plugins
+   wp conjure test-plugin-download --slug=elementor-pro
+
+═══════════════════════════════════════════════════════════════════════════════
+
+6. ACCESSIBILITY IMPROVEMENTS ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+A. ARIA Labels
+   File: class-conjure.php
+   - Added aria-label to remove file button
+   - Added aria-label to progress bar
+   - Added aria-hidden to decorative SVG icons
+   - Added role="status" to dynamic elements
+   - Added aria-live="polite" for status updates
+
+B. Progress Bar Accessibility
+   - Added role="progressbar" to progress elements
+   - Added aria-valuenow, aria-valuemin, aria-valuemax
+   - Screen reader friendly progress updates
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SUMMARY OF FILES MODIFIED
+═══════════════════════════════════════════════════════════════════════════════
+
+Modified Files (8):
+1. includes/class-conjure-downloader.php
+   - Rate limiting
+   - Filename sanitisation
+   - Retry mechanism
+   - Better error messages
+
+2. includes/class-conjure-theme-plugins.php
+   - JSON validation
+   - Configuration caching
+   - Developer hooks
+   - Test utilities
+
+3. includes/class-conjure-plugin-installer.php
+   - Progress tracking
+   - Better user feedback
+
+4. includes/class-conjure-logger.php
+   - Debug mode support
+   - Auto-detection of WP_DEBUG
+
+5. includes/class-conjure-admin-tools.php
+   - Validation notices
+   - Configuration status display
+
+6. includes/class-conjure-cli.php
+   - Three new WP-CLI commands
+   - Validation tools
+
+7. class-conjure.php
+   - CLI command registration
+   - Accessibility improvements
+
+8. examples/test-theme-plugins.php (NEW)
+   - Visual testing utility
+   - Developer-friendly interface
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NEW FEATURES SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+For Theme Developers:
+✓ JSON configuration validation
+✓ Bundled plugin testing
+✓ Visual test utility (test-theme-plugins.php)
+✓ WP-CLI validation commands
+✓ Better error messages
+✓ Debug mode support
+
+For End Users:
+✓ Progress indicators during plugin installation
+✓ Automatic retry on download failures
+✓ Better accessibility for screen readers
+✓ Admin notices for configuration issues
+
+For Site Administrators:
+✓ Rate limiting protection
+✓ Enhanced security (sanitisation, validation)
+✓ Performance improvements (caching)
+✓ WP-CLI tools for automation
+
+For Developers (using the plugin):
+✓ 10+ new filter hooks for customisation
+✓ Debug mode for troubleshooting
+✓ Test utilities for validation
+✓ Comprehensive logging
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CONFIGURATION OPTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+New Constants (wp-config.php):
+- CONJUREWP_DEBUG - Enable debug mode (forces DEBUG log level)
+
+New Filters:
+- conjurewp_bundled_plugins
+- conjurewp_theme_plugin_dir
+- conjurewp_theme_plugin_dir_path
+- conjurewp_theme_plugins_cache_duration
+- conjurewp_download_max_attempts
+- conjurewp_download_timeout
+- conjurewp_rate_limit_max_downloads
+- conjurewp_plugin_install_progress (action)
+- conjurewp_debug_mode
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TESTING RECOMMENDATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Test rate limiting:
+   - Try multiple rapid downloads
+   - Verify transient-based limiting works
+   - Check logging of rate limit violations
+
+2. Test JSON validation:
+   - Create invalid plugins.json
+   - Verify error messages are helpful
+   - Test admin notices display
+
+3. Test caching:
+   - Check transient is created
+   - Modify plugins.json and test cache refresh
+   - Test clear_config_cache() method
+
+4. Test retry mechanism:
+   - Use unreliable test URL
+   - Verify exponential backoff
+   - Check logging of retries
+
+5. Test WP-CLI commands:
+   wp conjure validate-theme-plugins
+   wp conjure list-theme-plugins
+   wp conjure test-plugin-download --slug=test-plugin
+
+6. Test accessibility:
+   - Use screen reader
+   - Test keyboard navigation
+   - Verify ARIA labels
+
+7. Test debug mode:
+   - Enable WP_DEBUG
+   - Check log level switches to DEBUG
+   - Verify verbose output
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BACKWARD COMPATIBILITY
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ All changes are backward compatible
+✓ New parameters have default values
+✓ Existing functionality preserved
+✓ Optional features (filters, constants)
+✓ Graceful degradation
+
+No breaking changes introduced.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+END OF IMPLEMENTATION SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+

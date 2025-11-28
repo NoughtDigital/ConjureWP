@@ -117,6 +117,11 @@ class Conjure_Logger {
 
 		$this->config = wp_parse_args( $config, $default_config );
 
+		// If WP_DEBUG is enabled, automatically use DEBUG level.
+		if ( $this->is_debug_mode() ) {
+			$this->config['min_log_level'] = MonologLogger::DEBUG;
+		}
+
 		// Convert string log levels to Monolog constants.
 		$this->config['min_log_level'] = $this->parse_log_level( $this->config['min_log_level'] );
 
@@ -133,16 +138,21 @@ class Conjure_Logger {
 					file_put_contents( $index_file, '<?php // Silence is golden' );
 				}
 
-				// Add .htaccess to protect log files.
-				$htaccess_file = $logger_dir . '/.htaccess';
-				if ( ! file_exists( $htaccess_file ) ) {
-					$htaccess_content  = "# Protect log files\n";
-					$htaccess_content .= "<Files *.log>\n";
-					$htaccess_content .= "Order allow,deny\n";
-					$htaccess_content .= "Deny from all\n";
-					$htaccess_content .= "</Files>\n";
-					file_put_contents( $htaccess_file, $htaccess_content );
-				}
+			// Add .htaccess to protect log files (Apache 2.4+ syntax).
+			$htaccess_file = $logger_dir . '/.htaccess';
+			if ( ! file_exists( $htaccess_file ) ) {
+				$htaccess_content  = "# Protect log files\n";
+				$htaccess_content .= "<Files *.log>\n";
+				$htaccess_content .= "    <IfModule mod_authz_core.c>\n";
+				$htaccess_content .= "        Require all denied\n";
+				$htaccess_content .= "    </IfModule>\n";
+				$htaccess_content .= "    <IfModule !mod_authz_core.c>\n";
+				$htaccess_content .= "        Order allow,deny\n";
+				$htaccess_content .= "        Deny from all\n";
+				$htaccess_content .= "    </IfModule>\n";
+				$htaccess_content .= "</Files>\n";
+				file_put_contents( $htaccess_file, $htaccess_content );
+			}
 			}
 
 			$this->log_path = $logger_dir . '/main.log';
@@ -489,6 +499,31 @@ class Conjure_Logger {
 		return $this->log->emergency( $message, $context );
 	}
 
+
+	/**
+	 * Check if debug mode is active.
+	 *
+	 * Debug mode is active if:
+	 * - WP_DEBUG is enabled
+	 * - CONJUREWP_DEBUG constant is defined and true
+	 * - conjurewp_debug_mode filter returns true
+	 *
+	 * @return bool True if debug mode is active.
+	 */
+	public function is_debug_mode() {
+		// Check constant.
+		if ( defined( 'CONJUREWP_DEBUG' ) && CONJUREWP_DEBUG ) {
+			return true;
+		}
+
+		// Check WP_DEBUG.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			return true;
+		}
+
+		// Check filter.
+		return apply_filters( 'conjurewp_debug_mode', false );
+	}
 
 	/**
 	 * Private clone method to prevent cloning of the instance of the *Singleton* instance.

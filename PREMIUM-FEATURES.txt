@@ -1,0 +1,247 @@
+CONJUREWP - FREE VS PREMIUM FEATURES
+======================================
+
+ConjureWP is available in two versions:
+- FREE VERSION (WordPress.org)
+- PREMIUM VERSION (via Freemius)
+
+FREE VERSION FEATURES
+=====================
+
+✅ Complete setup wizard with progress tracking
+✅ Child theme generator
+✅ Demo content import (WordPress XML)
+✅ Widget import
+✅ Customizer options import
+✅ Demo selection with preview images
+✅ Demo-specific plugin dependencies
+✅ Server health checks
+✅ Comprehensive logging
+✅ Admin tools and reset functionality
+✅ WP-CLI commands for automation
+✅ All hooks and filters available
+
+⚠️ FREE VERSION LIMITATIONS:
+   - Manual plugin installation required
+   - Revolution Slider import NOT included
+   - Redux Framework options import NOT included
+
+PREMIUM VERSION FEATURES
+=========================
+
+Everything in FREE version, PLUS:
+
+⭐ AUTOMATIC PLUGIN INSTALLATION
+   - One-click automatic plugin installation
+   - Automatic plugin activation
+   - No manual WordPress.org downloads required
+   - Saves time and simplifies workflow
+
+⭐ ADVANCED IMPORTS
+   - Revolution Slider import
+   - Redux Framework options import
+   - Complete theme demo replication
+
+⭐ LIFETIME INTEGRATION FOR THEME DEVELOPERS
+   - Theme developers can purchase lifetime integration
+   - Users of your theme get all premium features
+   - No per-site licensing required
+
+⭐ PRIORITY SUPPORT
+   - Email support with faster response times
+   - Help with custom implementations
+   - Troubleshooting assistance
+
+FEATURE COMPARISON TABLE
+=========================
+
+| Feature                          | Free    | Premium |
+|----------------------------------|---------|---------|
+| Setup wizard                     | ✅      | ✅      |
+| Child theme generator            | ✅      | ✅      |
+| Demo content import              | ✅      | ✅      |
+| Widget import                    | ✅      | ✅      |
+| Customizer import                | ✅      | ✅      |
+| **Revolution Slider import**     | ❌      | ✅      |
+| **Redux options import**         | ❌      | ✅      |
+| Demo selection                   | ✅      | ✅      |
+| WP-CLI automation                | ✅      | ✅      |
+| Server health checks             | ✅      | ✅      |
+| **Automatic plugin install**     | ❌      | ✅      |
+| **One-click activation**         | ❌      | ✅      |
+| **Priority support**             | ❌      | ✅      |
+| **Lifetime integration option**  | ❌      | ✅      |
+
+HOW IT WORKS
+============
+
+FREE VERSION WORKFLOW:
+1. Run setup wizard
+2. Select demo (if multiple available)
+3. Generate child theme (optional)
+4. SEE LIST of required plugins
+5. MANUALLY install plugins from WordPress.org
+6. Return to wizard
+7. Import demo content, widgets, customizer
+8. Complete setup
+
+PREMIUM VERSION WORKFLOW:
+1. Run setup wizard
+2. Select demo (if multiple available)
+3. Generate child theme (optional)
+4. SEE LIST of required plugins
+5. CLICK "Install Plugins" button
+6. Plugins automatically installed & activated
+7. Import demo content, widgets, customizer
+8. Complete setup
+
+The difference? Steps 5-6 are automated in Premium.
+
+WHO SHOULD USE PREMIUM?
+=======================
+
+Premium is perfect for:
+✅ Theme developers who want to offer one-click setup
+✅ Agencies managing multiple client sites
+✅ Users who want the fastest, easiest setup experience
+✅ Anyone who values time-saving automation
+
+Free version is perfect for:
+✅ Personal projects
+✅ Budget-conscious users
+✅ Users comfortable with manual plugin installation
+✅ Sites with simple plugin requirements
+
+THEME DEVELOPER BENEFITS
+=========================
+
+If you're a theme developer, you can:
+
+1. PURCHASE PREMIUM LICENSE
+   - Use automatic plugin installation in your demos
+   - Better onboarding experience for customers
+   - Fewer support requests
+
+2. PURCHASE LIFETIME INTEGRATION
+   - Your theme users get automatic plugin installation
+   - No per-site licensing required
+   - Your users don't need their own ConjureWP license
+   - Better value proposition for your theme
+
+See: docs/LIFETIME-INTEGRATION.md for details
+
+TECHNICAL IMPLEMENTATION
+=========================
+
+The plugin uses Freemius for licensing and deployment:
+
+1. DEPLOYMENT
+   - Upload full plugin to Freemius dashboard
+   - Freemius automatically generates TWO versions:
+     a) FREE version (WordPress.org compatible)
+     b) PREMIUM version (with Freemius SDK)
+
+2. CODE STRUCTURE
+   - Premium code wrapped in @freemius:premium-start/end tags
+   - Free version: Premium code automatically stripped
+   - Both versions work perfectly in their environments
+
+3. FEATURE GATING
+   - Conjure_Freemius::can_auto_install_plugins()
+   - Returns FALSE in free version
+   - Returns TRUE in premium version (with valid license)
+
+PRICING (Example - Set Your Own)
+=================================
+
+Suggested pricing structure:
+
+FREE
+- $0
+- All core features
+- Manual plugin installation
+- Community support
+
+PREMIUM - SINGLE SITE
+- $49/year (or $149 lifetime)
+- Automatic plugin installation
+- Priority support
+- 1 site license
+
+PREMIUM - 5 SITES
+- $99/year (or $299 lifetime)
+- Automatic plugin installation
+- Priority support
+- 5 site licenses
+
+PREMIUM - UNLIMITED
+- $199/year (or $599 lifetime)
+- Automatic plugin installation
+- Priority support
+- Unlimited sites
+
+THEME DEVELOPER - LIFETIME INTEGRATION
+- $499 one-time
+- Automatic plugin installation for ALL your theme users
+- Your users don't need their own license
+- Perfect for commercial themes
+
+FREQUENTLY ASKED QUESTIONS
+===========================
+
+Q: Can I still import demos with the free version?
+A: Yes! All demo import features work in the free version. You just 
+   need to manually install the required plugins first.
+
+Q: What happens if my premium license expires?
+A: The plugin continues to work, but automatic plugin installation 
+   will be disabled. Manual installation still works.
+
+Q: Can I upgrade from free to premium?
+A: Yes! Purchase a license and activate it. Your existing setup 
+   remains intact.
+
+Q: Does premium include theme licenses?
+A: No. ConjureWP is separate from theme licensing. This is a plugin 
+   license for automatic plugin installation features.
+
+Q: Can I use premium on multiple sites?
+A: Depends on your license tier (single, 5-site, or unlimited).
+
+Q: What about theme developers?
+A: Purchase lifetime integration and ALL your theme users get 
+   automatic plugin installation without needing their own license.
+
+SUPPORT
+=======
+
+FREE VERSION:
+- Community support via WordPress.org forums
+- Documentation and examples included
+- GitHub issues for bug reports
+
+PREMIUM VERSION:
+- Priority email support
+- Faster response times
+- Custom implementation help
+- Troubleshooting assistance
+
+UPGRADE NOW
+===========
+
+Ready to upgrade? Visit your WordPress admin:
+- Plugins → ConjureWP
+- Click "Upgrade" button
+- Or visit: https://conjurewp.com/pricing/
+
+LEARN MORE
+==========
+
+Documentation:
+- docs/LICENCE-ACTIVATION.md - How to activate premium
+- docs/LIFETIME-INTEGRATION.md - For theme developers
+- docs/PLUGIN-CONFIGURATION.md - Plugin setup guide
+
+Website: https://conjurewp.com/
+Support: support@conjurewp.com
+

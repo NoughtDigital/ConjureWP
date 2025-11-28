@@ -21,6 +21,7 @@ class Conjure_Admin_Tools {
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_tools_page' ), 99 );
 		add_action( 'admin_init', array( $this, 'handle_log_actions' ) );
+		add_action( 'admin_notices', array( $this, 'show_theme_plugin_validation_notice' ) );
 	}
 
 	/**
@@ -41,7 +42,8 @@ class Conjure_Admin_Tools {
 	 * Handle log file actions (clear, download).
 	 */
 	public function handle_log_actions() {
-		if ( ! isset( $_GET['page'] ) || 'conjurewp-logs' !== $_GET['page'] ) {
+		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 'conjurewp-logs' !== $page ) {
 			return;
 		}
 
@@ -50,9 +52,10 @@ class Conjure_Admin_Tools {
 		}
 
 		$logger = Conjure_Logger::get_instance();
+		$action = isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : '';
 
 		// Handle clear all logs action.
-		if ( isset( $_GET['action'] ) && 'clear_all_logs' === $_GET['action'] && check_admin_referer( 'conjurewp_clear_all_logs' ) ) {
+		if ( 'clear_all_logs' === $action && check_admin_referer( 'conjurewp_clear_all_logs' ) ) {
 			$log_files = $logger->get_all_log_files();
 			foreach ( $log_files as $log_file ) {
 				if ( file_exists( $log_file ) ) {
@@ -63,7 +66,7 @@ class Conjure_Admin_Tools {
 		}
 
 		// Handle clear single log action.
-		if ( isset( $_GET['action'] ) && 'clear_log' === $_GET['action'] && check_admin_referer( 'conjurewp_clear_log' ) ) {
+		if ( 'clear_log' === $action && check_admin_referer( 'conjurewp_clear_log' ) ) {
 			$log_path = $logger->get_log_path();
 
 			if ( file_exists( $log_path ) ) {
@@ -73,15 +76,25 @@ class Conjure_Admin_Tools {
 		}
 
 		// Handle download log action.
-		if ( isset( $_GET['action'] ) && 'download_log' === $_GET['action'] && check_admin_referer( 'conjurewp_download_log' ) ) {
-			$log_file = isset( $_GET['file'] ) ? sanitize_text_field( $_GET['file'] ) : '';
+		if ( 'download_log' === $action && check_admin_referer( 'conjurewp_download_log' ) ) {
+			$log_file = isset( $_GET['file'] ) ? sanitize_text_field( wp_unslash( $_GET['file'] ) ) : '';
 			
 			if ( empty( $log_file ) ) {
 				$log_path = $logger->get_log_path();
 			} else {
-				// Validate file is in the log directory.
+				// Validate file is in the log directory - prevent traversal attacks.
 				$log_dir  = dirname( $logger->get_log_path() );
 				$log_path = $log_dir . '/' . basename( $log_file );
+				
+				// Use realpath to resolve any path traversal attempts and verify prefix.
+				$real_log_path = realpath( $log_path );
+				$real_log_dir  = realpath( $log_dir );
+				
+				if ( ! $real_log_path || ! $real_log_dir || 0 !== strpos( $real_log_path, $real_log_dir ) ) {
+					wp_die( __( 'Invalid log file path.', 'conjurewp' ) );
+				}
+				
+				$log_path = $real_log_path;
 			}
 
 			if ( file_exists( $log_path ) ) {
@@ -103,6 +116,84 @@ class Conjure_Admin_Tools {
 			<p><?php _e( 'Log file has been cleared successfully.', 'conjurewp' ); ?></p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Show theme plugin validation notice on Conjure pages.
+	 */
+	public function show_theme_plugin_validation_notice() {
+		// Only show on Conjure-related pages.
+		$screen = get_current_screen();
+		if ( ! $screen || ( strpos( $screen->id, 'conjure' ) === false && $screen->id !== 'tools_page_conjurewp-logs' ) ) {
+			return;
+		}
+
+		// Check if theme has bundled plugins.
+		$plugin_dir = Conjure_Theme_Plugins::get_theme_plugin_dir();
+		if ( ! $plugin_dir ) {
+			return;
+		}
+
+		// Get config and validate.
+		$config_file = trailingslashit( $plugin_dir ) . 'plugins.json';
+		if ( ! file_exists( $config_file ) ) {
+			return;
+		}
+
+		// Only validate once per day to avoid performance impact.
+		$transient_key = 'conjurewp_theme_plugin_validation';
+		$cached_result = get_transient( $transient_key );
+
+		if ( false === $cached_result ) {
+			$validation_result = Conjure_Theme_Plugins::validate_config( $config_file );
+			set_transient( $transient_key, $validation_result, DAY_IN_SECONDS );
+			$cached_result = $validation_result;
+		}
+
+		// Show validation result.
+		if ( is_wp_error( $cached_result ) ) {
+			?>
+			<div class="notice notice-error">
+				<p>
+					<strong><?php _e( 'ConjureWP Theme Plugin Configuration Error:', 'conjurewp' ); ?></strong>
+					<?php echo esc_html( $cached_result->get_error_message() ); ?>
+				</p>
+			</div>
+			<?php
+		} else {
+			// Get plugins and show summary.
+			$plugins = Conjure_Theme_Plugins::get_bundled_plugins();
+			$invalid_count = 0;
+
+			foreach ( $plugins as $plugin ) {
+				// Check if bundled file exists.
+				if ( ! empty( $plugin['bundled'] ) && ! file_exists( $plugin['source'] ) ) {
+					$invalid_count++;
+				}
+			}
+
+			if ( $invalid_count > 0 ) {
+				?>
+				<div class="notice notice-warning">
+					<p>
+						<strong><?php _e( 'ConjureWP Theme Plugins Warning:', 'conjurewp' ); ?></strong>
+						<?php
+						printf(
+							/* translators: %d: number of plugins with issues */
+							_n(
+								'%d plugin has invalid configuration or missing files.',
+								'%d plugins have invalid configuration or missing files.',
+								$invalid_count,
+								'conjurewp'
+							),
+							$invalid_count
+						);
+						?>
+					</p>
+				</div>
+				<?php
+			}
+		}
 	}
 
 	/**

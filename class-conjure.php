@@ -732,8 +732,8 @@ class Conjure {
 						<?php esc_html_e( 'To use ConjureWP with your premium theme, please purchase a license or switch to an open-source theme.', 'conjurewp' ); ?>
 					</p>
 
-					<?php if ( function_exists( 'conjure_wp' ) ) : ?>
-						<?php $fs = conjure_wp(); ?>
+				<?php if ( function_exists( 'con_fs' ) ) : ?>
+					<?php $fs = con_fs(); ?>
 						<?php if ( $fs ) : ?>
 							<div class="conjure__upgrade-actions" style="margin-top: 30px;">
 								<?php if ( ! $fs->is_registered() ) : ?>
@@ -1004,10 +1004,18 @@ class Conjure {
 
 	// Show the plugin importer (custom built-in installer).
 	// Demo selection happens within this step for demo-specific plugins.
-	$this->steps['plugins'] = array(
-		'name' => esc_html__( 'Plugins', 'conjurewp' ),
-		'view' => array( $this, 'plugins' ),
-	);
+	// PREMIUM FEATURE: Automatic plugin installation (free users must install manually).
+	$can_auto_install = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_auto_install_plugins() : false;
+	
+	if ( $can_auto_install ) {
+		$this->steps['plugins'] = array(
+			'name' => esc_html__( 'Plugins', 'conjurewp' ),
+			'view' => array( $this, 'plugins' ),
+		);
+		$this->logger->debug( 'Plugin step added - user has premium license for automatic installation' );
+	} else {
+		$this->logger->debug( 'Plugin step NOT added - automatic plugin installation requires premium license (free users install manually)' );
+	}
 
 	// Show the content importer - either with pre-configured files or manual upload.
 	$this->steps['content'] = array(
@@ -1331,7 +1339,13 @@ class Conjure {
 		// Variables.
 	$url    = wp_nonce_url( add_query_arg( array( 'plugins' => 'go' ) ), 'conjure' );
 	$method = '';
-	$fields = array_keys( $_POST );
+	// Sanitise POST keys for filesystem credentials.
+	$fields = array();
+	if ( ! empty( $_POST ) ) {
+		foreach ( $_POST as $key => $value ) {
+			$fields[] = sanitize_text_field( wp_unslash( $key ) );
+		}
+	}
 	$creds  = request_filesystem_credentials( esc_url_raw( $url ), $method, false, false, $fields );
 
 	if ( false === $creds ) {
@@ -1622,22 +1636,44 @@ class Conjure {
 				<circle class="icon--checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="icon--checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
 			</svg>
 
-			<h1><?php echo esc_html( $header ); ?></h1>
+		<h1><?php echo esc_html( $header ); ?></h1>
 
-			<p><?php echo esc_html( $paragraph ); ?></p>
-			
-			<?php
-			// Display server health check.
-			echo $server_health->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$server_health->render_complete(
-				array(
-					'show_title'       => true,
-					'title'            => __( 'Server Health Check', 'conjurewp' ),
-					'requirements_url' => '',
-					'theme_name'       => $this->theme->name,
-				)
-			);
+		<p><?php echo esc_html( $paragraph ); ?></p>
+		
+		<?php
+		// @freemius:premium-start
+		// PREMIUM ONLY: Show upgrade notice for automatic plugin installation.
+		// In free version (WordPress.org), this entire block is removed.
+		$can_auto_install = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_auto_install_plugins() : false;
+		
+		if ( ! $can_auto_install && function_exists( 'con_fs' ) && con_fs() ) :
 			?>
+			<div style="background: #f0f6fc; border-left: 4px solid #0073aa; padding: 15px; margin: 20px 0; border-radius: 4px;">
+				<p style="margin: 0; font-size: 14px; line-height: 1.6;">
+					<?php 
+					printf(
+						/* translators: %s: Link to upgrade page */
+						esc_html__( 'Want to save time? %s for automatic plugin installation.', 'conjurewp' ),
+						'<a href="' . esc_url( con_fs()->get_upgrade_url() ) . '" style="color: #0073aa; font-weight: 600; text-decoration: underline;">' . esc_html__( 'Upgrade to Premium', 'conjurewp' ) . '</a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php
+		endif;
+		// @freemius:premium-end
+		
+		// Display server health check.
+		echo $server_health->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$server_health->render_complete(
+			array(
+				'show_title'       => true,
+				'title'            => __( 'Server Health Check', 'conjurewp' ),
+				'requirements_url' => '',
+				'theme_name'       => $this->theme->name,
+			)
+		);
+		?>
 
 		<?php if ( 1 < count( $this->import_files ) ) : ?>
 
@@ -2185,10 +2221,21 @@ class Conjure {
 	 */
 	private function edd_get_api_response( $api_params ) {
 
+		// Validate and sanitise the API URL.
+		$api_url = esc_url_raw( $this->edd_remote_api_url );
+
+		// Enforce HTTPS for remote API calls.
+		if ( 'https' !== wp_parse_url( $api_url, PHP_URL_SCHEME ) ) {
+			return new WP_Error(
+				'insecure_api_url',
+				__( 'EDD API URL must use HTTPS protocol for security.', 'conjurewp' )
+			);
+		}
+
 		$verify_ssl = (bool) apply_filters( 'edd_sl_api_request_verify_ssl', true );
 
 		$response = wp_remote_post(
-			$this->edd_remote_api_url,
+			$api_url,
 			array(
 				'timeout'   => 15,
 				'sslverify' => $verify_ssl,
@@ -2894,7 +2941,10 @@ class Conjure {
 			);
 		}
 
-		if ( ! empty( $import_files['sliders'] ) ) {
+		// Revolution Slider import (available in free and premium).
+		$can_use_advanced_imports = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_use_advanced_imports() : true;
+		
+		if ( ! empty( $import_files['sliders'] ) && $can_use_advanced_imports ) {
 			$content['sliders'] = array(
 				'title'            => esc_html__( 'Revolution Slider', 'conjurewp' ),
 				'description'      => esc_html__( 'Sample Revolution sliders data.', 'conjurewp' ),
@@ -2920,7 +2970,8 @@ class Conjure {
 			);
 		}
 
-		if ( ! empty( $import_files['redux'] ) ) {
+		// Redux Framework options import (available in free and premium).
+		if ( ! empty( $import_files['redux'] ) && $can_use_advanced_imports ) {
 			$content['redux'] = array(
 				'title'            => esc_html__( 'Redux Options', 'conjurewp' ),
 				'description'      => esc_html__( 'Redux framework options.', 'conjurewp' ),
@@ -3056,6 +3107,9 @@ class Conjure {
 		$cli = new Conjure_CLI( $this );
 		WP_CLI::add_command( 'conjure list', array( $cli, 'list_demos' ) );
 		WP_CLI::add_command( 'conjure import', array( $cli, 'import' ) );
+		WP_CLI::add_command( 'conjure validate-theme-plugins', array( $cli, 'validate_theme_plugins' ) );
+		WP_CLI::add_command( 'conjure list-theme-plugins', array( $cli, 'list_theme_plugins' ) );
+		WP_CLI::add_command( 'conjure test-plugin-download', array( $cli, 'test_plugin_download' ) );
 	}
 
 	/**
@@ -3578,10 +3632,17 @@ class Conjure {
 				return false;
 			}
 			
-			// Add .htaccess for security.
-			$htaccess_content = 'deny from all';
-			$htaccess_file = $conjure_dir . '.htaccess';
-			$htaccess_result = file_put_contents( $htaccess_file, $htaccess_content );
+		// Add .htaccess for security (Apache 2.4+ syntax).
+		$htaccess_content = "# Deny access to all files in this directory\n";
+		$htaccess_content .= "<IfModule mod_authz_core.c>\n";
+		$htaccess_content .= "    Require all denied\n";
+		$htaccess_content .= "</IfModule>\n";
+		$htaccess_content .= "<IfModule !mod_authz_core.c>\n";
+		$htaccess_content .= "    Order deny,allow\n";
+		$htaccess_content .= "    Deny from all\n";
+		$htaccess_content .= "</IfModule>\n";
+		$htaccess_file = $conjure_dir . '.htaccess';
+		$htaccess_result = file_put_contents( $htaccess_file, $htaccess_content );
 			
 			if ( false === $htaccess_result ) {
 				$error_message = sprintf(
@@ -3981,11 +4042,11 @@ class Conjure {
 				'description' => esc_html__( 'Customizer settings and theme options', 'conjurewp' ),
 				'accept'      => '.dat,.json',
 			),
-			'sliders' => array(
-				'title'       => esc_html__( 'Sliders', 'conjurewp' ),
-				'description' => esc_html__( 'Revolution Slider packages (.zip)', 'conjurewp' ),
-				'accept'      => '.zip',
-			),
+		'sliders' => array(
+			'title'       => esc_html__( 'Revolution Slider', 'conjurewp' ),
+			'description' => esc_html__( 'Revolution Slider packages (.zip)', 'conjurewp' ),
+			'accept'      => '.zip',
+		),
 			'redux' => array(
 				'title'       => esc_html__( 'Redux Options', 'conjurewp' ),
 				'description' => esc_html__( 'Redux framework settings', 'conjurewp' ),
@@ -4032,24 +4093,24 @@ class Conjure {
 				</p>
 			</div>
 
-			<div class="conjure__upload-success" style="display: <?php echo $has_file ? 'flex' : 'none'; ?>;">
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+			<div class="conjure__upload-success" style="display: <?php echo $has_file ? 'flex' : 'none'; ?>;" role="status" aria-live="polite">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<polyline points="20 6 9 17 4 12"></polyline>
 				</svg>
 				<div class="conjure__file-info">
 					<strong class="conjure__file-name"><?php echo esc_html( $file_name ); ?></strong>
 					<span class="conjure__file-size"><?php echo esc_html( $file_size ); ?></span>
 				</div>
-				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>" aria-label="<?php esc_attr_e( 'Remove uploaded file', 'conjurewp' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 						<line x1="18" y1="6" x2="6" y2="18"></line>
 						<line x1="6" y1="6" x2="18" y2="18"></line>
 					</svg>
 				</button>
 			</div>
 
-			<div class="conjure__upload-progress" style="display:none;">
-				<div class="conjure__progress-bar-small">
+			<div class="conjure__upload-progress" style="display:none;" role="status" aria-live="polite">
+				<div class="conjure__progress-bar-small" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="<?php esc_attr_e( 'Upload progress', 'conjurewp' ); ?>">
 					<div class="conjure__progress-fill"></div>
 				</div>
 				<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'conjurewp' ); ?></span>

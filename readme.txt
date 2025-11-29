@@ -14,14 +14,16 @@ A powerful WordPress onboarding wizard that helps users set up themes, install p
 
 ConjureWP is a comprehensive WordPress setup wizard that streamlines the theme installation process. Perfect for theme developers who want to provide their users with an effortless onboarding experience.
 
-= Core Features (Free) =
+= All Features (100% Free) =
 
 * **Setup Wizard** - Step-by-step guided installation with progress tracking and visual feedback
 * **Child Theme Generator** - Automatically creates child themes for safe customisation
-* **Plugin Installer** - Built-in installer for WordPress.org and custom plugins (manual installation)
+* **Automatic Plugin Installer** - Built-in installer for WordPress.org and custom plugins with one-click installation
 * **Content Import** - Import demo pages, posts, categories, tags, and media with self-contained importer
 * **Widget Import** - Automatically configure widgets and sidebars
 * **Customiser Import** - Apply theme settings and customisations
+* **Revolution Slider Import** - Import slider configurations for advanced demo replication
+* **Redux Framework Import** - Import theme option panel settings
 * **Demo Auto-Discovery** - Automatically detects and registers demo content from theme directory
 * **Demo-Specific Plugins** - Show only relevant plugins for each demo variation
 * **Theme Bundled Plugins** - Auto-merge plugins from theme's `/conjurewp-plugins/` folder
@@ -34,17 +36,7 @@ ConjureWP is a comprehensive WordPress setup wizard that streamlines the theme i
 * **Security Hardened** - Nonce verification, capability checks, and protected directories
 * **Update-Safe Storage** - Store demos outside plugin directory to prevent loss during updates
 
-= Premium Features ⭐ =
-
-Upgrade to premium for advanced features:
-
-* **Automatic Plugin Installation** - One-click installation of all required plugins (no manual downloads)
-* **Revolution Slider Import** - Import slider configurations for advanced demo replication
-* **Redux Framework Import** - Import theme option panel settings
-* **Priority Support** - Get help when you need it
-* **Lifetime Integration** - For theme developers to bundle premium features with their themes
-
-All core features (WP-CLI, REST API, server health, logging, etc.) are available in both free and premium versions.
+**All features are completely free with no premium upsells or limitations.**
 
 = For Theme Developers =
 
@@ -62,7 +54,7 @@ ConjureWP provides powerful tools for theme developers:
 * **Server Health API** - Customisable server requirement checks
 * **Redirect Control** - Control post-wizard redirect behaviour
 * **Configuration Examples** - Comprehensive examples in `/examples/` directory
-* **Lifetime Integration** - Purchase once, bundle with unlimited themes
+* **Premium Features Helper** - Helper class for gating custom theme features
 
 = Documentation =
 
@@ -112,7 +104,7 @@ Yes! ConjureWP works with all page builders:
 * Gutenberg (Block Editor)
 * Any other page builder
 
-Premium version includes Revolution Slider support for advanced demos.
+ConjureWP includes Revolution Slider import support for advanced demos.
 
 = Can I use this with WP-CLI? =
 
@@ -132,21 +124,21 @@ Yes! ConjureWP provides a REST API for hosting dashboards:
 
 Requires administrator authentication (`manage_options` capability). Perfect for hosting control panels without shell access.
 
-= What's the difference between free and premium? =
+= Is everything really free? =
 
-**Free version includes:**
-* All core features (wizard, imports, child themes, WP-CLI, REST API)
-* Manual plugin installation
+Yes! ConjureWP is 100% free and open source with no premium version or upsells. All features are included:
+* Setup wizard with progress tracking
+* Child theme generator
+* Automatic plugin installation (one-click)
+* Demo content, widgets, and customiser import
+* Revolution Slider import
+* Redux Framework import
+* WP-CLI commands
+* REST API
 * Server health monitoring
 * Comprehensive logging
 
-**Premium adds:**
-* Automatic plugin installation (one-click)
-* Revolution Slider import
-* Redux Framework import
-* Priority support
-
-All infrastructure features (WP-CLI, REST API, logging, server health) are available in both versions.
+The plugin includes a `Conjure_Premium_Features` helper class for theme developers who wish to gate their own custom features, but all ConjureWP features are completely free.
 
 = How do I view logs? =
 
@@ -222,12 +214,11 @@ Yes! ConjureWP includes multiple security measures:
 * Admin bar shortcuts to wizard and reset
 * Developer tools for granular step resets
 
-*Premium Features:*
+*All Features Included:*
 * Automatic plugin installation (one-click)
 * Revolution Slider import
 * Redux Framework import
-* Freemius licensing integration
-* Lifetime integration option for theme developers
+* Premium features helper class for theme developers
 
 *Security & Performance:*
 * Nonce verification on all actions

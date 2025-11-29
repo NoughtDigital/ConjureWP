@@ -2,18 +2,20 @@
 
 WordPress theme setup wizard with demo content import.
 
-> **Free on WordPress.org** | Premium features available via Freemius. Based on [MerlinWP](https://github.com/richtabor/MerlinWP).
+> **100% Free & Open Source** on WordPress.org. All features included. Based on [MerlinWP](https://github.com/richtabor/MerlinWP).
 
 ## Features
 
-### Core Features (Free)
+### All Features (100% Free)
 
 -   **Setup wizard** - Step-by-step guided installation with progress tracking
 -   **Child theme generator** - Create safe child themes automatically
--   **Built-in plugin installer** - Shows required/recommended plugins from WordPress.org and custom sources
+-   **Built-in plugin installer** - Automatic installation of required/recommended plugins from WordPress.org and custom sources
 -   **Demo content import** - Posts, pages, media, categories, tags
 -   **Widget importer** - Automatically configure widgets and sidebars
 -   **Customiser importer** - Theme settings and customisations
+-   **Revolution Slider import** - Import slider configurations for advanced demo replication
+-   **Redux Framework import** - Import theme option panel settings
 -   **Demo-specific plugin dependencies** - Show only relevant plugins per demo
 -   **Theme bundled plugins** - Auto-merge plugins from theme's `/conjurewp-plugins/` folder
 -   **Server health check** - PHP memory limit, execution time, MySQL version monitoring
@@ -25,30 +27,9 @@ WordPress theme setup wizard with demo content import.
 -   **Update-safe storage** - Store demos outside plugin directory
 -   **Security hardened** - `.htaccess` protection, nonce verification, capability checks
 
-### Premium Features ⭐
+### Premium Features Helper
 
--   **Automatic plugin installation** - One-click installation of all required plugins (no manual downloads)
--   **Revolution Slider import** - Import slider configurations for advanced demo replication
--   **Redux Framework import** - Import theme option panel settings
--   **Priority support** - Get help when you need it
--   **Lifetime integration** - For theme developers to bundle with themes
-
-### Free vs Premium
-
-| Feature | Free | Premium |
-|---------|------|---------|
-| Setup wizard & progress tracking | ✓ | ✓ |
-| Child theme generator | ✓ | ✓ |
-| Content/widget/customiser import | ✓ | ✓ |
-| Plugin installer (manual) | ✓ | ✓ |
-| Plugin installer (automatic) | ✗ | ✓ |
-| Revolution Slider import | ✗ | ✓ |
-| Redux Framework import | ✗ | ✓ |
-| WP-CLI commands | ✓ | ✓ |
-| REST API | ✓ | ✓ |
-| Server health monitoring | ✓ | ✓ |
-| Comprehensive logging | ✓ | ✓ |
-| Support | Community | Priority |
+The plugin includes `Conjure_Premium_Features` helper class for theme developers who wish to gate their own custom features. See `examples/premium-features-usage.php` for implementation examples.
 
 ## Requirements
 
@@ -238,7 +219,7 @@ See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` f
 -   ✅ Custom/Premium plugins (bundled with theme or via URL)
 -   ✅ Demo-specific plugin filtering
 -   ✅ Required vs recommended plugins
--   ✅ Automatic installation and activation (Premium feature)
+-   ✅ Automatic installation and activation (one-click)
 
 **WordPress.org Plugin:**
 
@@ -592,51 +573,21 @@ npm run build:wp
 
 This creates `dist/conjurewp.zip` with:
 - Production-optimised assets
-- Required vendor dependencies (Freemius SDK, Monolog)
+- Required vendor dependencies (Monolog)
 - No development files (tests, examples, build configs)
 - WordPress.org ready structure
 
 Upload the generated zip to WordPress.org SVN repository.
 
-### Freemius Deployment
-
-This plugin is also configured for Freemius deployment, which automatically generates:
-
--   **Free version**: WordPress.org compatible (Freemius SDK stripped)
--   **Premium version**: Includes Freemius SDK and licensing
-
-**Quick Deploy:**
-
-1. Update version in `conjurewp.php`
-2. Create git tag: `git tag v1.0.0 && git push origin v1.0.0`
-3. Upload ZIP to Freemius dashboard (or use GitHub Actions)
-4. Freemius processes and creates both versions
-5. Set release status to "Released"
-
-**Free Version:**
-
--   All core features included
--   No licensing restrictions
--   100% WordPress.org compatible
--   No external API calls
-
-**Premium Version:**
-
--   Same features as free
--   Freemius SDK for license management
--   Optional: can gate additional features if needed
-
 ## Documentation
 
 ### User Documentation
 
--   **[Licence Activation Guide](/docs/LICENCE-ACTIVATION.md)** - Understanding ConjureWP licensing, free vs premium features, and how to activate your licence. Clears up confusion between ConjureWP and theme licensing.
 -   **[WP-CLI Documentation](WP-CLI.md)** - Complete WP-CLI command reference for automated imports
 
 ### Developer Documentation
 
 -   **[Plugin Configuration Guide](/docs/PLUGIN-CONFIGURATION.md)** - Complete guide to configuring WordPress.org and custom/premium plugins for your theme demos. Includes demo-specific dependencies, required vs recommended plugins, and troubleshooting.
--   **[Lifetime Integration Guide](/docs/LIFETIME-INTEGRATION.md)** - For theme developers who purchased lifetime ConjureWP integration. Allows your users to access premium features without needing their own licence.
 
 ### Code Examples (`/examples/` directory)
 
@@ -676,7 +627,7 @@ See [examples/README.md](examples/README.md) for the complete list with descript
 
 ## Credits
 
-Based on [MerlinWP](https://github.com/richtabor/MerlinWP). Built with ConjureWP Importer, [Monolog](https://github.com/Seldaek/monolog), and TGMPA.
+Based on [MerlinWP](https://github.com/richtabor/MerlinWP). Built with ConjureWP Importer and [Monolog](https://github.com/Seldaek/monolog).
 
 ## Licence
 

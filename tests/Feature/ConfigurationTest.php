@@ -48,3 +48,4 @@ test('plugin has language template file', function () {
     expect(file_exists($potFile))->toBeTrue();
 });
 
+

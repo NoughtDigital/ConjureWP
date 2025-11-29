@@ -60,3 +60,4 @@ test('rest api class requires conjure instance', function () {
     expect($parameters[0]->getName())->toBe('conjure');
 });
 
+

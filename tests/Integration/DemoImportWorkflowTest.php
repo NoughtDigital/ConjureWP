@@ -79,3 +79,4 @@ test('conjure class has step completion tracking', function () {
     expect(method_exists('Conjure', 'get_step_completion_state'))->toBeTrue();
 });
 
+

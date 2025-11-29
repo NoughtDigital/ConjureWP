@@ -68,3 +68,4 @@ test('cli list_demos accepts required parameters', function () {
     expect($parameters[1]->getName())->toBe('assoc_args');
 });
 
+

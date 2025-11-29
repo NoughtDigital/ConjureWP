@@ -73,3 +73,4 @@ test('freemius lifetime integration returns boolean', function () {
     expect($result)->toBeBool();
 });
 
+

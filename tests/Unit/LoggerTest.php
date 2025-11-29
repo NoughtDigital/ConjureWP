@@ -25,3 +25,4 @@ test('logger has required logging methods', function () {
     }
 });
 
+

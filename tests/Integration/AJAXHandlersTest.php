@@ -69,3 +69,4 @@ test('ajax handlers check user capabilities', function () {
     expect($hasCapCheck)->toBeTrue();
 });
 
+

@@ -99,3 +99,4 @@ test('logger parses string log levels correctly', function () {
     expect(method_exists($logger, 'parse_log_level'))->toBeTrue();
 });
 
+

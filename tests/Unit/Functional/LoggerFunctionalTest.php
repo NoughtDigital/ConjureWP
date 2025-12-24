@@ -100,3 +100,4 @@ test('logger parses string log levels correctly', function () {
 });
 
 
+

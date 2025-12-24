@@ -5,8 +5,8 @@ Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
 Stable tag: 1.0.0
-Licence: GPLv2 or later
-Licence URI: https://www.gnu.org/licenses/gpl-2.0.html
+Licence: GPLv3 or later
+Licence URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 A powerful WordPress onboarding wizard that helps users set up themes, install plugins, import content, and more.
 

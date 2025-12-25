@@ -28,7 +28,7 @@ $config = array(
 	'dev_mode'             => false, // Enable development mode for testing (disabled by default for production builds).
 	'license_step'         => true, // EDD licence activation step for ConjureWP premium features.
 	'license_required'     => false, // Require the licence activation step (set false to allow users to skip).
-	'license_help_url'     => 'https://yourstore.com/my-account/', // URL for the 'license-tooltip'.
+	'license_help_url'     => '', // URL for the 'license-tooltip'. Will be set to Freemius account URL if available.
 	
 	/**
 	 * PREMIUM FEATURES (ConjureWP Licence Required):

@@ -451,34 +451,31 @@ if ( ! function_exists( 'con_fs' ) ) {
 				define( 'WP_FS__PRODUCT_21879_MULTISITE', true );
 			}
 
-			// Check if Freemius SDK is available.
-			// SDK is auto-loaded through Composer, but check for manual installation too.
-			$sdk_paths = array(
-				CONJUREWP_PLUGIN_DIR . 'vendor/freemius/wordpress-sdk/start.php',
-				CONJUREWP_PLUGIN_DIR . 'freemius/start.php',
-				CONJUREWP_PLUGIN_DIR . 'includes/freemius/start.php',
-			);
-
-			$sdk_loaded = false;
-			foreach ( $sdk_paths as $sdk_path ) {
+			// Include Freemius SDK.
+			// SDK is auto-loaded through Composer, but ensure it's loaded.
+			if ( ! function_exists( 'fs_dynamic_init' ) ) {
+				// Try to load Freemius SDK if not already loaded.
+				$plugin_dir = defined( 'CONJUREWP_PLUGIN_DIR' ) ? CONJUREWP_PLUGIN_DIR : dirname( dirname( __FILE__ ) );
+				$sdk_path = $plugin_dir . '/vendor/freemius/wordpress-sdk/start.php';
 				if ( file_exists( $sdk_path ) ) {
 					require_once $sdk_path;
-					$sdk_loaded = true;
-					break;
 				}
 			}
 
 			// Only initialize if Freemius SDK is available.
-			if ( $sdk_loaded && function_exists( 'fs_dynamic_init' ) ) {
+			if ( function_exists( 'fs_dynamic_init' ) ) {
 				$con_fs = fs_dynamic_init( array(
 					'id'                  => '21879',
 					'slug'                => 'conjurewp',
+					'premium_slug'        => 'conjurewp-pro',
 					'type'                => 'plugin',
 					'public_key'          => 'pk_4a1a51f34990a6a5f94ddeb5a5fc5',
 					'is_premium'          => true,
-					'has_premium_version' => false,
+					'premium_suffix'      => 'Pro',
+					'has_premium_version' => true,
 					'has_addons'          => false,
 					'has_paid_plans'      => true,
+					'wp_org_gatekeeper'   => 'OA7#BoRiBNqdf52FvzEf!!074aRLPs8fspif$7K1#4u4Csys1fQlCecVcUTOs2mcpeVHi#C2j9d09fOTvbC0HloPT7fFee5WdS3G',
 					'menu'                => array(
 						'first-path' => 'plugins.php',
 						'support'    => false,
@@ -499,6 +496,13 @@ $con_fs_instance = con_fs();
 
 // Signal that SDK was initiated.
 do_action( 'con_fs_loaded' );
+
+// Debug: Log Freemius initialization status (only in dev mode).
+if ( defined( 'WP_FS__DEV_MODE' ) && WP_FS__DEV_MODE ) {
+	if ( function_exists( 'error_log' ) ) {
+		error_log( 'ConjureWP Freemius Init: con_fs() = ' . ( $con_fs_instance ? 'object' : 'false' ) . ', fs_dynamic_init exists = ' . ( function_exists( 'fs_dynamic_init' ) ? 'yes' : 'no' ) );
+	}
+}
 
 /**
  * Customise Freemius opt-in/activation messaging to avoid confusion with theme licences.
@@ -568,6 +572,49 @@ if ( $con_fs_instance ) {
 		return __( 'Continue with Free Version', 'conjurewp' );
 	}
 	$con_fs_instance->add_filter( 'skip_connection_message', 'conjure_fs_custom_skip_button' );
+
+	/**
+	 * Hide Freemius activation screen for themes with lifetime integration.
+	 * When a theme developer has purchased lifetime integration, end users
+	 * should not see the license activation screen.
+	 */
+	if ( class_exists( 'Conjure_Freemius' ) && Conjure_Freemius::has_lifetime_integration() ) {
+		/**
+		 * Skip Freemius connection/activation for lifetime integration themes.
+		 * This prevents the activation screen from showing to end users.
+		 *
+		 * @param bool $skip Whether to skip the connection.
+		 * @return bool True to skip connection screen.
+		 */
+		function conjure_fs_skip_connection_for_lifetime_theme( $skip ) {
+			return true;
+		}
+		$con_fs_instance->add_filter( 'skip_connection', 'conjure_fs_skip_connection_for_lifetime_theme' );
+
+		/**
+		 * Hide activation notices for lifetime integration themes.
+		 *
+		 * @param bool $show Whether to show the notice.
+		 * @return bool False to hide notice.
+		 */
+		function conjure_fs_hide_activation_notice_for_lifetime_theme( $show ) {
+			return false;
+		}
+		$con_fs_instance->add_filter( 'show_opt_in', 'conjure_fs_hide_activation_notice_for_lifetime_theme' );
+		$con_fs_instance->add_filter( 'show_admin_notice', 'conjure_fs_hide_activation_notice_for_lifetime_theme' );
+
+		/**
+		 * Prevent Freemius from showing activation prompts.
+		 *
+		 * @param bool $show Whether to show activation prompt.
+		 * @return bool False to hide prompt.
+		 */
+		function conjure_fs_hide_activation_prompt_for_lifetime_theme( $show ) {
+			return false;
+		}
+		$con_fs_instance->add_filter( 'show_connect_notice', 'conjure_fs_hide_activation_prompt_for_lifetime_theme' );
+		$con_fs_instance->add_filter( 'show_trial', 'conjure_fs_hide_activation_prompt_for_lifetime_theme' );
+	}
 }
 
 endif; // End class_exists check for premium version.

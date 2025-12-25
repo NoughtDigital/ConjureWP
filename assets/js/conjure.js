@@ -327,7 +327,23 @@ var Conjure = (function ($) {
 			notice = $("#license-text");
 
 		function ajax_callback(r) {
-			if (typeof r.success !== "undefined" && r.success) {
+			// Handle AJAX failures (network errors, 500 errors, etc.)
+			if (!r || typeof r !== "object") {
+				r = {
+					success: false,
+					message: "Network error. Please check your connection and try again."
+				};
+			}
+
+			// Ensure response has required properties
+			if (typeof r.success === "undefined") {
+				r.success = false;
+			}
+			if (typeof r.message === "undefined" || !r.message) {
+				r.message = "An unexpected error occurred. Please try again.";
+			}
+
+			if (r.success) {
 				notice.siblings(".error-message").remove();
 				setTimeout(function () {
 					notice.addClass("lead");
@@ -361,7 +377,26 @@ var Conjure = (function ($) {
 					},
 					ajax_callback
 				)
-				.fail(ajax_callback);
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					// Handle AJAX failures properly
+					var errorResponse = {
+						success: false,
+						message: "Unable to connect to server. Please check your connection and try again."
+					};
+
+					// Try to parse response if available
+					if (jqXHR.responseJSON) {
+						errorResponse = jqXHR.responseJSON;
+					} else if (jqXHR.responseText) {
+						try {
+							errorResponse = JSON.parse(jqXHR.responseText);
+						} catch (e) {
+							// Use default error message
+						}
+					}
+
+					ajax_callback(errorResponse);
+				});
 		}
 
 		return {

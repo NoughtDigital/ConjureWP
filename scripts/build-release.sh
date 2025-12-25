@@ -79,8 +79,13 @@ fi
 # Install production dependencies
 echo -e "${YELLOW}Installing production Composer dependencies...${NC}"
 if [ -f "composer.json" ]; then
+    # Copy composer files temporarily for installation
+    cp composer.json "$BUILD_DIR/$PLUGIN_SLUG/"
+    cp composer.lock "$BUILD_DIR/$PLUGIN_SLUG/" 2>/dev/null || true
     cd "$BUILD_DIR/$PLUGIN_SLUG"
-    composer install --no-dev --optimize-autoloader --no-interaction
+    composer install --no-dev --optimize-autoloader --no-interaction --quiet
+    # Remove composer files from final build
+    rm composer.json composer.lock 2>/dev/null || true
     cd ../..
 fi
 

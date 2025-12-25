@@ -294,6 +294,19 @@ add_action( 'after_setup_theme', 'mytheme_configure_conjurewp' );
  *   Run code after import completes
  *   @param array $selected_import
  *
+ * WIZARD STEPS:
+ * - conjure_steps
+ *   Add, modify, or reorder wizard steps
+ *   @param array $steps Array of step definitions
+ *   @return array Modified steps array
+ *   See examples/custom-steps-example.php for detailed usage
+ *
+ * - {theme_template}_conjure_steps
+ *   Theme-specific step customisation (backward compatibility)
+ *   @param array $steps Array of step definitions
+ *   @return array Modified steps array
+ *   Note: Use 'conjure_steps' filter instead for better compatibility
+ *
  * ========================================================================
  * PRIORITY ORDER
  * ========================================================================

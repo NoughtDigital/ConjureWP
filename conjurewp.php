@@ -21,112 +21,121 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define plugin constants.
-define( 'CONJUREWP_VERSION', '1.0.0' );
-define( 'CONJUREWP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'CONJUREWP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'CONJUREWP_PLUGIN_FILE', __FILE__ );
+// Freemius auto-deactivation mechanism.
+if ( function_exists( 'con_fs' ) ) {
+	con_fs()->set_basename( true, __FILE__ );
+} else {
+	/**
+	 * DO NOT REMOVE THIS IF, IT IS ESSENTIAL FOR THE
+	 * `function_exists` CALL ABOVE TO PROPERLY WORK.
+	 */
 
-/**
- * Load Composer dependencies.
- * 
- * FREEMIUS NOTE: The vendor/freemius/ directory is automatically stripped from the
- * WordPress.org free version by Freemius. All code gracefully handles its absence.
- */
-if ( file_exists( CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
-	require_once CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php';
-}
+	// Define plugin constants.
+	define( 'CONJUREWP_VERSION', '1.0.0' );
+	define( 'CONJUREWP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+	define( 'CONJUREWP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+	define( 'CONJUREWP_PLUGIN_FILE', __FILE__ );
 
-/**
- * Load Freemius integration.
- * 
- * DEPLOYMENT: This file contains code wrapped in @freemius:premium-start/@freemius:premium-end
- * tags. When deployed to WordPress.org via Freemius, the premium code is stripped out, leaving
- * only free-version stubs that grant full access to all features.
- * 
- * FREE VERSION: Conjure_Freemius methods return values that grant full access (no restrictions).
- * PREMIUM VERSION: Includes Freemius SDK for license management (optional feature gating).
- */
-if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
-	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
-}
+	/**
+	 * Load Composer dependencies.
+	 * 
+	 * FREEMIUS NOTE: The vendor/freemius/ directory is automatically stripped from the
+	 * WordPress.org free version by Freemius. All code gracefully handles its absence.
+	 */
+	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
+		require_once CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php';
+	}
 
-/**
- * Load premium features helper.
- * 
- * Works with or without Freemius SDK. In free version, all methods return
- * non-premium values (is_free() returns true, is_premium() returns false, etc.).
- */
-if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php' ) ) {
-	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php';
-}
+	/**
+	 * Load Freemius integration.
+	 * 
+	 * DEPLOYMENT: This file contains code wrapped in @freemius:premium-start/@freemius:premium-end
+	 * tags. When deployed to WordPress.org via Freemius, the premium code is stripped out, leaving
+	 * only free-version stubs that grant full access to all features.
+	 * 
+	 * FREE VERSION: Conjure_Freemius methods return values that grant full access (no restrictions).
+	 * PREMIUM VERSION: Includes Freemius SDK for license management (optional feature gating).
+	 */
+	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
+		require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+	}
 
-/**
- * Load Conjure WP class.
- */
-require_once CONJUREWP_PLUGIN_DIR . 'class-conjure.php';
+	/**
+	 * Load premium features helper.
+	 * 
+	 * Works with or without Freemius SDK. In free version, all methods return
+	 * non-premium values (is_free() returns true, is_premium() returns false, etc.).
+	 */
+	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php' ) ) {
+		require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php';
+	}
 
-/**
- * Load the logger class.
- */
-require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
+	/**
+	 * Load Conjure WP class.
+	 */
+	require_once CONJUREWP_PLUGIN_DIR . 'class-conjure.php';
 
-/**
- * Load demo helpers class.
- */
-require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
+	/**
+	 * Load the logger class.
+	 */
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
 
-/**
- * Load theme plugin bundling class.
- */
-require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-theme-plugins.php';
+	/**
+	 * Load demo helpers class.
+	 */
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
 
-/**
- * Auto-merge theme-bundled plugins with demo-specific plugins.
- *
- * Allows theme developers to bundle plugins in /conjurewp-plugins/ folder
- * with a plugins.json configuration file.
- *
- * @param array $demo_plugins  Demo-specific plugins.
- * @param int   $demo_index    Demo index.
- * @param array $selected_demo Demo configuration.
- * @return array Merged plugin list.
- */
-function conjurewp_merge_theme_bundled_plugins( $demo_plugins, $demo_index, $selected_demo ) {
+	/**
+	 * Load theme plugin bundling class.
+	 */
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-theme-plugins.php';
+
+	/**
+	 * Auto-merge theme-bundled plugins with demo-specific plugins.
+	 *
+	 * Allows theme developers to bundle plugins in /conjurewp-plugins/ folder
+	 * with a plugins.json configuration file.
+	 *
+	 * @param array $demo_plugins  Demo-specific plugins.
+	 * @param int   $demo_index    Demo index.
+	 * @param array $selected_demo Demo configuration.
+	 * @return array Merged plugin list.
+	 */
+	function conjurewp_merge_theme_bundled_plugins( $demo_plugins, $demo_index, $selected_demo ) {
 	return Conjure_Theme_Plugins::merge_with_demo_plugins( $demo_plugins );
-}
-add_filter( 'conjure_demo_required_plugins', 'conjurewp_merge_theme_bundled_plugins', 5, 3 );
+	}
+	add_filter( 'conjure_demo_required_plugins', 'conjurewp_merge_theme_bundled_plugins', 5, 3 );
 
-/**
- * Load the configuration.
- */
-require_once CONJUREWP_PLUGIN_DIR . 'conjurewp-config.php';
+	/**
+	 * Load the configuration.
+	 */
+	require_once CONJUREWP_PLUGIN_DIR . 'conjurewp-config.php';
 
-/**
- * Load admin tools for viewing logs.
- */
-if ( is_admin() ) {
+	/**
+	 * Load admin tools for viewing logs.
+	 */
+	if ( is_admin() ) {
 	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-admin-tools.php';
-}
+	}
 
-/**
- * Load plugin textdomain.
- */
-function conjurewp_load_textdomain() {
+	/**
+	 * Load plugin textdomain.
+	 */
+	function conjurewp_load_textdomain() {
 	load_plugin_textdomain( 'conjurewp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-}
-add_action( 'plugins_loaded', 'conjurewp_load_textdomain' );
+	}
+	add_action( 'plugins_loaded', 'conjurewp_load_textdomain' );
 
-/**
- * Auto-register demo imports from custom directory.
- *
- * This function automatically discovers and registers demo content
- * if CONJUREWP_AUTO_REGISTER_DEMOS is enabled in wp-config.php
- *
- * @param array $import_files Existing import files.
- * @return array Modified import files with auto-discovered demos.
- */
-function conjurewp_auto_register_demos( $import_files ) {
+	/**
+	 * Auto-register demo imports from custom directory.
+	 *
+	 * This function automatically discovers and registers demo content
+	 * if CONJUREWP_AUTO_REGISTER_DEMOS is enabled in wp-config.php
+	 *
+	 * @param array $import_files Existing import files.
+	 * @return array Modified import files with auto-discovered demos.
+	 */
+	function conjurewp_auto_register_demos( $import_files ) {
 	// Check if auto-registration is enabled.
 	if ( ! Conjure_Demo_Helpers::is_auto_register_enabled() ) {
 		return $import_files;
@@ -141,46 +150,65 @@ function conjurewp_auto_register_demos( $import_files ) {
 	}
 
 	return $import_files;
-}
-add_filter( 'conjure_import_files', 'conjurewp_auto_register_demos', 5 );
+	}
+	add_filter( 'conjure_import_files', 'conjurewp_auto_register_demos', 5 );
 
-/**
- * Add settings link to plugins page.
- *
- * @param array $links Plugin action links.
- * @return array Modified plugin action links.
- */
-function conjurewp_add_action_links( $links ) {
-	$setup_link = array(
-		'<a href="' . admin_url( 'admin.php?page=conjurewp-setup' ) . '">' . __( 'Run Setup Wizard', 'conjurewp' ) . '</a>',
-	);
-	return array_merge( $setup_link, $links );
-}
-add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'conjurewp_add_action_links' );
+	/**
+	 * Add settings link to plugins page.
+	 *
+	 * @param array $links Plugin action links.
+	 * @return array Modified plugin action links.
+	 */
+	function conjurewp_add_action_links( $links ) {
+		$setup_link = array(
+			'<a href="' . admin_url( 'admin.php?page=conjurewp-setup' ) . '">' . __( 'Run Setup Wizard', 'conjurewp' ) . '</a>',
+		);
 
-/**
- * Get the logger instance.
- *
- * @return Conjure_Logger The logger instance.
- */
-function conjurewp_get_logger() {
+		// Add license activation link if Freemius is available and theme doesn't have lifetime integration.
+		// Theme developers with lifetime integration shouldn't show license link to end users.
+		$has_lifetime_integration = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::has_lifetime_integration() : false;
+		
+		if ( ! $has_lifetime_integration && function_exists( 'con_fs' ) ) {
+			$fs = con_fs();
+			if ( $fs && is_object( $fs ) ) {
+				// Link to Freemius account page for license activation.
+				$account_url = $fs->get_account_url();
+				if ( $account_url ) {
+					$license_link = array(
+						'<a href="' . esc_url( $account_url ) . '">' . __( 'Activate License', 'conjurewp' ) . '</a>',
+					);
+					$setup_link = array_merge( $setup_link, $license_link );
+				}
+			}
+		}
+
+		return array_merge( $setup_link, $links );
+	}
+	add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'conjurewp_add_action_links' );
+
+	/**
+	 * Get the logger instance.
+	 *
+	 * @return Conjure_Logger The logger instance.
+	 */
+	function conjurewp_get_logger() {
 	return Conjure_Logger::get_instance();
-}
+	}
 
-/**
- * Get the log file path.
- *
- * @return string The absolute path to the log file.
- */
-function conjurewp_get_log_path() {
+	/**
+	 * Get the log file path.
+	 *
+	 * @return string The absolute path to the log file.
+	 */
+	function conjurewp_get_log_path() {
 	$logger = conjurewp_get_logger();
 	return $logger->get_log_path();
-}
+	}
 
-/**
- * Display admin notice with log file location.
- */
-function conjurewp_admin_log_notice() {
+	/**
+	 * Display admin notice with log file location.
+	 */
+	function conjurewp_admin_log_notice() {
 	// Only show to administrators.
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
@@ -209,65 +237,70 @@ function conjurewp_admin_log_notice() {
 		</p>
 	</div>
 	<?php
-}
-add_action( 'admin_notices', 'conjurewp_admin_log_notice' );
-
-/**
- * Add reset option to the WordPress admin bar.
- *
- * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
- */
-function conjurewp_admin_bar_reset( $wp_admin_bar ) {
-	// Only show to administrators.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
 	}
+	add_action( 'admin_notices', 'conjurewp_admin_log_notice' );
 
-	// Create the reset URL with nonce.
-	$reset_url = wp_nonce_url(
-		add_query_arg( 'conjurewp_reset', 'true', admin_url() ),
-		'conjurewp_reset_nonce',
-		'_wpnonce'
-	);
+	/**
+	 * Add reset option to the WordPress admin bar.
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar The admin bar object.
+	 */
+	function conjurewp_admin_bar_reset( $wp_admin_bar ) {
+		// Only show when WP_DEBUG is enabled.
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+			return;
+		}
 
-	// Add the parent menu item.
-	$wp_admin_bar->add_node(
-		array(
-			'id'    => 'conjurewp-reset',
-			'title' => __( 'ConjureWP Reset', 'conjurewp' ),
-			'href'  => '#',
-		)
-	);
+		// Only show to administrators.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
 
-	// Add the reset action as a child menu item.
-	$wp_admin_bar->add_node(
-		array(
-			'parent' => 'conjurewp-reset',
-			'id'     => 'conjurewp-reset-wizard',
-			'title'  => __( 'Reset Setup Wizard', 'conjurewp' ),
-			'href'   => $reset_url,
-			'meta'   => array(
-				'onclick' => 'return confirm("' . esc_js( __( 'Are you sure you want to reset ConjureWP? This will delete the child theme and allow you to run the setup wizard again.', 'conjurewp' ) ) . '");',
-			),
-		)
-	);
+		// Create the reset URL with nonce.
+		$reset_url = wp_nonce_url(
+			add_query_arg( 'conjurewp_reset', 'true', admin_url() ),
+			'conjurewp_reset_nonce',
+			'_wpnonce'
+		);
 
-	// Add a link to run the wizard.
-	$wp_admin_bar->add_node(
-		array(
-			'parent' => 'conjurewp-reset',
-			'id'     => 'conjurewp-run-wizard',
-			'title'  => __( 'Run Setup Wizard', 'conjurewp' ),
-			'href'   => admin_url( 'admin.php?page=conjurewp-setup' ),
-		)
-	);
-}
-add_action( 'admin_bar_menu', 'conjurewp_admin_bar_reset', 999 );
+		// Add the parent menu item.
+		$wp_admin_bar->add_node(
+			array(
+				'id'    => 'conjurewp-reset',
+				'title' => __( 'ConjureWP Reset', 'conjurewp' ),
+				'href'  => '#',
+			)
+		);
 
-/**
- * Handle the ConjureWP reset action.
- */
-function conjurewp_handle_reset() {
+		// Add the reset action as a child menu item.
+		$wp_admin_bar->add_node(
+			array(
+				'parent' => 'conjurewp-reset',
+				'id'     => 'conjurewp-reset-wizard',
+				'title'  => __( 'Reset Setup Wizard', 'conjurewp' ),
+				'href'   => $reset_url,
+				'meta'   => array(
+					'onclick' => 'return confirm("' . esc_js( __( 'Are you sure you want to reset ConjureWP? This will delete the child theme and allow you to run the setup wizard again.', 'conjurewp' ) ) . '");',
+				),
+			)
+		);
+
+		// Add a link to run the wizard.
+		$wp_admin_bar->add_node(
+			array(
+				'parent' => 'conjurewp-reset',
+				'id'     => 'conjurewp-run-wizard',
+				'title'  => __( 'Run Setup Wizard', 'conjurewp' ),
+				'href'   => admin_url( 'admin.php?page=conjurewp-setup' ),
+			)
+		);
+	}
+	add_action( 'admin_bar_menu', 'conjurewp_admin_bar_reset', 999 );
+
+	/**
+	 * Handle the ConjureWP reset action.
+	 */
+	function conjurewp_handle_reset() {
 	// Check if the reset parameter is set.
 	$reset_action = isset( $_GET['conjurewp_reset'] ) ? sanitize_text_field( wp_unslash( $_GET['conjurewp_reset'] ) ) : '';
 	if ( 'true' !== $reset_action ) {
@@ -354,13 +387,13 @@ function conjurewp_handle_reset() {
 	// Redirect to the setup wizard.
 	wp_safe_redirect( admin_url( 'admin.php?page=conjurewp-setup&reset=success' ) );
 	exit;
-}
-add_action( 'admin_init', 'conjurewp_handle_reset', 1 );
+	}
+	add_action( 'admin_init', 'conjurewp_handle_reset', 1 );
 
-/**
- * Display success notice after reset.
- */
-function conjurewp_reset_success_notice() {
+	/**
+	 * Display success notice after reset.
+	 */
+	function conjurewp_reset_success_notice() {
 	// Only show to administrators.
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
@@ -380,5 +413,6 @@ function conjurewp_reset_success_notice() {
 		</p>
 	</div>
 	<?php
+	}
+	add_action( 'admin_notices', 'conjurewp_reset_success_notice' );
 }
-add_action( 'admin_notices', 'conjurewp_reset_success_notice' );

@@ -62,3 +62,4 @@ test('rest api class requires conjure instance', function () {
 
 
 
+

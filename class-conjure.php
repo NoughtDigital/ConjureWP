@@ -2344,20 +2344,22 @@ class Conjure {
 		} else {
 			// User is not registered - need to register first via opt_in.
 			// Note: opt_in may return a redirect URL for non-AJAX flows.
+			// Correct opt_in signature: opt_in($email, $first, $last, $license_key, $is_uninstall, $trial_plan_id, $is_disconnected, $is_marketing_allowed, $sites, $redirect, $license_owner_id)
 			$next_page = $fs->opt_in(
-				false, // is_anonymous
-				false, // is_marketing_allowed
-				false, // is_extensions_tracking_allowed
+				false, // email
+				false, // first
+				false, // last
 				$license_key, // license_key
-				false, // is_diagnostic_tracking_allowed
-				false, // is_extensions_tracking_allowed (duplicate param)
-				false, // is_gdpr_required
-				null, // is_marketing_allowed (duplicate)
+				false, // is_uninstall
+				false, // trial_plan_id
+				false, // is_disconnected
+				null, // is_marketing_allowed
 				array(), // sites
-				true // is_license_activation
+				false, // redirect - set to false for AJAX calls to prevent redirect URLs
+				null // license_owner_id
 			);
 
-			$this->logger->debug( 'Freemius opt_in result', array( 'result' => $next_page, 'type' => gettype( $next_page ) ) );
+			$this->logger->debug( 'Freemius opt_in result', array( 'result' => $next_page, 'type' => gettype( $next_page ), 'is_registered' => $fs->is_registered() ) );
 
 			// Check for errors in the response.
 			if ( is_object( $next_page ) && isset( $next_page->error ) ) {
@@ -2371,20 +2373,29 @@ class Conjure {
 				$message = ! empty( $error_message ) 
 					? esc_html( $error_message )
 					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
-			} elseif ( is_string( $next_page ) && ! empty( $next_page ) ) {
-				// opt_in returned a redirect URL - user needs to complete registration.
-				$success = false;
-				$message = esc_html__( 'Please complete the registration process. If you have already registered, try refreshing the page.', 'conjurewp' );
-				$this->logger->warning( 'Freemius opt_in returned redirect URL', array( 'url' => $next_page ) );
 			} else {
-				// Check if license was activated.
+				// opt_in with redirect=false completed. Now check if license was activated successfully.
+				// When redirect is false, opt_in returns a URL string (not an error).
+				// We need to sync and check if the user is now registered with a valid license.
 				$this->sync_freemius_license( $fs );
-				$success = $this->freemius_has_active_license( $fs );
+				
+				// Check if user is now registered and has active license.
+				$is_registered = $fs->is_registered();
+				$has_license = $this->freemius_has_active_license( $fs );
+				
+				$this->logger->debug( 'After opt_in sync check', array( 
+					'is_registered' => $is_registered,
+					'has_license' => $has_license 
+				) );
 
-				if ( ! $success ) {
+				if ( ! $is_registered ) {
+					$success = false;
+					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'conjurewp' );
+					$this->logger->warning( 'User not registered after opt_in' );
+				} elseif ( ! $has_license ) {
 					$success = false;
 					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
-					$this->logger->warning( 'License activation failed after opt_in', array( 'has_license' => $this->freemius_has_active_license( $fs ) ) );
+					$this->logger->warning( 'License activation failed after opt_in', array( 'is_registered' => $is_registered ) );
 				} else {
 					// Success - user is now registered and license is activated.
 					$theme = $this->theme->get( 'Name' );
@@ -2393,6 +2404,7 @@ class Conjure {
 						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
 						$theme
 					);
+					$success = true;
 					$this->mark_step_completed( 'license' );
 				}
 			}

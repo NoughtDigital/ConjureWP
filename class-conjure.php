@@ -28,42 +28,42 @@ class Conjure {
 	 *
 	 * @var object WP_Theme
 	 */
-	protected $theme;
+	public $theme;
 
 	/**
 	 * Current step.
 	 *
 	 * @var string
 	 */
-	protected $step = '';
+	public $step = '';
 
 	/**
 	 * Steps.
 	 *
 	 * @var    array
 	 */
-	protected $steps = array();
+	public $steps = array();
 
 	/**
 	 * Demo Plugin Manager instance.
 	 *
 	 * @var Conjure_Demo_Plugin_Manager
 	 */
-	protected $demo_plugin_manager;
+	public $demo_plugin_manager;
 
 	/**
 	 * Importer.
 	 *
 	 * @var    array
 	 */
-	protected $importer;
+	public $importer;
 
 	/**
 	 * WP Hook class.
 	 *
 	 * @var Conjure_Hooks
 	 */
-	protected $hooks;
+	public $hooks;
 
 	/**
 	 * Holds the verified import files.
@@ -98,35 +98,35 @@ class Conjure {
 	 *
 	 * @var array $strings
 	 */
-	protected $strings = null;
+	public $strings = null;
 
 	/**
 	 * The base path where Conjure is located.
 	 *
 	 * @var array $strings
 	 */
-	protected $base_path = null;
+	public $base_path = null;
 
 	/**
 	 * The base url where Conjure is located.
 	 *
 	 * @var array $strings
 	 */
-	protected $base_url = null;
+	public $base_url = null;
 
 	/**
 	 * The location where Conjure is located within the theme or plugin.
 	 *
 	 * @var string $directory
 	 */
-	protected $directory = null;
+	public $directory = null;
 
 	/**
 	 * Top level admin page.
 	 *
 	 * @var string $conjure_url
 	 */
-	protected $conjure_url = null;
+	public $conjure_url = null;
 
 	/**
 	 * The wp-admin parent page slug for the admin menu item.
@@ -147,56 +147,56 @@ class Conjure {
 	 *
 	 * @var string $hook_suffix
 	 */
-	protected $hook_suffix = null;
+	public $hook_suffix = null;
 
 	/**
 	 * The URL for the "Learn more about child themes" link.
 	 *
 	 * @var string $child_action_btn_url
 	 */
-	protected $child_action_btn_url = null;
+	public $child_action_btn_url = null;
 
 	/**
 	 * The flag, to mark, if the theme license step should be enabled.
 	 *
 	 * @var boolean $license_step_enabled
 	 */
-	protected $license_step_enabled = false;
+	public $license_step_enabled = false;
 
 	/**
 	 * The URL for the "Where can I find the license key?" link.
 	 *
 	 * @var string $theme_license_help_url
 	 */
-	protected $theme_license_help_url = null;
+	public $theme_license_help_url = null;
 
 	/**
 	 * Remove the "Skip" button, if required.
 	 *
 	 * @var string $license_required
 	 */
-	protected $license_required = null;
+	public $license_required = null;
 
 	/**
 	 * The item name of the EDD product (this theme).
 	 *
 	 * @var string $edd_item_name
 	 */
-	protected $edd_item_name = null;
+	public $edd_item_name = null;
 
 	/**
 	 * The theme slug of the EDD product (this theme).
 	 *
 	 * @var string $edd_theme_slug
 	 */
-	protected $edd_theme_slug = null;
+	public $edd_theme_slug = null;
 
 	/**
 	 * The remote_api_url of the EDD shop.
 	 *
 	 * @var string $edd_remote_api_url
 	 */
-	protected $edd_remote_api_url = null;
+	public $edd_remote_api_url = null;
 
 	/**
 	 * Turn on dev mode if you're developing.
@@ -231,14 +231,56 @@ class Conjure {
 	 *
 	 * @var string $slug
 	 */
-	protected $slug = '';
+	public $slug = '';
 
 	/**
 	 * Flag to keep wizard locked on the license step until activation.
 	 *
 	 * @var bool
 	 */
-	protected $license_gate_active = false;
+	public $license_gate_active = false;
+
+	/**
+	 * Wizard UI instance.
+	 *
+	 * @var Conjure_Wizard_UI
+	 */
+	protected $wizard_ui;
+
+	/**
+	 * Child theme generator instance.
+	 *
+	 * @var Conjure_Child_Theme_Generator
+	 */
+	protected $child_theme_generator;
+
+	/**
+	 * License manager instance.
+	 *
+	 * @var Conjure_License_Manager
+	 */
+	protected $license_manager;
+
+	/**
+	 * Step manager instance.
+	 *
+	 * @var Conjure_Step_Manager
+	 */
+	protected $step_manager;
+
+	/**
+	 * File upload handler instance.
+	 *
+	 * @var Conjure_File_Upload_Handler
+	 */
+	protected $file_upload_handler;
+
+	/**
+	 * AJAX handler instance.
+	 *
+	 * @var Conjure_Ajax_Handler
+	 */
+	protected $ajax_handler;
 
 	/**
 	 * Setup plugin version.
@@ -296,10 +338,6 @@ class Conjure {
 		$this->dev_mode               = $config['dev_mode'];
 		$this->ready_big_button_url   = $config['ready_big_button_url'];
 
-		if ( class_exists( 'Conjure_Freemius' ) ) {
-			add_filter( 'conjurewp_has_free_access', array( $this, 'grant_access_for_valid_edd_license' ), 10, 2 );
-		}
-
 		// Strings passed in from the config file.
 		$this->strings = $strings;
 
@@ -317,14 +355,38 @@ class Conjure {
 	$logger_config = isset( $config['logging'] ) ? $config['logging'] : array();
 	$this->logger = Conjure_Logger::get_instance( $logger_config );
 
+	// Initialize refactored class components.
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-step-manager.php';
+	$this->step_manager = new Conjure_Step_Manager( $this );
+
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-wizard-ui.php';
+	$this->wizard_ui = new Conjure_Wizard_UI( $this, $this->step_manager );
+
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-child-theme-generator.php';
+	$this->child_theme_generator = new Conjure_Child_Theme_Generator( $this );
+
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-license-manager.php';
+	$this->license_manager = new Conjure_License_Manager( $this, $this->step_manager );
+
+	// Register Freemius filter AFTER License Manager is instantiated.
+	if ( class_exists( 'Conjure_Freemius' ) ) {
+		add_filter( 'conjurewp_has_free_access', array( $this, 'grant_access_for_valid_edd_license' ), 10, 2 );
+	}
+
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-file-upload-handler.php';
+	$this->file_upload_handler = new Conjure_File_Upload_Handler( $this, $this->wizard_ui );
+
+	require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-ajax-handler.php';
+	$this->ajax_handler = new Conjure_Ajax_Handler( $this, $this->child_theme_generator, $this->license_manager, $this->file_upload_handler );
+
 	// Is Dev Mode turned on?
 	$already_setup = get_option( 'conjure_' . $this->slug . '_completed' );
 
 	// Load admin bar functionality for power users to rerun steps (only if CONJURE_TOOLS_ENABLED constant is defined).
 	if ( $already_setup && defined( 'CONJURE_TOOLS_ENABLED' ) && CONJURE_TOOLS_ENABLED ) {
-		add_action( 'admin_bar_menu', array( $this, 'add_admin_bar_rerun_menu' ), 100 );
-		add_action( 'admin_init', array( $this, 'handle_step_reset' ), 5 );
-		add_action( 'admin_notices', array( $this, 'display_admin_notices' ) );
+		add_action( 'admin_bar_menu', array( $this->step_manager, 'add_admin_bar_rerun_menu' ), 100 );
+		add_action( 'admin_init', array( $this->step_manager, 'handle_step_reset' ), 5 );
+		add_action( 'admin_notices', array( $this->step_manager, 'display_admin_notices' ) );
 	}
 
 	// Register REST API endpoints (always available for hosting dashboards).
@@ -354,23 +416,16 @@ class Conjure {
 		add_action( 'admin_init', array( $this, 'redirect' ), 30 );
 		add_action( 'after_switch_theme', array( $this, 'switch_theme' ) );
 		add_action( 'admin_init', array( $this, 'ignore' ), 5 );
-	add_action( 'admin_footer', array( $this, 'svg_sprite' ) );
-	add_action( 'wp_ajax_conjure_content', array( $this, '_ajax_content' ), 10, 0 );
-	add_action( 'wp_ajax_conjure_get_total_content_import_items', array( $this, '_ajax_get_total_content_import_items' ), 10, 0 );
-	add_action( 'wp_ajax_conjure_install_plugin', array( $this, '_ajax_install_plugin' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_child_theme', array( $this, 'generate_child' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_activate_license', array( $this, '_ajax_activate_license' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $this, 'update_selected_import_data_info' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_import_finished', array( $this, 'import_finished' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_upload_file', array( $this, '_ajax_upload_file' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_upload_from_media', array( $this, '_ajax_upload_from_media' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_delete_uploaded_file', array( $this, '_ajax_delete_uploaded_file' ), 10, 0 );
-		add_action( 'wp_ajax_conjure_get_health_metrics', array( $this, '_ajax_get_health_metrics' ), 10, 0 );
-		add_filter( 'pt-importer/new_ajax_request_response_data', array( $this, 'pt_importer_new_ajax_request_response_data' ) );
+	add_action( 'admin_footer', array( $this->wizard_ui, 'svg_sprite' ) );
+	
+	// Register AJAX handlers through the AJAX handler class.
+	$this->ajax_handler->register_ajax_handlers();
+	
+	add_filter( 'pt-importer/new_ajax_request_response_data', array( $this, 'pt_importer_new_ajax_request_response_data' ) );
 		add_action( 'import_end', array( $this, 'after_content_import_setup' ) );
 		add_action( 'import_start', array( $this, 'before_content_import_setup' ) );
 		add_action( 'admin_init', array( $this, 'register_import_files' ) );
-		add_filter( 'upload_mimes', array( $this, 'allow_import_file_types' ) );
+		add_filter( 'upload_mimes', array( $this->file_upload_handler, 'allow_import_file_types' ) );
 
 	// Register WP-CLI commands if WP-CLI is available.
 	if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -795,213 +850,66 @@ class Conjure {
 	}
 
 	/**
-	 * Output the header.
+	 * Output the header (delegates to Wizard UI).
 	 */
-	protected function header() {
-
-		// Strings passed in from the config file.
-		$strings = $this->strings;
-
-		// Get the current step.
-		$current_step = '';
-		if ( ! empty( $this->step ) && isset( $this->steps[ $this->step ] ) && isset( $this->steps[ $this->step ]['name'] ) ) {
-			$current_step = strtolower( $this->steps[ $this->step ]['name'] );
-		}
-
-		// Set the current screen to prevent "get_current_screen called incorrectly" notices.
-		// This ensures compatibility with plugins that use get_current_screen() in admin_head hooks.
-		if ( ! empty( $this->hook_suffix ) ) {
-			set_current_screen( $this->hook_suffix );
-		}
-		?>
-
-		<!DOCTYPE html>
-		<html xmlns="http://www.w3.org/1999/xhtml" <?php language_attributes(); ?>>
-		<head>
-			<meta name="viewport" content="width=device-width"/>
-			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-			<?php printf( esc_html( $strings['title%s%s%s%s'] ), '<ti', 'tle>', esc_html( $this->theme->name ), '</title>' ); ?>
-			<?php do_action( 'admin_print_styles' ); ?>
-			<?php do_action( 'admin_print_scripts' ); ?>
-			<?php do_action( 'admin_head' ); ?>
-		</head>
-		<body class="conjure__body conjure__body--<?php echo esc_attr( $current_step ); ?>">
-		<?php
+	public function header() {
+		return $this->wizard_ui->header();
 	}
 
 	/**
-	 * Output the content for the current step.
+	 * Output the content for the current step (delegates to Wizard UI).
 	 */
-	protected function body() {
-		if ( empty( $this->step ) || ! isset( $this->steps[ $this->step ] ) ) {
-			$this->logger->error( sprintf( __( 'Invalid step requested: %s', 'conjurewp' ), $this->step ) );
-			return;
-		}
-
-		if ( ! isset( $this->steps[ $this->step ]['view'] ) || ! is_callable( $this->steps[ $this->step ]['view'] ) ) {
-			$this->logger->error( sprintf( __( 'Step view is not callable: %s', 'conjurewp' ), $this->step ) );
-			return;
-		}
-
-		try {
-			call_user_func( $this->steps[ $this->step ]['view'] );
-		} catch ( Exception $e ) {
-			$this->logger->error( sprintf( __( 'Error rendering step %s: %s', 'conjurewp' ), $this->step, $e->getMessage() ) );
-			echo '<div class="error"><p>' . esc_html__( 'An error occurred while loading this step. Please check the error logs.', 'conjurewp' ) . '</p></div>';
-		}
+	public function body() {
+		return $this->wizard_ui->body();
 	}
 
 	/**
-	 * Output the footer.
+	 * Output the footer (delegates to Wizard UI).
 	 */
-	protected function footer() {
-		?>
-		</body>
-		<?php do_action( 'admin_footer' ); ?>
-		<?php do_action( 'admin_print_footer_scripts' ); ?>
-		</html>
-		<?php
+	public function footer() {
+		return $this->wizard_ui->footer();
 	}
 
 	/**
-	 * SVG
+	 * SVG sprite (delegates to Wizard UI).
 	 */
 	public function svg_sprite() {
-
-		// Define SVG sprite file.
-		$svg = trailingslashit( $this->base_path ) . $this->directory . '/assets/images/sprite.svg';
-
-		// If it exists, include it.
-		if ( file_exists( $svg ) ) {
-			require_once apply_filters( 'conjure_svg_sprite', $svg );
-		}
+		return $this->wizard_ui->svg_sprite();
 	}
 
 	/**
-	 * Return SVG markup.
+	 * Return SVG markup (delegates to Wizard UI).
 	 *
-	 * @param array $args {
-	 *     Parameters needed to display an SVG.
-	 *
-	 *     @type string $icon  Required SVG icon filename.
-	 *     @type string $title Optional SVG title.
-	 *     @type string $desc  Optional SVG description.
-	 * }
+	 * @param array $args Parameters needed to display an SVG.
 	 * @return string SVG markup.
 	 */
 	public function svg( $args = array() ) {
-
-		// Make sure $args are an array.
-		if ( empty( $args ) ) {
-			return __( 'Please define default parameters in the form of an array.', 'conjurewp' );
-		}
-
-		// Define an icon.
-		if ( false === array_key_exists( 'icon', $args ) ) {
-			return __( 'Please define an SVG icon filename.', 'conjurewp' );
-		}
-
-		// Set defaults.
-		$defaults = array(
-			'icon'        => '',
-			'title'       => '',
-			'desc'        => '',
-			'aria_hidden' => true, // Hide from screen readers.
-			'fallback'    => false,
-		);
-
-		// Parse args.
-		$args = wp_parse_args( $args, $defaults );
-
-		// Set aria hidden.
-		$aria_hidden = '';
-
-		if ( true === $args['aria_hidden'] ) {
-			$aria_hidden = ' aria-hidden="true"';
-		}
-
-		// Set ARIA.
-		$aria_labelledby = '';
-
-		if ( $args['title'] && $args['desc'] ) {
-			$aria_labelledby = ' aria-labelledby="title desc"';
-		}
-
-		// Begin SVG markup.
-		$svg = '<svg class="icon icon--' . esc_attr( $args['icon'] ) . '"' . $aria_hidden . $aria_labelledby . ' role="img">';
-
-		// If there is a title, display it.
-		if ( $args['title'] ) {
-			$svg .= '<title>' . esc_html( $args['title'] ) . '</title>';
-		}
-
-		// If there is a description, display it.
-		if ( $args['desc'] ) {
-			$svg .= '<desc>' . esc_html( $args['desc'] ) . '</desc>';
-		}
-
-		$svg .= '<use xlink:href="#icon-' . esc_html( $args['icon'] ) . '"></use>';
-
-		// Add some markup to use as a fallback for browsers that do not support SVGs.
-		if ( $args['fallback'] ) {
-			$svg .= '<span class="svg-fallback icon--' . esc_attr( $args['icon'] ) . '"></span>';
-		}
-
-		$svg .= '</svg>';
-
-		return $svg;
+		return $this->wizard_ui->svg( $args );
 	}
 
 	/**
-	 * Allowed HTML for sprites.
+	 * Allowed HTML for sprites (delegates to Wizard UI).
+	 *
+	 * @return array
 	 */
 	public function svg_allowed_html() {
-
-		$array = array(
-			'svg' => array(
-				'class'       => array(),
-				'aria-hidden' => array(),
-				'role'        => array(),
-			),
-			'use' => array(
-				'xlink:href' => array(),
-			),
-		);
-
-		return apply_filters( 'conjure_svg_allowed_html', $array );
+		return $this->wizard_ui->svg_allowed_html();
 	}
 
 	/**
-	 * Loading conjure-spinner.
+	 * Loading spinner (delegates to Wizard UI).
 	 */
 	public function loading_spinner() {
-
-		// Define the spinner file.
-		$spinner = trailingslashit( $this->base_path ) . $this->directory . '/assets/images/spinner.php';
-
-		// Retrieve the spinner.
-		$spinner = apply_filters( 'conjure_loading_spinner', $spinner );
-
-		if ( file_exists( $spinner ) ) {
-			include $spinner;
-		}
+		return $this->wizard_ui->loading_spinner();
 	}
 
 	/**
-	 * Allowed HTML for the loading spinner.
+	 * Allowed HTML for the loading spinner (delegates to Wizard UI).
+	 *
+	 * @return array
 	 */
 	public function loading_spinner_allowed_html() {
-
-		$array = array(
-			'span' => array(
-				'class' => array(),
-			),
-			'cite' => array(
-				'class' => array(),
-			),
-		);
-
-		return apply_filters( 'conjure_loading_spinner_allowed_html', $array );
+		return $this->wizard_ui->loading_spinner_allowed_html();
 	}
 
 	/**
@@ -1074,66 +982,35 @@ class Conjure {
 	}
 
 	/**
-	 * Output the steps
+	 * Output the steps navigation (delegates to Wizard UI).
 	 */
-	protected function step_output() {
-		$ouput_steps  = $this->steps;
-		$array_keys   = array_keys( $this->steps );
-		$current_step = array_search( $this->step, $array_keys, true );
-
-		array_shift( $ouput_steps );
-		?>
-
-		<ol class="dots">
-
-			<?php
-			foreach ( $ouput_steps as $step_key => $step ) :
-
-				$class_attr = '';
-				$show_link  = false;
-
-				if ( $step_key === $this->step ) {
-					$class_attr = 'active';
-				} elseif ( $current_step > array_search( $step_key, $array_keys, true ) ) {
-					$class_attr = 'done';
-					$show_link  = true;
-				}
-				?>
-
-				<li class="<?php echo esc_attr( $class_attr ); ?>">
-					<a href="<?php echo esc_url( $this->step_link( $step_key ) ); ?>" title="<?php echo esc_attr( $step['name'] ); ?>"></a>
-				</li>
-
-			<?php endforeach; ?>
-
-		</ol>
-
-		<?php
+	public function step_output() {
+		return $this->wizard_ui->step_output();
 	}
 
 	/**
-	 * Get the step URL.
+	 * Get the step URL (delegates to Wizard UI).
 	 *
 	 * @param string $step Name of the step, appended to the URL.
+	 * @return string
 	 */
-	protected function step_link( $step ) {
-		return add_query_arg( 'step', $step );
+	public function step_link( $step ) {
+		return $this->wizard_ui->step_link( $step );
 	}
 
 	/**
-	 * Get the next step link.
+	 * Get the next step link (delegates to Wizard UI).
+	 *
+	 * @return string
 	 */
-	protected function step_next_link() {
-		$keys = array_keys( $this->steps );
-		$step = array_search( $this->step, $keys, true ) + 1;
-
-		return add_query_arg( 'step', $keys[ $step ] );
+	public function step_next_link() {
+		return $this->wizard_ui->step_next_link();
 	}
 
 	/**
 	 * Introduction step
 	 */
-	protected function welcome() {
+	public function welcome() {
 
 		// Has this theme been setup yet? Compare this to the option set when you get to the last panel.
 		$already_setup = get_option( 'conjure_' . $this->slug . '_completed' );
@@ -1178,7 +1055,7 @@ class Conjure {
 	 * Handles save button from welcome page.
 	 * This is to perform tasks when the setup wizard has already been run.
 	 */
-	protected function welcome_handler() {
+	public function welcome_handler() {
 
 		check_admin_referer( 'conjure' );
 
@@ -1188,7 +1065,7 @@ class Conjure {
 	/**
 	 * Theme EDD license step.
 	 */
-	protected function license() {
+	public function license() {
 		// Debug: Check if method is being called at all.
 		error_log( 'CONJUREWP: License step method called' );
 		$this->logger->debug( __( 'License step view method called', 'conjurewp' ) );
@@ -1355,7 +1232,7 @@ class Conjure {
 	/**
 	 * Child theme generator.
 	 */
-	protected function child() {
+	public function child() {
 
 	// Variables.
 	$child_theme_option = get_option( 'conjure_' . $this->slug . '_child' );
@@ -1414,7 +1291,7 @@ class Conjure {
 	/**
 	 * Theme plugins
 	 */
-	protected function plugins() {
+	public function plugins() {
 
 		// Variables.
 	$url    = wp_nonce_url( add_query_arg( array( 'plugins' => 'go' ) ), 'conjure' );
@@ -1633,7 +1510,7 @@ class Conjure {
 	/**
 	 * Page setup
 	 */
-	protected function content() {
+	public function content() {
 		// Check if any demo files are registered.
 		if ( empty( $this->import_files ) ) {
 			$this->logger->error( 
@@ -1891,7 +1768,7 @@ class Conjure {
 	/**
 	 * Final step
 	 */
-	protected function ready() {
+	public function ready() {
 
 		// Author name.
 		$author = $this->theme->author;

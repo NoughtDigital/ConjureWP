@@ -70,7 +70,13 @@ class Conjure_Admin_Tools {
 			$log_path = $logger->get_log_path();
 
 			if ( file_exists( $log_path ) ) {
-				file_put_contents( $log_path, '' );
+				global $wp_filesystem;
+				if ( ! function_exists( 'WP_Filesystem' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+				}
+				WP_Filesystem();
+
+				$wp_filesystem->put_contents( $log_path, '', FS_CHMOD_FILE );
 				add_action( 'admin_notices', array( $this, 'clear_log_notice' ) );
 			}
 		}
@@ -258,17 +264,17 @@ class Conjure_Admin_Tools {
 							<?php endif; ?>
 						</td>
 					</tr>
-				<tr>
-					<th><?php _e( 'Minimum Log Level:', 'conjurewp' ); ?></th>
-					<td><strong><?php echo esc_html( $min_level_name ); ?></strong></td>
-				</tr>
-				<tr>
-					<th><?php _e( 'Total Log Files:', 'conjurewp' ); ?></th>
-					<td>
-						<strong><?php echo count( $log_files ); ?></strong>
-						<span style="color: #666;"> (<?php echo size_format( $total_size ); ?> total)</span>
-					</td>
-				</tr>
+					<tr>
+						<th><?php _e( 'Minimum Log Level:', 'conjurewp' ); ?></th>
+						<td><strong><?php echo esc_html( $min_level_name ); ?></strong></td>
+					</tr>
+					<tr>
+						<th><?php _e( 'Total Log Files:', 'conjurewp' ); ?></th>
+						<td>
+							<strong><?php echo count( $log_files ); ?></strong>
+							<span style="color: #666;"> (<?php echo size_format( $total_size ); ?> total)</span>
+						</td>
+					</tr>
 				</table>
 			</div>
 

@@ -195,14 +195,28 @@ class Conjure_Demo_Helpers {
 		// Add .htaccess for security (Apache/LiteSpeed).
 		$htaccess_file = $directory . '.htaccess';
 		if ( ! file_exists( $htaccess_file ) ) {
+			global $wp_filesystem;
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+			WP_Filesystem();
+
 			$htaccess_content = "# Deny all access to demo directory\nRequire all denied";
-			file_put_contents( $htaccess_file, $htaccess_content );
+			$wp_filesystem->put_contents( $htaccess_file, $htaccess_content, FS_CHMOD_FILE );
 		}
 
 		// Add index.php placeholder to prevent directory listing.
 		$index_file = $directory . 'index.php';
 		if ( ! file_exists( $index_file ) ) {
-			file_put_contents( $index_file, "<?php\n// Silence is golden.\n" );
+			if ( ! isset( $wp_filesystem ) ) {
+				global $wp_filesystem;
+				if ( ! function_exists( 'WP_Filesystem' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+				}
+				WP_Filesystem();
+			}
+
+			$wp_filesystem->put_contents( $index_file, "<?php\n// Silence is golden.\n", FS_CHMOD_FILE );
 		}
 
 		return true;

@@ -39,39 +39,10 @@ var Conjure = (function ($) {
 
 		setTimeout(function () {
 			body.addClass("loaded");
-
-			// Debug: Check drawer content on page load
-			var drawerContent = $(".js-conjure-drawer-import-content");
-			var drawerItems = $(".conjure__drawer--import-content__list-item");
-			console.log("=== Conjure Debug - Page Loaded ===");
-			console.log("Drawer content HTML:", drawerContent.html());
-			console.log("Drawer items count:", drawerItems.length);
-			if (drawerItems.length === 0) {
-				console.error(
-					"ERROR: No import options loaded! Check PHP get_import_data_info() and get_import_steps_html()"
-				);
-			}
 		}, 100);
 
 		drawer_trigger.on("click", function () {
 			body.toggleClass(drawer_opened);
-
-			// Debug: Check if drawer content exists
-			var drawerContent = $(".js-conjure-drawer-import-content");
-			var drawerItems = $(".conjure__drawer--import-content__list-item");
-			console.log("Conjure Debug - Drawer clicked");
-			console.log(
-				"Drawer content element exists:",
-				drawerContent.length > 0
-			);
-			console.log("Drawer items count:", drawerItems.length);
-			if (drawerItems.length > 0) {
-				console.log("First drawer item:", drawerItems.first().html());
-			} else {
-				console.log(
-					"WARNING: No drawer items found! The import options list is empty."
-				);
-			}
 		});
 
 		// Initialize Server Health dropdown
@@ -202,19 +173,10 @@ var Conjure = (function ($) {
 							response.data.has_plugins &&
 							response.data.demo_plugins
 						) {
-							// Store in data attribute for potential future use.
 							$(".js-conjure-drawer-import-content").data(
 								"demo-plugins",
 								response.data.demo_plugins
 							);
-
-							// Log for debugging (remove in production if desired).
-							if (console && console.log) {
-								console.log(
-									"Demo-specific plugins loaded:",
-									response.data.demo_plugins
-								);
-							}
 						}
 					} else {
 						alert(conjure_params.texts.something_went_wrong);
@@ -452,7 +414,7 @@ var Conjure = (function ($) {
 					complete();
 				}
 				// The plugin is done (installed, updated and activated).
-				else if (typeof response.done != "undefined" && response.done) {
+				else if (typeof response.done !== "undefined" && response.done) {
 					// CRITICAL: Mark this plugin as DONE before moving to next to prevent loops.
 					if ($current_node && !$current_node.data("done_item")) {
 						items_completed++;
@@ -461,7 +423,7 @@ var Conjure = (function ($) {
 					find_next();
 				} else if (typeof response.url != "undefined") {
 					// We have an ajax url action to perform.
-					if (response.hash == current_item_hash) {
+					if (response.hash === current_item_hash) {
 						currentSpan
 							.removeClass("installing success")
 							.addClass("error");
@@ -585,7 +547,7 @@ var Conjure = (function ($) {
 		function ajax_callback(response) {
 			var currentSpan = $current_node.find("label");
 			if (
-				typeof response == "object" &&
+				typeof response === "object" &&
 				typeof response.message !== "undefined"
 			) {
 				currentSpan.addClass(response.message.toLowerCase());
@@ -629,8 +591,6 @@ var Conjure = (function ($) {
 					find_next();
 				}
 			} else {
-				console.log(response);
-				// Error - try again with next plugin.
 				currentSpan.addClass("status--error");
 				find_next();
 			}
@@ -678,12 +638,12 @@ var Conjure = (function ($) {
 				".conjure__drawer--import-content__list-item input:checked"
 			);
 			$items.each(function () {
-				if (current_item == "" || do_next) {
+				if (current_item === "" || do_next) {
 					current_item = $(this).data("content");
 					$current_node = $(this);
 					process_current();
 					do_next = false;
-				} else if ($(this).data("content") == current_item) {
+				} else if ($(this).data("content") === current_item) {
 					do_next = true;
 				}
 			});
@@ -1448,7 +1408,7 @@ var Conjure = (function ($) {
 	function conjure_loading_button(btn) {
 		var $button = jQuery(btn);
 
-		if ($button.data("done-loading") == "yes") {
+		if ($button.data("done-loading") === "yes") {
 			return false;
 		}
 
@@ -1475,10 +1435,7 @@ var Conjure = (function ($) {
 			t = this;
 			$(window_loaded);
 		},
-		callback: function (func) {
-			console.log(func);
-			console.log(this);
-		},
+		callback: function () {},
 	};
 })(jQuery);
 

@@ -497,13 +497,6 @@ $con_fs_instance = con_fs();
 // Signal that SDK was initiated.
 do_action( 'con_fs_loaded' );
 
-// Debug: Log Freemius initialization status (only in dev mode).
-if ( defined( 'WP_FS__DEV_MODE' ) && WP_FS__DEV_MODE ) {
-	if ( function_exists( 'error_log' ) ) {
-		error_log( 'ConjureWP Freemius Init: con_fs() = ' . ( $con_fs_instance ? 'object' : 'false' ) . ', fs_dynamic_init exists = ' . ( function_exists( 'fs_dynamic_init' ) ? 'yes' : 'no' ) );
-	}
-}
-
 /**
  * Customise Freemius opt-in/activation messaging to avoid confusion with theme licences.
  * Makes it clear that this is for ConjureWP premium features, not theme activation.

@@ -1747,7 +1747,7 @@ class WXRImporter extends \WP_Importer {
 			$key = array_search( $child->tagName, $tag_name );
 			if ( $key ) {
 				$data[ $key ] = $child->textContent;
-			} else if ( $child->tagName == 'wp:termmeta' ) {
+			} elseif ( $child->tagName === 'wp:termmeta' ) {
 				$meta_item = $this->parse_meta_node( $child );
 				if ( ! empty( $meta_item ) ) {
 					$meta[] = $meta_item;
@@ -2322,7 +2322,7 @@ class WXRImporter extends \WP_Importer {
 				continue;
 			}
 			// Check if the correct parent id is already correctly mapped.
-			if ( isset( $termattributes['parent'] ) &&  $termattributes['parent'] == $mapped_parent ) {
+			if ( isset( $termattributes['parent'] ) && $termattributes['parent'] === $mapped_parent ) {
 				// Clear out our temporary meta key.
 				delete_term_meta( $term_id, '_wxr_import_parent' );
 				continue;

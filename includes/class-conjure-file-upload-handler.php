@@ -5,7 +5,7 @@
  * Handles file upload and manual import mode.
  *
  * @package   Conjure WP
- * @version   @@pkg.version
+ * @version   1.0.0
  * @link      https://conjurewp.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
@@ -92,27 +92,33 @@ class Conjure_File_Upload_Handler {
 			$htaccess_content .= "    Deny from all\n";
 			$htaccess_content .= "</IfModule>\n";
 			$htaccess_file = $conjure_dir . '.htaccess';
-			$htaccess_result = file_put_contents( $htaccess_file, $htaccess_content );
-			
+			global $wp_filesystem;
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+			WP_Filesystem();
+
+			$htaccess_result = $wp_filesystem->put_contents( $htaccess_file, $htaccess_content, FS_CHMOD_FILE );
+
 			if ( false === $htaccess_result ) {
 				$error_message = sprintf(
 					__( 'Failed to create .htaccess file in upload directory: %s', 'conjurewp' ),
 					$conjure_dir
 				);
-				
+
 				$this->logger->error( $error_message );
 			}
-			
+
 			// Add index.php to prevent directory listing.
-			$index_file = $conjure_dir . 'index.php';
-			$index_result = file_put_contents( $index_file, '<?php // Silence is golden.' );
-			
+			$index_file   = $conjure_dir . 'index.php';
+			$index_result = $wp_filesystem->put_contents( $index_file, '<?php // Silence is golden.', FS_CHMOD_FILE );
+
 			if ( false === $index_result ) {
 				$error_message = sprintf(
 					__( 'Failed to create index.php file in upload directory: %s', 'conjurewp' ),
 					$conjure_dir
 				);
-				
+
 				$this->logger->error( $error_message );
 			}
 		}

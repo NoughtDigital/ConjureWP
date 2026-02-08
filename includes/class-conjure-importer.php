@@ -196,7 +196,7 @@ class Importer extends WXRImporter {
 				continue;
 			}
 
-			if ( 'item' == $reader->name ) {
+			if ( 'item' === $reader->name ) {
 				$node   = $reader->expand();
 				$parsed = $this->parse_post_node( $node );
 

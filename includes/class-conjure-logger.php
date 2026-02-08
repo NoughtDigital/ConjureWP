@@ -132,27 +132,33 @@ class Conjure_Logger {
 			if ( ! file_exists( $logger_dir ) ) {
 				wp_mkdir_p( $logger_dir );
 
+				global $wp_filesystem;
+				if ( ! function_exists( 'WP_Filesystem' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+				}
+				WP_Filesystem();
+
 				// Add index.php to prevent directory listing.
 				$index_file = $logger_dir . '/index.php';
 				if ( ! file_exists( $index_file ) ) {
-					file_put_contents( $index_file, '<?php // Silence is golden' );
+					$wp_filesystem->put_contents( $index_file, '<?php // Silence is golden', FS_CHMOD_FILE );
 				}
 
-			// Add .htaccess to protect log files (Apache 2.4+ syntax).
-			$htaccess_file = $logger_dir . '/.htaccess';
-			if ( ! file_exists( $htaccess_file ) ) {
-				$htaccess_content  = "# Protect log files\n";
-				$htaccess_content .= "<Files *.log>\n";
-				$htaccess_content .= "    <IfModule mod_authz_core.c>\n";
-				$htaccess_content .= "        Require all denied\n";
-				$htaccess_content .= "    </IfModule>\n";
-				$htaccess_content .= "    <IfModule !mod_authz_core.c>\n";
-				$htaccess_content .= "        Order allow,deny\n";
-				$htaccess_content .= "        Deny from all\n";
-				$htaccess_content .= "    </IfModule>\n";
-				$htaccess_content .= "</Files>\n";
-				file_put_contents( $htaccess_file, $htaccess_content );
-			}
+				// Add .htaccess to protect log files (Apache 2.4+ syntax).
+				$htaccess_file = $logger_dir . '/.htaccess';
+				if ( ! file_exists( $htaccess_file ) ) {
+					$htaccess_content  = "# Protect log files\n";
+					$htaccess_content .= "<Files *.log>\n";
+					$htaccess_content .= "    <IfModule mod_authz_core.c>\n";
+					$htaccess_content .= "        Require all denied\n";
+					$htaccess_content .= "    </IfModule>\n";
+					$htaccess_content .= "    <IfModule !mod_authz_core.c>\n";
+					$htaccess_content .= "        Order allow,deny\n";
+					$htaccess_content .= "        Deny from all\n";
+					$htaccess_content .= "    </IfModule>\n";
+					$htaccess_content .= "</Files>\n";
+					$wp_filesystem->put_contents( $htaccess_file, $htaccess_content, FS_CHMOD_FILE );
+				}
 			}
 
 			$this->log_path = $logger_dir . '/main.log';

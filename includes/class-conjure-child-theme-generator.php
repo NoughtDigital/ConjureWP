@@ -5,7 +5,7 @@
  * Handles creation of child themes.
  *
  * @package   Conjure WP
- * @version   @@pkg.version
+ * @version   1.0.0
  * @link      https://conjurewp.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital

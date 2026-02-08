@@ -94,38 +94,31 @@ class Conjure_License_Manager {
 			$fs = con_fs();
 			// Check if Freemius SDK is actually available (not just the stub function).
 			$fs_available = ( $fs && is_object( $fs ) && method_exists( $fs, 'is_registered' ) );
-			
-			$this->logger->debug( 'Freemius SDK check', array( 
-				'function_exists' => function_exists( 'con_fs' ),
-				'fs_instance' => is_object( $fs ) ? 'object' : ( $fs === false ? 'false' : 'other' ),
-				'fs_available' => $fs_available,
-				'is_registered' => $fs_available ? $fs->is_registered() : 'unknown',
-				'fs_dynamic_init_exists' => function_exists( 'fs_dynamic_init' ),
-				'license_key_length' => strlen( $license_key )
-			) );
-			
+
 			if ( $fs_available ) {
-				// Use Freemius license activation.
+				$this->logger->debug( 'Activating license via Freemius SDK' );
 				$result = $this->freemius_activate_license( $license_key );
 			} else {
-				$this->logger->warning( 'Freemius SDK function exists but SDK not initialised, falling back to EDD activation', array(
-					'fs_value' => $fs,
-					'fs_type' => gettype( $fs ),
-					'fs_methods' => is_object( $fs ) ? get_class_methods( $fs ) : 'not_object'
-				) );
-				// Fallback to EDD license activation.
+				$this->logger->debug( 'Freemius SDK not initialised, falling back to EDD activation' );
 				$result = $this->edd_activate_license( $license_key );
 			}
 		} else {
-			$this->logger->warning( 'Freemius SDK function not available, falling back to EDD activation', array(
-				'freemius_file_exists' => file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ),
-				'con_fs_defined' => defined( 'CONJUREWP_PLUGIN_DIR' ) ? 'constant_defined' : 'constant_not_defined'
-			) );
-			// Fallback to EDD license activation.
+			$this->logger->debug( 'Freemius not available, falling back to EDD activation' );
 			$result = $this->edd_activate_license( $license_key );
 		}
 
 		$this->logger->debug( __( 'The license activation was performed with the following results', 'conjurewp' ), $result );
+
+		// If activation succeeded, re-evaluate steps and provide the correct next step URL.
+		// This is needed because activating a license may unlock new steps (e.g. 'plugins').
+		if ( ! empty( $result['success'] ) ) {
+			$this->conjure->steps();
+			$step_keys   = array_keys( $this->conjure->steps );
+			$current_idx = array_search( 'license', $step_keys, true );
+			if ( false !== $current_idx && isset( $step_keys[ $current_idx + 1 ] ) ) {
+				$result['redirect_url'] = add_query_arg( 'step', $step_keys[ $current_idx + 1 ] );
+			}
+		}
 
 		wp_send_json( array_merge( array( 'done' => 1 ), $result ) );
 	}
@@ -160,8 +153,6 @@ class Conjure_License_Manager {
 		// Use Freemius SDK's activate_license method if available (preferred method).
 		if ( method_exists( $fs, 'activate_license' ) ) {
 			$result = $fs->activate_license( $license_key );
-			
-			$this->logger->debug( 'Freemius activate_license result', array( 'result' => $result ) );
 
 			if ( is_object( $result ) && isset( $result->error ) ) {
 				$success = false;
@@ -208,8 +199,6 @@ class Conjure_License_Manager {
 			);
 
 			$result = $api->call( $fs->add_show_pending( '/' ), 'put', $params );
-
-			$this->logger->debug( 'Freemius API call result', array( 'result' => $result ) );
 
 			// Check if result is an error.
 			$is_error = ( is_object( $result ) && isset( $result->error ) ) || false === $result;
@@ -263,8 +252,6 @@ class Conjure_License_Manager {
 				null // license_owner_id
 			);
 
-			$this->logger->debug( 'Freemius opt_in result', array( 'result' => $next_page, 'type' => gettype( $next_page ), 'is_registered' => $fs->is_registered() ) );
-
 			// Check for errors in the response.
 			if ( is_object( $next_page ) && isset( $next_page->error ) ) {
 				$success = false;
@@ -283,21 +270,16 @@ class Conjure_License_Manager {
 				
 				// Check if user is now registered and has active license.
 				$is_registered = $fs->is_registered();
-				$has_license = $this->freemius_has_active_license( $fs );
-				
-				$this->logger->debug( 'After opt_in sync check', array( 
-					'is_registered' => $is_registered,
-					'has_license' => $has_license 
-				) );
+				$has_license   = $this->freemius_has_active_license( $fs );
 
 				if ( ! $is_registered ) {
 					$success = false;
 					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'conjurewp' );
-					$this->logger->warning( 'User not registered after opt_in' );
+					$this->logger->warning( 'User not registered after Freemius opt_in' );
 				} elseif ( ! $has_license ) {
 					$success = false;
 					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
-					$this->logger->warning( 'License activation failed after opt_in', array( 'is_registered' => $is_registered ) );
+					$this->logger->warning( 'License not active after Freemius opt_in' );
 				} else {
 					// Success - user is now registered and license is activated.
 					$theme = $this->conjure->theme->get( 'Name' );

@@ -2000,6 +2000,17 @@ class Conjure {
 
 		$this->logger->debug( __( 'The license activation was performed with the following results', 'conjurewp' ), $result );
 
+		// If activation succeeded, re-evaluate steps and provide the correct next step URL.
+		// This is needed because activating a license may unlock new steps (e.g. 'plugins').
+		if ( ! empty( $result['success'] ) ) {
+			$this->steps();
+			$step_keys   = array_keys( $this->steps );
+			$current_idx = array_search( 'license', $step_keys, true );
+			if ( false !== $current_idx && isset( $step_keys[ $current_idx + 1 ] ) ) {
+				$result['redirect_url'] = add_query_arg( 'step', $step_keys[ $current_idx + 1 ] );
+			}
+		}
+
 		wp_send_json( array_merge( array( 'done' => 1 ), $result ) );
 	}
 

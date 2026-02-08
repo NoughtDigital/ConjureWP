@@ -286,6 +286,7 @@ var Conjure = (function ($) {
 		var body = $(".conjure__body");
 		var wrapper = $(".conjure__content--license-key");
 		var complete,
+			btn_element,
 			notice = $("#license-text");
 
 		function ajax_callback(r) {
@@ -306,6 +307,11 @@ var Conjure = (function ($) {
 			}
 
 			if (r.success) {
+				// If the server returned a redirect URL (e.g. because new steps were unlocked),
+				// update the button href so the redirect goes to the correct next step.
+				if (r.redirect_url) {
+					btn_element.href = r.redirect_url;
+				}
 				notice.siblings(".error-message").remove();
 				setTimeout(function () {
 					notice.addClass("lead");
@@ -363,6 +369,7 @@ var Conjure = (function ($) {
 
 		return {
 			init: function (btn) {
+				btn_element = btn;
 				complete = function () {
 					setTimeout(function () {
 						$(".conjure__body").addClass("js--finished");
@@ -375,7 +382,7 @@ var Conjure = (function ($) {
 					}, 3500);
 
 					setTimeout(function () {
-						window.location.href = btn.href;
+						window.location.href = btn_element.href;
 					}, 4000);
 				};
 				do_ajax();

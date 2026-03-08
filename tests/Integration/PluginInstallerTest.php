@@ -1,12 +1,12 @@
 <?php
 
 test('plugin installer class file exists', function () {
-    $installerFile = getPluginPath('includes/class-conjure-plugin-installer.php');
+    $installerFile = conjurewp_test_get_plugin_path('includes/class-conjure-plugin-installer.php');
     expect(file_exists($installerFile))->toBeTrue();
 });
 
 test('plugin installer class file has required structure', function () {
-    $installerFile = getPluginPath('includes/class-conjure-plugin-installer.php');
+    $installerFile = conjurewp_test_get_plugin_path('includes/class-conjure-plugin-installer.php');
     $content = file_get_contents($installerFile);
     
     expect($content)->toContain('class Conjure_Plugin_Installer');
@@ -15,12 +15,12 @@ test('plugin installer class file has required structure', function () {
 });
 
 test('demo plugin manager class exists', function () {
-    require_once getPluginPath('includes/class-conjure-demo-plugin-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-plugin-manager.php');
     expect(class_exists('Conjure_Demo_Plugin_Manager'))->toBeTrue();
 });
 
 test('demo plugin manager has required plugins method', function () {
-    require_once getPluginPath('includes/class-conjure-demo-plugin-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-plugin-manager.php');
     
     $methods = get_class_methods('Conjure_Demo_Plugin_Manager');
     $hasPluginMethods = false;
@@ -36,12 +36,12 @@ test('demo plugin manager has required plugins method', function () {
 });
 
 test('theme plugins class exists', function () {
-    require_once getPluginPath('includes/class-conjure-theme-plugins.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-theme-plugins.php');
     expect(class_exists('Conjure_Theme_Plugins'))->toBeTrue();
 });
 
 test('theme plugins can load plugins json', function () {
-    require_once getPluginPath('includes/class-conjure-theme-plugins.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-theme-plugins.php');
     
     $methods = get_class_methods('Conjure_Theme_Plugins');
     $hasLoadMethod = false;
@@ -57,12 +57,12 @@ test('theme plugins can load plugins json', function () {
 });
 
 test('downloader class exists for remote content', function () {
-    require_once getPluginPath('includes/class-conjure-downloader.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-downloader.php');
     expect(class_exists('Conjure_Downloader'))->toBeTrue();
 });
 
 test('downloader has download method in file', function () {
-    $downloaderFile = getPluginPath('includes/class-conjure-downloader.php');
+    $downloaderFile = conjurewp_test_get_plugin_path('includes/class-conjure-downloader.php');
     $content = file_get_contents($downloaderFile);
     
     expect($content)->toContain('function download');

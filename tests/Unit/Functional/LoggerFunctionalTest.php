@@ -1,10 +1,21 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Monolog\Logger as MonologLogger;
 
-beforeEach(function () {
+// Skip when WordPress test lib is not installed (no wp-admin/includes/file.php).
+$conjurewp_wp_file_available = defined( 'ABSPATH' ) && file_exists( ABSPATH . 'wp-admin/includes/file.php' );
+
+beforeEach(function () use ( $conjurewp_wp_file_available ) {
+    if ( ! $conjurewp_wp_file_available ) {
+        throw new \PHPUnit\Framework\SkippedWithMessageException( 'WordPress test environment required (wp-admin/includes/file.php)' );
+    }
     // Create a temporary log directory for tests
-    $this->tempLogDir = sys_get_temp_dir() . '/conjurewp-test-logs-' . uniqid();
+    $this->tempLogDir = sys_get_temp_dir() . '/ConjureWP-test-logs-' . uniqid();
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- test fixture setup.
     mkdir($this->tempLogDir, 0755, true);
     $this->tempLogFile = $this->tempLogDir . '/test.log';
 });
@@ -12,9 +23,11 @@ beforeEach(function () {
 afterEach(function () {
     // Clean up test logs
     if (file_exists($this->tempLogFile)) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- test fixture teardown.
         unlink($this->tempLogFile);
     }
     if (is_dir($this->tempLogDir)) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- test fixture teardown.
         rmdir($this->tempLogDir);
     }
     
@@ -26,7 +39,7 @@ afterEach(function () {
 });
 
 test('logger can be instantiated with configuration', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $config = [
         'enable_rotation' => false,
@@ -39,7 +52,7 @@ test('logger can be instantiated with configuration', function () {
 });
 
 test('logger writes info messages to log file', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $logger = Conjure_Logger::get_instance();
     
@@ -53,7 +66,7 @@ test('logger writes info messages to log file', function () {
 });
 
 test('logger has all required logging methods', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $logger = Conjure_Logger::get_instance();
     
@@ -64,7 +77,7 @@ test('logger has all required logging methods', function () {
 });
 
 test('logger respects minimum log level configuration', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $config = [
         'min_log_level' => MonologLogger::ERROR,
@@ -81,7 +94,7 @@ test('logger respects minimum log level configuration', function () {
 });
 
 test('logger accepts custom configuration updates', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $logger = Conjure_Logger::get_instance();
     expect($logger)->toBeInstanceOf('Conjure_Logger');
@@ -91,7 +104,7 @@ test('logger accepts custom configuration updates', function () {
 });
 
 test('logger parses string log levels correctly', function () {
-    require_once getPluginPath('includes/class-conjure-logger.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-logger.php');
     
     $logger = Conjure_Logger::get_instance();
     

@@ -5,7 +5,7 @@
  * @package   Conjure
  * @author    ConjureWP
  * @license   GPL-3.0
- * @link      https://conjurewp.com
+ * @link      https://ConjureWP.com
  */
 
 // Exit if accessed directly.
@@ -117,7 +117,7 @@ class Conjure_Server_Health {
 	 */
 	public function get_memory_limit_value() {
 		$memory_limit = ini_get( 'memory_limit' );
-		
+
 		if ( ! $memory_limit ) {
 			return 0;
 		}
@@ -128,7 +128,7 @@ class Conjure_Server_Health {
 		}
 
 		$memory_limit = strtoupper( $memory_limit );
-		
+
 		if ( strpos( $memory_limit, 'G' ) !== false ) {
 			return (int) $memory_limit * 1024;
 		} elseif ( strpos( $memory_limit, 'M' ) !== false ) {
@@ -147,7 +147,7 @@ class Conjure_Server_Health {
 	 */
 	public function get_max_execution_value() {
 		$max_execution = ini_get( 'max_execution_time' );
-		
+
 		if ( ! $max_execution ) {
 			return 0;
 		}
@@ -164,7 +164,7 @@ class Conjure_Server_Health {
 		$memory_limit = ini_get( 'memory_limit' );
 
 		if ( ! $memory_limit ) {
-			return __( 'N/A', 'conjurewp' );
+			return __( 'N/A', 'ConjureWP' );
 		}
 
 		return $memory_limit;
@@ -195,7 +195,7 @@ class Conjure_Server_Health {
 		$max_execution = ini_get( 'max_execution_time' );
 
 		if ( ! $max_execution ) {
-			return __( 'N/A', 'conjurewp' );
+			return __( 'N/A', 'ConjureWP' );
 		}
 
 		return $max_execution . 's';
@@ -210,7 +210,7 @@ class Conjure_Server_Health {
 		$max_execution = ini_get( 'max_execution_time' );
 
 		if ( ! $max_execution ) {
-			return '<span class="below-req">' . esc_html__( 'N/A', 'conjurewp' ) . '</span>';
+			return '<span class="below-req">' . esc_html__( 'N/A', 'ConjureWP' ) . '</span>';
 		}
 
 		if ( $max_execution < $this->min_execution_time ) {
@@ -228,16 +228,10 @@ class Conjure_Server_Health {
 	public function get_mysql_version() {
 		global $wpdb;
 
-		// Suppress errors and use WordPress DB version as fallback.
-		$version = $wpdb->get_var( 'SELECT VERSION()' );
-
-		if ( empty( $version ) ) {
-			// Fallback to WordPress database version.
-			$version = $wpdb->db_version();
-		}
+		$version = $wpdb->db_version();
 
 		// Sanitize output.
-		return $version ? sanitize_text_field( $version ) : __( 'N/A', 'conjurewp' );
+		return $version ? sanitize_text_field( $version ) : __( 'N/A', 'ConjureWP' );
 	}
 
 	/**
@@ -249,24 +243,24 @@ class Conjure_Server_Health {
 	public function format_filesize( $raw_size ) {
 		// Validate input.
 		if ( ! is_numeric( $raw_size ) || $raw_size < 0 ) {
-			return __( 'unknown', 'conjurewp' );
+			return __( 'unknown', 'ConjureWP' );
 		}
 
 		$raw_size = absint( $raw_size );
 
 		if ( $raw_size / 1099511627776 > 1 ) {
-			return number_format_i18n( $raw_size / 1099511627776, 1 ) . ' ' . __( 'TiB', 'conjurewp' );
+			return number_format_i18n( $raw_size / 1099511627776, 1 ) . ' ' . __( 'TiB', 'ConjureWP' );
 		} elseif ( $raw_size / 1073741824 > 1 ) {
-			return number_format_i18n( $raw_size / 1073741824, 1 ) . ' ' . __( 'GiB', 'conjurewp' );
+			return number_format_i18n( $raw_size / 1073741824, 1 ) . ' ' . __( 'GiB', 'ConjureWP' );
 		} elseif ( $raw_size / 1048576 > 1 ) {
-			return number_format_i18n( $raw_size / 1048576, 1 ) . ' ' . __( 'MiB', 'conjurewp' );
+			return number_format_i18n( $raw_size / 1048576, 1 ) . ' ' . __( 'MiB', 'ConjureWP' );
 		} elseif ( $raw_size / 1024 > 1 ) {
-			return number_format_i18n( $raw_size / 1024, 1 ) . ' ' . __( 'KiB', 'conjurewp' );
+			return number_format_i18n( $raw_size / 1024, 1 ) . ' ' . __( 'KiB', 'ConjureWP' );
 		} elseif ( $raw_size > 1 ) {
-			return number_format_i18n( $raw_size, 0 ) . ' ' . __( 'bytes', 'conjurewp' );
+			return number_format_i18n( $raw_size, 0 ) . ' ' . __( 'bytes', 'ConjureWP' );
 		}
 
-		return __( 'unknown', 'conjurewp' );
+		return __( 'unknown', 'ConjureWP' );
 	}
 
 	/**
@@ -299,7 +293,7 @@ class Conjure_Server_Health {
 
 		$defaults = array(
 			'show_title'       => true,
-			'title'            => __( 'Server Health Check', 'conjurewp' ),
+			'title'            => __( 'Server Health Check', 'ConjureWP' ),
 			'requirements_url' => '',
 			'theme_name'       => '',
 		);
@@ -321,19 +315,19 @@ class Conjure_Server_Health {
 			<div class="server-health-content" id="server-health-content">
 				<?php if ( $meets_requirements ) : ?>
 					<p id="check-req">
-						<strong><?php esc_html_e( 'Meets Requirements', 'conjurewp' ); ?></strong>, 
-						<?php esc_html_e( 'setup & import functions will operate smoothly.', 'conjurewp' ); ?>
+						<strong><?php esc_html_e( 'Meets Requirements', 'ConjureWP' ); ?></strong>, 
+						<?php esc_html_e( 'setup & import functions will operate smoothly.', 'ConjureWP' ); ?>
 					</p>
 			<?php else : ?>
 				<p id="check-req">
-					<strong><?php esc_html_e( 'Server Resources Low', 'conjurewp' ); ?></strong><br />
+					<strong><?php esc_html_e( 'Server Resources Low', 'ConjureWP' ); ?></strong><br />
 					<?php
 					if ( ! empty( $args['requirements_url'] ) && filter_var( $args['requirements_url'], FILTER_VALIDATE_URL ) ) {
 						echo wp_kses(
 							sprintf(
 								/* translators: %s: link to theme requirements documentation */
-								__( 'Your server may experience timeout issues during import. Please review the %s to ensure a smooth setup.', 'conjurewp' ),
-								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'recommended requirements', 'conjurewp' ) . '</em></a>'
+								__( 'Your server may experience timeout issues during import. Please review the %s to ensure a smooth setup.', 'ConjureWP' ),
+								'<a href="' . esc_url( $args['requirements_url'] ) . '" target="_blank" rel="noopener noreferrer"><em>' . esc_html__( 'recommended requirements', 'ConjureWP' ) . '</em></a>'
 							),
 							array(
 								'a' => array(
@@ -345,7 +339,7 @@ class Conjure_Server_Health {
 							)
 						);
 					} else {
-						esc_html_e( 'Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.', 'conjurewp' );
+						esc_html_e( 'Your server may experience timeout issues during import. Consider increasing PHP memory and execution time limits.', 'ConjureWP' );
 					}
 					?>
 				</p>
@@ -358,19 +352,19 @@ class Conjure_Server_Health {
 				?>
 				<ul class="server-info">
 					<li>
-						<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'conjurewp' ); ?></span>
+						<span class="server-feature"><?php esc_html_e( 'PHP Memory Limit', 'ConjureWP' ); ?></span>
 						<span class="server-value health-metric-value-memory" data-current="<?php echo esc_attr( $memory_limit ); ?>" data-min="<?php echo esc_attr( $this->min_memory_limit ); ?>">
 							<?php echo wp_kses_post( $this->get_memory_limit_html() ); ?>
 						</span>
 					</li>
 					<li>
-						<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'conjurewp' ); ?></span>
+						<span class="server-feature"><?php esc_html_e( 'PHP Max Execution Time', 'ConjureWP' ); ?></span>
 						<span class="server-value health-metric-value-execution" data-current="<?php echo esc_attr( $max_execution ); ?>" data-min="<?php echo esc_attr( $this->min_execution_time ); ?>">
 							<?php echo wp_kses_post( $this->get_max_execution_time_html() ); ?>
 						</span>
 					</li>
 					<li>
-						<span class="server-feature"><?php esc_html_e( 'MySQL Version', 'conjurewp' ); ?></span>
+						<span class="server-feature"><?php esc_html_e( 'MySQL Version', 'ConjureWP' ); ?></span>
 						<span class="server-value health-metric-value-mysql">
 							<span class="meets-req"><?php echo esc_html( $mysql_version ); ?></span>
 						</span>
@@ -399,8 +393,8 @@ class Conjure_Server_Health {
 	 * @param array $args Optional. Arguments to customize output.
 	 */
 	public function render_complete( $args = array() ) {
-		echo $this->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo $this->render_health_check( $args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo wp_kses_post( $this->get_health_check_styles() );
+		echo wp_kses_post( $this->render_health_check( $args ) );
 	}
 
 	/**
@@ -410,7 +404,7 @@ class Conjure_Server_Health {
 	 */
 	public function get_bottlenecks() {
 		$bottlenecks = array();
-		
+
 		if ( ! $this->enabled ) {
 			return $bottlenecks;
 		}
@@ -446,7 +440,7 @@ class Conjure_Server_Health {
 			switch ( $bottleneck ) {
 				case 'memory':
 					$links[] = array(
-						'title' => __( 'How to increase PHP memory limit', 'conjurewp' ),
+						'title' => __( 'How to increase PHP memory limit', 'ConjureWP' ),
 						'url'   => 'https://wordpress.org/documentation/article/editing-wp-config-php/#increase-memory-allocated-to-php',
 						'type'  => 'memory',
 					);
@@ -454,7 +448,7 @@ class Conjure_Server_Health {
 
 				case 'execution_time':
 					$links[] = array(
-						'title' => __( 'How to increase PHP max execution time', 'conjurewp' ),
+						'title' => __( 'How to increase PHP max execution time', 'ConjureWP' ),
 						'url'   => 'https://wordpress.org/support/article/common-wordpress-errors/#maximum-execution-time-exceeded',
 						'type'  => 'execution_time',
 					);

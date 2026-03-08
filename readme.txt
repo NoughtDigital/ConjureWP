@@ -1,12 +1,12 @@
-=== ConjureWP - WordPress Setup Wizard ===
+=== Conjure Setup Wizard ===
 Contributors: noughtdigital
 Tags: demo import, theme setup, content import, onboarding, setup wizard
 Requires at least: 6.0
-Tested up to: 6.6
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.0.0
-Licence: GPLv3 or later
-Licence URI: https://www.gnu.org/licenses/gpl-3.0.html
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 A powerful WordPress onboarding wizard that helps users set up themes, install plugins, import content, and more.
 
@@ -26,7 +26,7 @@ ConjureWP is a comprehensive WordPress setup wizard that streamlines the theme i
 * **Redux Framework Import** - Import theme option panel settings
 * **Demo Auto-Discovery** - Automatically detects and registers demo content from theme directory
 * **Demo-Specific Plugins** - Show only relevant plugins for each demo variation
-* **Theme Bundled Plugins** - Auto-merge plugins from theme's `/conjurewp-plugins/` folder
+* **Theme Bundled Plugins** - Auto-merge plugins from theme's `/ConjureWP-plugins/` folder
 * **Server Health Monitoring** - Real-time checks for PHP memory, execution time, and MySQL version
 * **Comprehensive Logging** - Detailed logs with rotation, filtering, and admin viewer
 * **Log Management** - View, download, and clear logs from WordPress admin
@@ -44,7 +44,7 @@ ConjureWP provides powerful tools for theme developers:
 
 * **Demo Auto-Discovery** - Automatically detects demo content in your theme directory (zero configuration)
 * **Multiple Demo Support** - Support unlimited demo variations with dropdown selection
-* **Theme Bundled Plugins** - Include premium plugins in theme's `/conjurewp-plugins/` folder
+* **Theme Bundled Plugins** - Include premium plugins in theme's `/ConjureWP-plugins/` folder
 * **Demo-Specific Plugins** - Different plugin requirements for each demo
 * **Update-Safe Storage** - Store demos in theme directory to survive plugin updates
 * **Custom Preview Images** - Visual demo selection with preview images
@@ -58,11 +58,11 @@ ConjureWP provides powerful tools for theme developers:
 
 = Documentation =
 
-Visit [conjurewp.com](https://conjurewp.com/) for complete documentation, examples, and integration guides.
+Visit [ConjureWP.com](https://ConjureWP.com/) for complete documentation, examples, and integration guides.
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/conjurewp/`, or install directly through the WordPress plugins screen
+1. Upload the plugin files to `/wp-content/plugins/ConjureWP/`, or install directly through the WordPress plugins screen
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Navigate to the setup wizard from the admin menu or dashboard notice
 4. Follow the step-by-step wizard to configure your site
@@ -79,8 +79,8 @@ No, the wizard works out of the box for end users. However, theme developers sho
 
 Demo content can be stored in multiple locations (checked in this priority order):
 1. Custom path via `CONJUREWP_DEMO_PATH` constant in wp-config.php
-2. Theme directory: `/wp-content/themes/your-theme/conjurewp-demos/`
-3. Uploads directory: `/wp-content/uploads/conjurewp-demos/`
+2. Theme directory: `/wp-content/themes/your-theme/ConjureWP-demos/`
+3. Uploads directory: `/wp-content/uploads/ConjureWP-demos/`
 4. Plugin directory: `/demo/` (examples only, not recommended for production)
 
 For production, always use options 1 or 2 to prevent loss during plugin updates.
@@ -114,13 +114,13 @@ Yes! ConjureWP includes full WP-CLI support:
 * `wp conjure import --demo=slug` - Import demo by slug
 * Skip options: `--skip-content`, `--skip-widgets`, `--skip-options`, etc.
 
-Perfect for CI/CD pipelines, hosting automation, and bulk site deployments. See WP-CLI.md for complete documentation.
+Perfect for CI/CD pipelines, hosting automation, and bulk site deployments. See docs/WP-CLI.md for complete documentation.
 
 = Can I use this with hosting control panels? =
 
 Yes! ConjureWP provides a REST API for hosting dashboards:
-* `GET /wp-json/conjurewp/v1/demos` - List available demos
-* `POST /wp-json/conjurewp/v1/import` - Trigger demo import
+* `GET /wp-json/ConjureWP/v1/demos` - List available demos
+* `POST /wp-json/ConjureWP/v1/import` - Trigger demo import
 
 Requires administrator authentication (`manage_options` capability). Perfect for hosting control panels without shell access.
 
@@ -151,7 +151,7 @@ Logs include automatic rotation (keeps 5 files, 10MB each) and are protected fro
 
 = Can I bundle plugins with my theme? =
 
-Yes! Create a `/conjurewp-plugins/` folder in your theme with:
+Yes! Create a `/ConjureWP-plugins/` folder in your theme with:
 * `plugins.json` configuration file
 * Plugin ZIP files
 
@@ -159,9 +159,9 @@ ConjureWP will automatically merge these with demo-specific plugins. See `/examp
 
 = How do I create multiple demos? =
 
-Create subfolders in your theme's `/conjurewp-demos/` directory:
-* `/conjurewp-demos/business/` - content.xml, widgets.json, etc.
-* `/conjurewp-demos/portfolio/` - content.xml, widgets.json, etc.
+Create subfolders in your theme's `/ConjureWP-demos/` directory:
+* `/ConjureWP-demos/business/` - content.xml, widgets.json, etc.
+* `/ConjureWP-demos/portfolio/` - content.xml, widgets.json, etc.
 
 Enable auto-discovery: `define( 'CONJUREWP_AUTO_REGISTER_DEMOS', true );` in wp-config.php
 
@@ -198,7 +198,7 @@ Yes! ConjureWP includes multiple security measures:
 * Widget and customiser import with validation
 * Built-in plugin installer supporting WordPress.org and custom sources
 * Demo-specific plugin dependencies (different plugins per demo)
-* Theme bundled plugins system (auto-merge from `/conjurewp-plugins/`)
+* Theme bundled plugins system (auto-merge from `/ConjureWP-plugins/`)
 * Auto-discovery of demo content from theme directory
 * Multiple demo support with preview images
 * Update-safe storage locations
@@ -238,5 +238,5 @@ Yes! ConjureWP includes multiple security measures:
 == Upgrade Notice ==
 
 = 1.0.0 =
-Initial release of ConjureWP - WordPress Setup Wizard. Streamline your theme installation process with our powerful onboarding wizard.
+Initial release of Conjure Setup Wizard. Streamline your theme installation process with our powerful onboarding wizard.
 

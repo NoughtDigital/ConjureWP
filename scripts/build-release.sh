@@ -92,18 +92,18 @@ fi
 # Create ZIP
 echo -e "${YELLOW}Creating release ZIP...${NC}"
 cd "$BUILD_DIR"
-zip -r "../$DIST_DIR/conjurewp-$VERSION.zip" "$PLUGIN_SLUG" -q
+zip -r "../$DIST_DIR/ConjureWP-$VERSION.zip" "$PLUGIN_SLUG" -q
 cd ..
 
 # Get file size
-FILE_SIZE=$(du -h "$DIST_DIR/conjurewp-$VERSION.zip" | cut -f1)
+FILE_SIZE=$(du -h "$DIST_DIR/ConjureWP-$VERSION.zip" | cut -f1)
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Build Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "Version:  ${YELLOW}$VERSION${NC}"
-echo -e "File:     ${YELLOW}$DIST_DIR/conjurewp-$VERSION.zip${NC}"
+echo -e "File:     ${YELLOW}$DIST_DIR/ConjureWP-$VERSION.zip${NC}"
 echo -e "Size:     ${YELLOW}$FILE_SIZE${NC}"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"

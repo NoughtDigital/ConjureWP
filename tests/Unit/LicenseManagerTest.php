@@ -1,17 +1,17 @@
 <?php
 
 test('conjure license manager class file exists', function () {
-    $classFile = getPluginPath('includes/class-conjure-license-manager.php');
+    $classFile = conjurewp_test_get_plugin_path('includes/class-conjure-license-manager.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('conjure license manager class can be loaded', function () {
-    require_once getPluginPath('includes/class-conjure-license-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-license-manager.php');
     expect(class_exists('Conjure_License_Manager'))->toBeTrue();
 });
 
 test('conjure license manager class has required methods', function () {
-    require_once getPluginPath('includes/class-conjure-license-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-license-manager.php');
     
     $requiredMethods = [
         '__construct',

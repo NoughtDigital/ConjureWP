@@ -1,7 +1,11 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 test('composer.json is valid json', function () {
-    $composerPath = getPluginPath('composer.json');
+    $composerPath = conjurewp_test_get_plugin_path('composer.json');
     $composerContent = file_get_contents($composerPath);
     $composerData = json_decode($composerContent, true);
     
@@ -10,7 +14,7 @@ test('composer.json is valid json', function () {
 });
 
 test('composer.json has required fields', function () {
-    $composerPath = getPluginPath('composer.json');
+    $composerPath = conjurewp_test_get_plugin_path('composer.json');
     $composerData = json_decode(file_get_contents($composerPath), true);
     
     expect($composerData)->toHaveKeys(['name', 'description', 'license', 'require']);
@@ -19,7 +23,7 @@ test('composer.json has required fields', function () {
 });
 
 test('composer.json requires correct php version', function () {
-    $composerPath = getPluginPath('composer.json');
+    $composerPath = conjurewp_test_get_plugin_path('composer.json');
     $composerData = json_decode(file_get_contents($composerPath), true);
     
     expect($composerData['require'])->toHaveKey('php');
@@ -27,7 +31,7 @@ test('composer.json requires correct php version', function () {
 });
 
 test('package.json is valid json', function () {
-    $packagePath = getPluginPath('package.json');
+    $packagePath = conjurewp_test_get_plugin_path('package.json');
     $packageContent = file_get_contents($packagePath);
     $packageData = json_decode($packageContent, true);
     
@@ -36,7 +40,7 @@ test('package.json is valid json', function () {
 });
 
 test('phpcs.xml exists and is valid xml', function () {
-    $phpcsPath = getPluginPath('phpcs.xml');
+    $phpcsPath = conjurewp_test_get_plugin_path('phpcs.xml');
     expect(file_exists($phpcsPath))->toBeTrue();
     
     $xml = simplexml_load_file($phpcsPath);
@@ -44,7 +48,7 @@ test('phpcs.xml exists and is valid xml', function () {
 });
 
 test('plugin has language template file', function () {
-    $potFile = getPluginPath('languages/conjurewp.pot');
+    $potFile = conjurewp_test_get_plugin_path('languages/conjurewp.pot');
     expect(file_exists($potFile))->toBeTrue();
 });
 

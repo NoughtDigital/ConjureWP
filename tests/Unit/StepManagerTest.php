@@ -1,17 +1,17 @@
 <?php
 
 test('conjure step manager class file exists', function () {
-    $classFile = getPluginPath('includes/class-conjure-step-manager.php');
+    $classFile = conjurewp_test_get_plugin_path('includes/class-conjure-step-manager.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('conjure step manager class can be loaded', function () {
-    require_once getPluginPath('includes/class-conjure-step-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-step-manager.php');
     expect(class_exists('Conjure_Step_Manager'))->toBeTrue();
 });
 
 test('conjure step manager class has required methods', function () {
-    require_once getPluginPath('includes/class-conjure-step-manager.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-step-manager.php');
     
     $requiredMethods = [
         '__construct',

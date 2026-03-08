@@ -32,6 +32,7 @@ global $wpdb;
 // - conjure_{theme_slug}_completed
 // - conjure_{theme_slug}_child
 // - conjure_{theme_slug}_step_completion
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional bulk cleanup during uninstall.
 $wpdb->query(
 	$wpdb->prepare(
 		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
@@ -45,6 +46,7 @@ $wpdb->query(
 // - conjure_uploaded_files
 // - conjure_selected_demo_index
 // - conjure_admin_notice
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional bulk cleanup during uninstall.
 $wpdb->query(
 	$wpdb->prepare(
 		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
@@ -53,21 +55,23 @@ $wpdb->query(
 	)
 );
 
-// Delete all transients that start with 'conjurewp_'.
+// Delete all transients that start with 'ConjureWP_'.
 // This includes:
 // - conjurewp_theme_plugins_config
 // - conjurewp_theme_plugin_validation
 // - conjurewp_downloads_{hash}
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional bulk cleanup during uninstall.
 $wpdb->query(
 	$wpdb->prepare(
 		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-		$wpdb->esc_like( '_transient_conjurewp_' ) . '%',
-		$wpdb->esc_like( '_transient_timeout_conjurewp_' ) . '%'
+		$wpdb->esc_like( '_transient_ConjureWP_' ) . '%',
+		$wpdb->esc_like( '_transient_timeout_ConjureWP_' ) . '%'
 	)
 );
 
 // Delete transients that contain '_conjure_redirect' (theme-specific redirects).
 // Format: _transient_{theme}_conjure_redirect or _transient_timeout_{theme}_conjure_redirect
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional bulk cleanup during uninstall.
 $wpdb->query(
 	$wpdb->prepare(
 		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
@@ -92,22 +96,22 @@ if ( ! $wp_filesystem ) {
 	return; // Cannot proceed without filesystem access.
 }
 
-$upload_dir = wp_upload_dir();
+$conjurewp_upload_dir = wp_upload_dir();
 
 // Delete log directory: /wp-content/uploads/conjure-wp/
-$log_dir = trailingslashit( $upload_dir['basedir'] ) . 'conjure-wp';
-if ( $wp_filesystem->exists( $log_dir ) ) {
-	$wp_filesystem->rmdir( $log_dir, true );
+$conjurewp_log_dir = trailingslashit( $conjurewp_upload_dir['basedir'] ) . 'conjure-wp';
+if ( $wp_filesystem->exists( $conjurewp_log_dir ) ) {
+	$wp_filesystem->rmdir( $conjurewp_log_dir, true );
 }
 
 // Delete uploads directory: /wp-content/uploads/conjure-uploads/
 // This contains files uploaded through the wizard (XML, JSON, etc.).
-$uploads_dir = trailingslashit( $upload_dir['basedir'] ) . 'conjure-uploads';
-if ( $wp_filesystem->exists( $uploads_dir ) ) {
-	$wp_filesystem->rmdir( $uploads_dir, true );
+$conjurewp_uploads_dir = trailingslashit( $conjurewp_upload_dir['basedir'] ) . 'conjure-uploads';
+if ( $wp_filesystem->exists( $conjurewp_uploads_dir ) ) {
+	$wp_filesystem->rmdir( $conjurewp_uploads_dir, true );
 }
 
-// Note: We do NOT delete /wp-content/uploads/conjurewp-demos/ as this may
+// Note: We do NOT delete /wp-content/uploads/ConjureWP-demos/ as this may
 // contain user-provided demo content that should persist even after plugin removal.
 
 // ============================================================================
@@ -126,10 +130,9 @@ if ( function_exists( 'wp_cache_flush' ) ) {
 // Log the uninstall (if possible, but don't fail if logger doesn't exist).
 if ( class_exists( 'Conjure_Logger' ) ) {
 	try {
-		$logger = Conjure_Logger::get_instance();
-		$logger->info( 'ConjureWP plugin uninstalled - all data cleaned up' );
+		$conjurewp_logger = Conjure_Logger::get_instance();
+		$conjurewp_logger->info( 'ConjureWP plugin uninstalled - all data cleaned up' );
 	} catch ( Exception $e ) {
 		// Silently fail - we're uninstalling anyway.
 	}
 }
-

@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * Define demo import files.
  *
@@ -28,7 +30,7 @@ function my_theme_import_files() {
 			'local_import_widget_file'     => trailingslashit( get_template_directory() ) . 'demo/widgets.wie',
 			'local_import_customizer_file' => trailingslashit( get_template_directory() ) . 'demo/customizer.dat',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/preview.jpg',
-			'import_notice'                => __( 'This demo includes sample content, widgets, and customizer settings.', 'your-textdomain' ),
+			'import_notice'                => __( 'This demo includes sample content, widgets, and customizer settings.', 'ConjureWP' ),
 			'preview_url'                  => 'https://your-theme-demo.com/',
 		),
 		// Add more demo imports here if you have multiple demos.
@@ -60,8 +62,8 @@ function my_theme_after_import_setup( $selected_import ) {
 	}
 
 	// Example: Assign front page and posts page (blog page).
-	$front_page_id = get_page_by_title( 'Home' );
-	$blog_page_id  = get_page_by_title( 'Blog' );
+	$front_page_id = conjurewp_example_get_page_by_title( 'Home' );
+	$blog_page_id  = conjurewp_example_get_page_by_title( 'Blog' );
 
 	if ( $front_page_id ) {
 		update_option( 'show_on_front', 'page' );

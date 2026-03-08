@@ -30,10 +30,10 @@ class Conjure_Admin_Tools {
 	public function add_tools_page() {
 		add_submenu_page(
 			'tools.php',
-			__( 'ConjureWP Logs', 'conjurewp' ),
-			__( 'ConjureWP Logs', 'conjurewp' ),
+			__( 'ConjureWP Logs', 'ConjureWP' ),
+			__( 'ConjureWP Logs', 'ConjureWP' ),
 			'manage_options',
-			'conjurewp-logs',
+			'ConjureWP-logs',
 			array( $this, 'render_logs_page' )
 		);
 	}
@@ -43,7 +43,7 @@ class Conjure_Admin_Tools {
 	 */
 	public function handle_log_actions() {
 		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
-		if ( 'conjurewp-logs' !== $page ) {
+		if ( 'ConjureWP-logs' !== $page ) {
 			return;
 		}
 
@@ -59,7 +59,7 @@ class Conjure_Admin_Tools {
 			$log_files = $logger->get_all_log_files();
 			foreach ( $log_files as $log_file ) {
 				if ( file_exists( $log_file ) ) {
-					unlink( $log_file );
+					wp_delete_file( $log_file );
 				}
 			}
 			add_action( 'admin_notices', array( $this, 'clear_log_notice' ) );
@@ -84,30 +84,41 @@ class Conjure_Admin_Tools {
 		// Handle download log action.
 		if ( 'download_log' === $action && check_admin_referer( 'conjurewp_download_log' ) ) {
 			$log_file = isset( $_GET['file'] ) ? sanitize_text_field( wp_unslash( $_GET['file'] ) ) : '';
-			
+
 			if ( empty( $log_file ) ) {
 				$log_path = $logger->get_log_path();
 			} else {
 				// Validate file is in the log directory - prevent traversal attacks.
 				$log_dir  = dirname( $logger->get_log_path() );
 				$log_path = $log_dir . '/' . basename( $log_file );
-				
+
 				// Use realpath to resolve any path traversal attempts and verify prefix.
 				$real_log_path = realpath( $log_path );
 				$real_log_dir  = realpath( $log_dir );
-				
+
 				if ( ! $real_log_path || ! $real_log_dir || 0 !== strpos( $real_log_path, $real_log_dir ) ) {
-					wp_die( __( 'Invalid log file path.', 'conjurewp' ) );
+					wp_die( esc_html__( 'Invalid log file path.', 'ConjureWP' ) );
 				}
-				
+
 				$log_path = $real_log_path;
 			}
 
 			if ( file_exists( $log_path ) ) {
+				$filesystem = $this->get_filesystem();
+				if ( ! $filesystem ) {
+					wp_die( esc_html__( 'Unable to access filesystem.', 'ConjureWP' ) );
+				}
+
+				$contents = $filesystem->get_contents( $log_path );
+				if ( false === $contents ) {
+					wp_die( esc_html__( 'Unable to read log file.', 'ConjureWP' ) );
+				}
+
+				$safe_contents = wp_kses( $contents, array() );
 				header( 'Content-Type: text/plain' );
-				header( 'Content-Disposition: attachment; filename="conjurewp-' . basename( $log_path ) . '"' );
-				header( 'Content-Length: ' . filesize( $log_path ) );
-				readfile( $log_path );
+				header( 'Content-Disposition: attachment; filename="ConjureWP-' . esc_attr( basename( $log_path ) ) . '"' );
+				header( 'Content-Length: ' . (string) strlen( $safe_contents ) );
+				echo $safe_contents;
 				exit;
 			}
 		}
@@ -119,7 +130,7 @@ class Conjure_Admin_Tools {
 	public function clear_log_notice() {
 		?>
 		<div class="notice notice-success is-dismissible">
-			<p><?php _e( 'Log file has been cleared successfully.', 'conjurewp' ); ?></p>
+			<p><?php esc_html_e( 'Log file has been cleared successfully.', 'ConjureWP' ); ?></p>
 		</div>
 		<?php
 	}
@@ -130,7 +141,7 @@ class Conjure_Admin_Tools {
 	public function show_theme_plugin_validation_notice() {
 		// Only show on Conjure-related pages.
 		$screen = get_current_screen();
-		if ( ! $screen || ( strpos( $screen->id, 'conjure' ) === false && $screen->id !== 'tools_page_conjurewp-logs' ) ) {
+		if ( ! $screen || ( strpos( $screen->id, 'conjure' ) === false && $screen->id !== 'tools_page_ConjureWP-logs' ) ) {
 			return;
 		}
 
@@ -161,7 +172,7 @@ class Conjure_Admin_Tools {
 			?>
 			<div class="notice notice-error">
 				<p>
-					<strong><?php _e( 'ConjureWP Theme Plugin Configuration Error:', 'conjurewp' ); ?></strong>
+					<strong><?php esc_html_e( 'ConjureWP Theme Plugin Configuration Error:', 'ConjureWP' ); ?></strong>
 					<?php echo esc_html( $cached_result->get_error_message() ); ?>
 				</p>
 			</div>
@@ -182,17 +193,19 @@ class Conjure_Admin_Tools {
 				?>
 				<div class="notice notice-warning">
 					<p>
-						<strong><?php _e( 'ConjureWP Theme Plugins Warning:', 'conjurewp' ); ?></strong>
+						<strong><?php esc_html_e( 'ConjureWP Theme Plugins Warning:', 'ConjureWP' ); ?></strong>
 						<?php
 						printf(
-							/* translators: %d: number of plugins with issues */
-							_n(
-								'%d plugin has invalid configuration or missing files.',
-								'%d plugins have invalid configuration or missing files.',
-								$invalid_count,
-								'conjurewp'
+							esc_html(
+								/* translators: %d: number of plugins with issues */
+								_n(
+									'%d plugin has invalid configuration or missing files.',
+									'%d plugins have invalid configuration or missing files.',
+									$invalid_count,
+									'ConjureWP'
+								)
 							),
-							$invalid_count
+							esc_html( number_format_i18n( $invalid_count ) )
 						);
 						?>
 					</p>
@@ -244,17 +257,17 @@ class Conjure_Admin_Tools {
 
 		?>
 		<div class="wrap">
-			<h1><?php _e( 'ConjureWP Logs', 'conjurewp' ); ?></h1>
+			<h1><?php esc_html_e( 'ConjureWP Logs', 'ConjureWP' ); ?></h1>
 
 			<div class="card">
-				<h2><?php _e( 'Logger Configuration', 'conjurewp' ); ?></h2>
+				<h2><?php esc_html_e( 'Logger Configuration', 'ConjureWP' ); ?></h2>
 				<table class="form-table">
 					<tr>
-						<th><?php _e( 'Log Directory:', 'conjurewp' ); ?></th>
+						<th><?php esc_html_e( 'Log Directory:', 'ConjureWP' ); ?></th>
 						<td><code><?php echo esc_html( dirname( $log_path ) ); ?></code></td>
 					</tr>
 					<tr>
-						<th><?php _e( 'Log Rotation:', 'conjurewp' ); ?></th>
+						<th><?php esc_html_e( 'Log Rotation:', 'ConjureWP' ); ?></th>
 						<td>
 							<?php if ( $config['enable_rotation'] ) : ?>
 								<span style="color: green;">✓ Enabled</span>
@@ -265,14 +278,14 @@ class Conjure_Admin_Tools {
 						</td>
 					</tr>
 					<tr>
-						<th><?php _e( 'Minimum Log Level:', 'conjurewp' ); ?></th>
+						<th><?php esc_html_e( 'Minimum Log Level:', 'ConjureWP' ); ?></th>
 						<td><strong><?php echo esc_html( $min_level_name ); ?></strong></td>
 					</tr>
 					<tr>
-						<th><?php _e( 'Total Log Files:', 'conjurewp' ); ?></th>
+						<th><?php esc_html_e( 'Total Log Files:', 'ConjureWP' ); ?></th>
 						<td>
 							<strong><?php echo count( $log_files ); ?></strong>
-							<span style="color: #666;"> (<?php echo size_format( $total_size ); ?> total)</span>
+							<span style="color: #666;"> (<?php echo esc_html( size_format( $total_size ) ); ?> total)</span>
 						</td>
 					</tr>
 				</table>
@@ -280,14 +293,14 @@ class Conjure_Admin_Tools {
 
 			<?php if ( ! empty( $log_files ) ) : ?>
 				<div class="card" style="margin-top: 20px;">
-					<h2><?php _e( 'Log Files', 'conjurewp' ); ?></h2>
+					<h2><?php esc_html_e( 'Log Files', 'ConjureWP' ); ?></h2>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
-								<th><?php _e( 'File Name', 'conjurewp' ); ?></th>
-								<th><?php _e( 'Size', 'conjurewp' ); ?></th>
-								<th><?php _e( 'Modified', 'conjurewp' ); ?></th>
-								<th><?php _e( 'Actions', 'conjurewp' ); ?></th>
+								<th><?php esc_html_e( 'File Name', 'ConjureWP' ); ?></th>
+								<th><?php esc_html_e( 'Size', 'ConjureWP' ); ?></th>
+								<th><?php esc_html_e( 'Modified', 'ConjureWP' ); ?></th>
+								<th><?php esc_html_e( 'Actions', 'ConjureWP' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -300,11 +313,11 @@ class Conjure_Admin_Tools {
 									?>
 									<tr>
 										<td><code><?php echo esc_html( $file_name ); ?></code></td>
-										<td><?php echo size_format( $file_size ); ?></td>
+										<td><?php echo esc_html( size_format( $file_size ) ); ?></td>
 										<td><?php echo esc_html( human_time_diff( $file_modified, current_time( 'timestamp' ) ) ); ?> ago</td>
 										<td>
-											<a href="<?php echo wp_nonce_url( admin_url( 'tools.php?page=conjurewp-logs&action=download_log&file=' . urlencode( $file_name ) ), 'conjurewp_download_log' ); ?>" class="button button-small">
-												<?php _e( 'Download', 'conjurewp' ); ?>
+											<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'tools.php?page=ConjureWP-logs&action=download_log&file=' . urlencode( $file_name ) ), 'conjurewp_download_log' ) ); ?>" class="button button-small">
+												<?php esc_html_e( 'Download', 'ConjureWP' ); ?>
 											</a>
 										</td>
 									</tr>
@@ -315,8 +328,8 @@ class Conjure_Admin_Tools {
 
 					<p style="margin-top: 15px;">
 						<?php if ( count( $log_files ) > 0 ) : ?>
-							<a href="<?php echo wp_nonce_url( admin_url( 'tools.php?page=conjurewp-logs&action=clear_all_logs' ), 'conjurewp_clear_all_logs' ); ?>" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete ALL log files?', 'conjurewp' ); ?>');">
-								<?php _e( 'Delete All Logs', 'conjurewp' ); ?>
+							<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'tools.php?page=ConjureWP-logs&action=clear_all_logs' ), 'conjurewp_clear_all_logs' ) ); ?>" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete ALL log files?', 'ConjureWP' ); ?>');">
+								<?php esc_html_e( 'Delete All Logs', 'ConjureWP' ); ?>
 							</a>
 						<?php endif; ?>
 					</p>
@@ -325,7 +338,7 @@ class Conjure_Admin_Tools {
 
 			<?php if ( $main_log_exists && $main_log_size > 0 ) : ?>
 				<div class="card" style="margin-top: 20px;">
-					<h2><?php _e( 'Recent Log Entries (Last 500 lines from current log)', 'conjurewp' ); ?></h2>
+					<h2><?php esc_html_e( 'Recent Log Entries (Last 500 lines from current log)', 'ConjureWP' ); ?></h2>
 					<div style="background: #f5f5f5; padding: 15px; border: 1px solid #ddd; border-radius: 3px; max-height: 600px; overflow-y: auto;">
 						<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 12px;"><?php echo esc_html( $main_log_content ); ?></pre>
 					</div>
@@ -333,27 +346,27 @@ class Conjure_Admin_Tools {
 			<?php endif; ?>
 
 			<div class="card" style="margin-top: 20px;">
-				<h2><?php _e( 'About ConjureWP Logging', 'conjurewp' ); ?></h2>
-				<p><?php _e( 'ConjureWP uses an advanced logging system with rotation and severity filtering to prevent large log files and reduce noise.', 'conjurewp' ); ?></p>
+				<h2><?php esc_html_e( 'About ConjureWP Logging', 'ConjureWP' ); ?></h2>
+				<p><?php esc_html_e( 'ConjureWP uses an advanced logging system with rotation and severity filtering to prevent large log files and reduce noise.', 'ConjureWP' ); ?></p>
 				
-				<h3 style="margin-top: 20px;"><?php _e( 'Features', 'conjurewp' ); ?></h3>
+				<h3 style="margin-top: 20px;"><?php esc_html_e( 'Features', 'ConjureWP' ); ?></h3>
 				<ul style="list-style: disc; margin-left: 20px;">
-					<li><strong><?php _e( 'Log Rotation:', 'conjurewp' ); ?></strong> <?php _e( 'Automatically rotates logs to prevent large files. Configure in conjurewp-config.php.', 'conjurewp' ); ?></li>
-					<li><strong><?php _e( 'Severity Filtering:', 'conjurewp' ); ?></strong> <?php _e( 'Filter logs by severity (DEBUG, INFO, WARNING, ERROR, etc.) to reduce noise.', 'conjurewp' ); ?></li>
-					<li><strong><?php _e( 'Multi-file Management:', 'conjurewp' ); ?></strong> <?php _e( 'View, download, and delete all rotated log files from this admin page.', 'conjurewp' ); ?></li>
+					<li><strong><?php esc_html_e( 'Log Rotation:', 'ConjureWP' ); ?></strong> <?php esc_html_e( 'Automatically rotates logs to prevent large files. Configure in ConjureWP-config.php.', 'ConjureWP' ); ?></li>
+					<li><strong><?php esc_html_e( 'Severity Filtering:', 'ConjureWP' ); ?></strong> <?php esc_html_e( 'Filter logs by severity (DEBUG, INFO, WARNING, ERROR, etc.) to reduce noise.', 'ConjureWP' ); ?></li>
+					<li><strong><?php esc_html_e( 'Multi-file Management:', 'ConjureWP' ); ?></strong> <?php esc_html_e( 'View, download, and delete all rotated log files from this admin page.', 'ConjureWP' ); ?></li>
 				</ul>
 
-				<h3 style="margin-top: 20px;"><?php _e( 'What Gets Logged', 'conjurewp' ); ?></h3>
+				<h3 style="margin-top: 20px;"><?php esc_html_e( 'What Gets Logged', 'ConjureWP' ); ?></h3>
 				<ul style="list-style: disc; margin-left: 20px;">
-					<li><?php _e( 'Plugin installations and activations', 'conjurewp' ); ?></li>
-					<li><?php _e( 'Content import progress', 'conjurewp' ); ?></li>
-					<li><?php _e( 'Child theme generation', 'conjurewp' ); ?></li>
-					<li><?php _e( 'License activation attempts', 'conjurewp' ); ?></li>
-					<li><?php _e( 'Errors, warnings, and critical issues', 'conjurewp' ); ?></li>
+					<li><?php esc_html_e( 'Plugin installations and activations', 'ConjureWP' ); ?></li>
+					<li><?php esc_html_e( 'Content import progress', 'ConjureWP' ); ?></li>
+					<li><?php esc_html_e( 'Child theme generation', 'ConjureWP' ); ?></li>
+					<li><?php esc_html_e( 'License activation attempts', 'ConjureWP' ); ?></li>
+					<li><?php esc_html_e( 'Errors, warnings, and critical issues', 'ConjureWP' ); ?></li>
 				</ul>
 
-				<h3 style="margin-top: 20px;"><?php _e( 'Configuration', 'conjurewp' ); ?></h3>
-				<p><?php _e( 'To customize logging behavior, edit the <code>logging</code> section in <code>conjurewp-config.php</code>. Available options:', 'conjurewp' ); ?></p>
+				<h3 style="margin-top: 20px;"><?php esc_html_e( 'Configuration', 'ConjureWP' ); ?></h3>
+				<p><?php echo wp_kses_post( __( 'To customize logging behavior, edit the <code>logging</code> section in <code>ConjureWP-config.php</code>. Available options:', 'ConjureWP' ) ); ?></p>
 				<ul style="list-style: disc; margin-left: 20px;">
 					<li><code>enable_rotation</code> - Enable/disable log rotation (default: true)</li>
 					<li><code>max_files</code> - Maximum number of rotated files to keep (default: 5)</li>
@@ -373,38 +386,46 @@ class Conjure_Admin_Tools {
 	 * @return string File content.
 	 */
 	private function tail( $file, $lines = 100 ) {
-		$handle = fopen( $file, 'r' );
-		if ( ! $handle ) {
+		$filesystem = $this->get_filesystem();
+		if ( ! $filesystem ) {
 			return '';
 		}
 
-		$linecounter = $lines;
-		$pos         = -2;
-		$beginning   = false;
-		$text        = array();
-
-		while ( $linecounter > 0 ) {
-			$t = ' ';
-			while ( "\n" !== $t ) {
-				if ( fseek( $handle, $pos, SEEK_END ) === -1 ) {
-					$beginning = true;
-					break;
-				}
-				$t = fgetc( $handle );
-				--$pos;
-			}
-			--$linecounter;
-			if ( $beginning ) {
-				rewind( $handle );
-			}
-			$text[ $lines - $linecounter - 1 ] = fgets( $handle );
-			if ( $beginning ) {
-				break;
-			}
+		$contents = $filesystem->get_contents( $file );
+		if ( false === $contents ) {
+			return '';
 		}
-		fclose( $handle );
 
-		return implode( '', array_reverse( $text ) );
+		$line_count = absint( $lines );
+		if ( 0 === $line_count ) {
+			return '';
+		}
+
+		$all_lines = preg_split( "/\r\n|\r|\n/", $contents );
+		$tail      = array_slice( $all_lines, -$line_count );
+
+		return implode( "\n", $tail );
+	}
+
+	/**
+	 * Get a WP_Filesystem instance.
+	 *
+	 * @return WP_Filesystem_Base|null Filesystem instance or null on failure.
+	 */
+	private function get_filesystem() {
+		global $wp_filesystem;
+
+		if ( $wp_filesystem instanceof WP_Filesystem_Base ) {
+			return $wp_filesystem;
+		}
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		WP_Filesystem();
+
+		return $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem : null;
 	}
 }
 

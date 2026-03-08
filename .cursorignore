@@ -1,0 +1,12 @@
+node_modules
+vendor
+dist
+build
+storage
+logs
+.cache
+.next
+public/build
+bootstrap/cache
+storage/framework
+storage/logs

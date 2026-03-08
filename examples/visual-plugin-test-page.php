@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function conjure_test_add_plugin_preview_page() {
 	add_submenu_page(
-		'conjurewp-setup',                           // Parent slug (ConjureWP)
+		'ConjureWP-setup',                           // Parent slug (ConjureWP)
 		'Plugin Selection Preview',                  // Page title
 		'Plugin Preview',                            // Menu title
 		'manage_options',                            // Capability
@@ -92,9 +92,11 @@ function conjure_test_render_plugin_selection_ui() {
 	}
 
 	$demo_plugin_manager = new Conjure_Demo_Plugin_Manager();
-	
-	// Get selected demo index from GET parameter (for testing)
-	$selected_demo_index = isset( $_GET['demo'] ) ? intval( $_GET['demo'] ) : null;
+
+	$selected_demo_index = null;
+	if ( isset( $_GET['demo'] ) && isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'conjurewp_demo_select' ) ) {
+		$selected_demo_index = absint( $_GET['demo'] );
+	}
 	
 	?>
 	<style>
@@ -180,10 +182,12 @@ function conjure_test_render_plugin_selection_ui() {
 
 	<script>
 		function conjure_test_change_demo(demoIndex) {
+			var baseUrl = '<?php echo esc_url( admin_url( 'admin.php?page=conjure-plugin-preview' ) ); ?>';
+			var nonce = '<?php echo esc_attr( wp_create_nonce( 'conjurewp_demo_select' ) ); ?>';
 			if (demoIndex) {
-				window.location.href = '<?php echo admin_url( 'admin.php?page=conjure-plugin-preview' ); ?>&demo=' + demoIndex;
+				window.location.href = baseUrl + '&demo=' + demoIndex + '&_wpnonce=' + nonce;
 			} else {
-				window.location.href = '<?php echo admin_url( 'admin.php?page=conjure-plugin-preview' ); ?>';
+				window.location.href = baseUrl;
 			}
 		}
 	</script>
@@ -303,12 +307,12 @@ function conjure_test_render_plugin_selection_ui() {
  */
 function conjure_test_plugin_preview_notice() {
 	$screen = get_current_screen();
-	if ( $screen && $screen->id === 'toplevel_page_conjurewp-setup' ) {
+	if ( $screen && $screen->id === 'toplevel_page_ConjureWP-setup' ) {
 		?>
 		<div class="notice notice-info is-dismissible">
 			<p>
 				<strong>Testing Demo-Specific Plugins?</strong> 
-				<a href="<?php echo admin_url( 'admin.php?page=conjure-plugin-preview' ); ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=conjure-plugin-preview' ) ); ?>">
 					View Plugin Selection Preview →
 				</a>
 			</p>

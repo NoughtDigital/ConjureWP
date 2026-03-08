@@ -1,3 +1,8 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <span class="conjure__button--loading__spinner">
 
 	<div class="conjure-spinner">

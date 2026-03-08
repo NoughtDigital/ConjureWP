@@ -17,6 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * ========================================================================
  * 1. REDIRECT CONTROL (When Theme is Activated)
@@ -29,10 +31,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param bool $enabled Whether redirect is enabled.
  * @return bool Modified enabled state.
  */
-function mytheme_disable_wizard_redirect( $enabled ) {
+function conjurewp_disable_wizard_redirect( $enabled ) {
 	return false; // Disable redirect completely.
 }
-add_filter( 'conjure_redirect_on_theme_switch_enabled', 'mytheme_disable_wizard_redirect' );
+add_filter( 'conjure_redirect_on_theme_switch_enabled', 'conjurewp_disable_wizard_redirect' );
 
 /**
  * OR redirect to your custom welcome page instead.
@@ -41,10 +43,10 @@ add_filter( 'conjure_redirect_on_theme_switch_enabled', 'mytheme_disable_wizard_
  * @param string $conjure_url The wizard page slug.
  * @return string Modified redirect URL.
  */
-function mytheme_custom_welcome_redirect( $url, $conjure_url ) {
-	return admin_url( 'admin.php?page=mytheme-welcome' );
+function conjurewp_custom_welcome_redirect( $url, $conjure_url ) {
+	return admin_url( 'admin.php?page=ConjureWP-welcome' );
 }
-add_filter( 'conjure_redirect_on_theme_switch_url', 'mytheme_custom_welcome_redirect', 10, 2 );
+add_filter( 'conjure_redirect_on_theme_switch_url', 'conjurewp_custom_welcome_redirect', 10, 2 );
 
 /**
  * ========================================================================
@@ -61,18 +63,18 @@ add_filter( 'conjure_redirect_on_theme_switch_url', 'mytheme_custom_welcome_redi
  * @param string $theme_slug Optional theme slug.
  * @return string Path to demo content directory.
  */
-function mytheme_custom_demo_path( $path, $theme_slug ) {
+function conjurewp_custom_demo_path( $path, $theme_slug ) {
 	// Option 1: Use theme directory.
 	return get_template_directory() . '/demo-content';
 	
 	// Option 2: Use uploads directory.
 	// $upload_dir = wp_upload_dir();
-	// return $upload_dir['basedir'] . '/mytheme-demos';
+	// return $upload_dir['basedir'] . '/ConjureWP-demos';
 	
 	// Option 3: Use external storage.
 	// return '/var/www/shared-content/demos';
 }
-add_filter( 'conjurewp_custom_demo_path', 'mytheme_custom_demo_path', 10, 2 );
+add_filter( 'conjurewp_custom_demo_path', 'conjurewp_custom_demo_path', 10, 2 );
 
 /**
  * ========================================================================
@@ -91,10 +93,10 @@ add_filter( 'conjurewp_custom_demo_path', 'mytheme_custom_demo_path', 10, 2 );
  * @param bool|null $enabled Current enabled state (null = not set).
  * @return bool Whether auto-registration is enabled.
  */
-function mytheme_enable_auto_register_demos( $enabled ) {
+function conjurewp_enable_auto_register_demos( $enabled ) {
 	return true; // Enable auto-discovery.
 }
-add_filter( 'conjurewp_auto_register_demos', 'mytheme_enable_auto_register_demos' );
+add_filter( 'conjurewp_auto_register_demos', 'conjurewp_enable_auto_register_demos' );
 
 /**
  * ========================================================================
@@ -110,7 +112,7 @@ add_filter( 'conjurewp_auto_register_demos', 'mytheme_enable_auto_register_demos
  * @param array $config Current logger configuration.
  * @return array Modified logger configuration.
  */
-function mytheme_configure_logger( $config ) {
+function conjurewp_configure_logger( $config ) {
 	return array(
 		'enable_rotation'  => true,    // Enable log file rotation.
 		'max_files'        => 10,      // Keep up to 10 rotated log files.
@@ -118,7 +120,7 @@ function mytheme_configure_logger( $config ) {
 		'min_log_level'    => 'DEBUG', // Log everything (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY).
 	);
 }
-add_filter( 'conjurewp_logger_config', 'mytheme_configure_logger' );
+add_filter( 'conjurewp_logger_config', 'conjurewp_configure_logger' );
 
 /**
  * ========================================================================
@@ -134,7 +136,7 @@ add_filter( 'conjurewp_logger_config', 'mytheme_configure_logger' );
  * @param array $import_files Existing import files.
  * @return array Modified import files array.
  */
-function mytheme_register_demo_imports( $import_files ) {
+function conjurewp_register_demo_imports( $import_files ) {
 	$demo_path = get_template_directory() . '/demo-content/';
 	
 	$import_files[] = array(
@@ -145,12 +147,12 @@ function mytheme_register_demo_imports( $import_files ) {
 		'local_import_redux'           => array(
 			array(
 				'file_path'   => $demo_path . 'redux-options.json',
-				'option_name' => 'mytheme_options',
+				'option_name' => 'conjurewp_options',
 			),
 		),
 		'import_preview_image_url'     => get_template_directory_uri() . '/assets/demo-preview.jpg',
-		'preview_url'                  => 'https://demo.yourtheme.com/main',
-		'import_notice'                => __( 'This will import the main demo content with all features.', 'mytheme' ),
+		'preview_url'                  => 'https://demo.ConjureWP.com/main',
+		'import_notice'                => __( 'This will import the main demo content with all features.', 'ConjureWP' ),
 	);
 	
 	// Add more demos as needed...
@@ -160,13 +162,13 @@ function mytheme_register_demo_imports( $import_files ) {
 		'local_import_widget_file'     => $demo_path . 'minimal/widgets.json',
 		'local_import_customizer_file' => $demo_path . 'minimal/customizer.dat',
 		'import_preview_image_url'     => get_template_directory_uri() . '/assets/demo-minimal.jpg',
-		'preview_url'                  => 'https://demo.yourtheme.com/minimal',
-		'import_notice'                => __( 'A minimal demo with basic content.', 'mytheme' ),
+		'preview_url'                  => 'https://demo.ConjureWP.com/minimal',
+		'import_notice'                => __( 'A minimal demo with basic content.', 'ConjureWP' ),
 	);
 	
 	return $import_files;
 }
-add_filter( 'conjure_import_files', 'mytheme_register_demo_imports' );
+add_filter( 'conjure_import_files', 'conjurewp_register_demo_imports' );
 
 /**
  * ========================================================================
@@ -179,10 +181,10 @@ add_filter( 'conjure_import_files', 'mytheme_register_demo_imports' );
  *
  * @param array $selected_import Selected import data.
  */
-function mytheme_after_import_setup( $selected_import ) {
+function conjurewp_after_import_setup( $selected_import ) {
 	// Set front page and blog page.
-	$front_page = get_page_by_title( 'Home' );
-	$blog_page  = get_page_by_title( 'Blog' );
+	$front_page = conjurewp_example_get_page_by_title( 'Home' );
+	$blog_page  = conjurewp_example_get_page_by_title( 'Blog' );
 	
 	if ( $front_page ) {
 		update_option( 'show_on_front', 'page' );
@@ -206,9 +208,9 @@ function mytheme_after_import_setup( $selected_import ) {
 	flush_rewrite_rules();
 	
 	// Set default theme options.
-	update_option( 'mytheme_setup_completed', true );
+	update_option( 'conjurewp_setup_completed', true );
 }
-add_action( 'conjure_after_all_import', 'mytheme_after_import_setup' );
+add_action( 'conjure_after_all_import', 'conjurewp_after_import_setup' );
 
 /**
  * ========================================================================
@@ -221,15 +223,15 @@ add_action( 'conjure_after_all_import', 'mytheme_after_import_setup' );
 /**
  * Complete ConjureWP configuration for your theme.
  */
-function mytheme_configure_conjurewp() {
+function conjurewp_configure_conjurewp() {
 	// 1. Redirect to custom welcome page on theme activation.
 	add_filter( 'conjure_redirect_on_theme_switch_url', function( $url ) {
-		return admin_url( 'admin.php?page=mytheme-welcome' );
+		return admin_url( 'admin.php?page=ConjureWP-welcome' );
 	});
 	
 	// 2. Set custom demo path (if not using auto-discovery).
 	add_filter( 'conjurewp_custom_demo_path', function( $path ) {
-		return get_template_directory() . '/conjurewp-demos';
+		return get_template_directory() . '/ConjureWP-demos';
 	});
 	
 	// 3. Enable auto-registration of demos.
@@ -247,7 +249,7 @@ function mytheme_configure_conjurewp() {
 		});
 	}
 }
-add_action( 'after_setup_theme', 'mytheme_configure_conjurewp' );
+add_action( 'after_setup_theme', 'conjurewp_configure_conjurewp' );
 
 /**
  * ========================================================================

@@ -37,7 +37,7 @@ jobs:
       - name: Create plugin ZIP
         run: |
           mkdir -p dist
-          zip -r dist/conjurewp.zip . \
+          zip -r dist/ConjureWP.zip . \
             -x "*.git*" \
             -x "*node_modules/*" \
             -x "*.github/*" \
@@ -56,7 +56,7 @@ jobs:
       - name: Deploy to Freemius
         uses: buttonizer/freemius-deploy@v0.1.2
         with:
-          file_name: conjurewp.zip
+          file_name: ConjureWP.zip
           release_mode: pending  # Change to 'released' to auto-publish
           version: ${{ steps.get_version.outputs.VERSION }}
           sandbox: false  # Set to true for testing
@@ -64,19 +64,19 @@ jobs:
           PUBLIC_KEY: ${{ secrets.FREEMIUS_PUBLIC_KEY }}
           DEV_ID: ${{ secrets.FREEMIUS_DEV_ID }}
           SECRET_KEY: ${{ secrets.FREEMIUS_SECRET_KEY }}
-          PLUGIN_SLUG: conjurewp
+          PLUGIN_SLUG: ConjureWP
           PLUGIN_ID: 21879
       
       - name: Upload free version as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: conjurewp-free-${{ steps.get_version.outputs.VERSION }}
+          name: ConjureWP-free-${{ steps.get_version.outputs.VERSION }}
           path: ${{ steps.deploy.outputs.free_version }}
       
       - name: Upload premium version as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: conjurewp-premium-${{ steps.get_version.outputs.VERSION }}
+          name: ConjureWP-premium-${{ steps.get_version.outputs.VERSION }}
           path: ${{ steps.deploy.outputs.pro_version }}
 
 

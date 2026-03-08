@@ -1,7 +1,11 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 test('demo helpers class exists and can be loaded', function () {
-    $helpersFile = getPluginPath('includes/class-conjure-demo-helpers.php');
+    $helpersFile = conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     expect(file_exists($helpersFile))->toBeTrue();
     
     require_once $helpersFile;
@@ -9,7 +13,7 @@ test('demo helpers class exists and can be loaded', function () {
 });
 
 test('demo helpers has get_demo_directory method', function () {
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     expect(method_exists('Conjure_Demo_Helpers', 'get_demo_directory'))->toBeTrue();
 });
@@ -17,10 +21,10 @@ test('demo helpers has get_demo_directory method', function () {
 test('demo helpers get_demo_directory returns string path', function () {
     // Define required constant for test
     if (!defined('CONJUREWP_PLUGIN_DIR')) {
-        define('CONJUREWP_PLUGIN_DIR', getPluginPath());
+        define('CONJUREWP_PLUGIN_DIR', conjurewp_test_get_plugin_path());
     }
     
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     $path = Conjure_Demo_Helpers::get_demo_directory();
     expect($path)->toBeString();
@@ -28,19 +32,19 @@ test('demo helpers get_demo_directory returns string path', function () {
 });
 
 test('demo helpers has get_theme_demo_directory method', function () {
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     expect(method_exists('Conjure_Demo_Helpers', 'get_theme_demo_directory'))->toBeTrue();
 });
 
 test('demo helpers has get_uploads_demo_directory method', function () {
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     expect(method_exists('Conjure_Demo_Helpers', 'get_uploads_demo_directory'))->toBeTrue();
 });
 
 test('demo helpers methods accept theme slug parameter', function () {
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     $reflection = new ReflectionClass('Conjure_Demo_Helpers');
     $method = $reflection->getMethod('get_demo_directory');
@@ -53,10 +57,10 @@ test('demo helpers methods accept theme slug parameter', function () {
 test('demo helpers respects filter for custom demo path', function () {
     // Define required constant for test
     if (!defined('CONJUREWP_PLUGIN_DIR')) {
-        define('CONJUREWP_PLUGIN_DIR', getPluginPath());
+        define('CONJUREWP_PLUGIN_DIR', conjurewp_test_get_plugin_path());
     }
     
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     // Test that the method can be called
     $path = Conjure_Demo_Helpers::get_demo_directory();
@@ -64,7 +68,7 @@ test('demo helpers respects filter for custom demo path', function () {
 });
 
 test('demo helpers has demo file location methods', function () {
-    require_once getPluginPath('includes/class-conjure-demo-helpers.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
     
     $methods = get_class_methods('Conjure_Demo_Helpers');
     

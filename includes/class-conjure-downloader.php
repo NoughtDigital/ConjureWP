@@ -42,9 +42,9 @@ class Conjure_Downloader {
 		if ( empty( $url ) ) {
 			$error = new \WP_Error(
 				'missing_url',
-				__( 'Missing URL for downloading a file!', 'conjurewp' )
+				__( 'Missing URL for downloading a file!', 'ConjureWP' )
 			);
-			
+
 			Conjure_Logger::get_instance()->error(
 				$error->get_error_message(),
 				array(
@@ -52,7 +52,7 @@ class Conjure_Downloader {
 					'filename' => $filename,
 				)
 			);
-			
+
 			return $error;
 		}
 
@@ -80,7 +80,7 @@ class Conjure_Downloader {
 					'directory_creation_failed',
 					sprintf(
 						/* translators: %s: directory path */
-						__( 'Could not create directory: %s', 'conjurewp' ),
+						__( 'Could not create directory: %s', 'ConjureWP' ),
 						$this->download_directory_path
 					)
 				);
@@ -125,7 +125,7 @@ class Conjure_Downloader {
 				'download_error',
 				sprintf(
 					/* translators: 1: strong tag start, 2: URL, 3: strong tag end, 4: line break, 5: error code, 6: error message */
-					__( 'Failed to download file from: %1$s%2$s%3$s%4$sHTTP Error: %5$s - %6$s%4$sPlease check the URL and try again.', 'conjurewp' ),
+					__( 'Failed to download file from: %1$s%2$s%3$s%4$sHTTP Error: %5$s - %6$s%4$sPlease check the URL and try again.', 'ConjureWP' ),
 					'<strong>',
 					$url,
 					'</strong>',
@@ -153,7 +153,7 @@ class Conjure_Downloader {
 				'file_not_saved',
 				sprintf(
 					/* translators: 1: filename, 2: destination path */
-					__( 'Failed to save file "%1$s" to disk at path: %2$s. Please check directory permissions.', 'conjurewp' ),
+					__( 'Failed to save file "%1$s" to disk at path: %2$s. Please check directory permissions.', 'ConjureWP' ),
 					$filename,
 					$destination_path
 				)
@@ -217,7 +217,7 @@ class Conjure_Downloader {
 			$this->download_directory_path = $download_directory_path;
 		} else {
 			$upload_dir                    = wp_upload_dir();
-			$this->download_directory_path = apply_filters( 'conjure_upload_file_path', trailingslashit( $upload_dir['basedir'] ) . 'conjurewp/' );
+			$this->download_directory_path = apply_filters( 'conjure_upload_file_path', trailingslashit( $upload_dir['basedir'] ) . 'ConjureWP/' );
 		}
 	}
 
@@ -256,7 +256,7 @@ class Conjure_Downloader {
 				Conjure_Logger::get_instance()->info(
 					sprintf(
 						/* translators: 1: attempt number, 2: max attempts */
-						__( 'Download attempt %1$d of %2$d', 'conjurewp' ),
+						__( 'Download attempt %1$d of %2$d', 'ConjureWP' ),
 						$attempt,
 						$max_attempts
 					),
@@ -284,7 +284,7 @@ class Conjure_Downloader {
 					Conjure_Logger::get_instance()->info(
 						sprintf(
 							/* translators: %d: attempt number */
-							__( 'Download successful on attempt %d', 'conjurewp' ),
+							__( 'Download successful on attempt %d', 'ConjureWP' ),
 							$attempt
 						),
 						array( 'url' => $url )
@@ -302,7 +302,7 @@ class Conjure_Downloader {
 				'download_failed_after_retries',
 				sprintf(
 					/* translators: 1: number of attempts, 2: error message */
-					__( 'Download failed after %1$d attempts. Last error: %2$s', 'conjurewp' ),
+					__( 'Download failed after %1$d attempts. Last error: %2$s', 'ConjureWP' ),
 					$max_attempts,
 					$last_error->get_error_message()
 				)
@@ -320,15 +320,15 @@ class Conjure_Downloader {
 	private function check_rate_limit() {
 		$ip = $this->get_client_ip();
 		$transient_key = 'conjurewp_downloads_' . md5( $ip );
-		
+
 		$downloads = get_transient( $transient_key );
-		
+
 		// First download or expired transient.
 		if ( false === $downloads ) {
 			set_transient( $transient_key, 1, HOUR_IN_SECONDS );
 			return true;
 		}
-		
+
 		// Check if limit exceeded.
 		$max_downloads = apply_filters( 'conjurewp_rate_limit_max_downloads', 10 );
 		if ( $downloads >= $max_downloads ) {
@@ -336,15 +336,15 @@ class Conjure_Downloader {
 				'rate_limit_exceeded',
 				sprintf(
 					/* translators: %d: maximum downloads per hour */
-					__( 'Rate limit exceeded. Maximum %d downloads per hour allowed.', 'conjurewp' ),
+					__( 'Rate limit exceeded. Maximum %d downloads per hour allowed.', 'ConjureWP' ),
 					$max_downloads
 				)
 			);
 		}
-		
+
 		// Increment counter.
 		set_transient( $transient_key, $downloads + 1, HOUR_IN_SECONDS );
-		
+
 		return true;
 	}
 
@@ -355,7 +355,7 @@ class Conjure_Downloader {
 	 */
 	private function get_client_ip() {
 		$ip = '';
-		
+
 		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
 			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
 		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
@@ -363,12 +363,12 @@ class Conjure_Downloader {
 		} elseif ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
 			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
-		
+
 		// Validate IP address.
 		if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
 			return $ip;
 		}
-		
+
 		return '0.0.0.0';
 	}
 }

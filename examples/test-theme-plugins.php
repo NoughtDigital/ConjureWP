@@ -1,18 +1,23 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	require_once '../../../../../wp-load.php';
+}
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Theme Plugin Configuration Test Utility
  *
  * Place this file in your theme's root directory and access it via:
  * https://yoursite.com/wp-content/themes/your-theme/test-theme-plugins.php
  *
- * This will test your conjurewp-plugins/plugins.json configuration.
+ * This will test your ConjureWP-plugins/plugins.json configuration.
  *
  * @package ConjureWP
  * @version 2.0.0
  */
-
-// Load WordPress.
-require_once '../../../../../wp-load.php';
 
 // Security check.
 if ( ! current_user_can( 'manage_options' ) ) {
@@ -222,12 +227,12 @@ $test_result = Conjure_Theme_Plugins::test_plugin_config();
 			<h2>Next Steps</h2>
 			<ul style="list-style: disc; margin-left: 20px;">
 				<li>Review any errors or warnings above</li>
-				<li>Ensure all bundled plugin ZIP files exist in <span class="code">conjurewp-plugins/</span></li>
+				<li>Ensure all bundled plugin ZIP files exist in <span class="code">ConjureWP-plugins/</span></li>
 				<li>Test external URLs are accessible and return valid ZIP files</li>
 				<li>Use the WP-CLI command: <span class="code">wp conjure validate-theme-plugins</span></li>
 			</ul>
 			
-			<a href="<?php echo esc_url( admin_url( 'tools.php?page=conjurewp-logs' ) ); ?>" class="button">
+			<a href="<?php echo esc_url( admin_url( 'tools.php?page=ConjureWP-logs' ) ); ?>" class="button">
 				View ConjureWP Logs
 			</a>
 		</div>

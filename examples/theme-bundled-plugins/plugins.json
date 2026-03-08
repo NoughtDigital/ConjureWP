@@ -16,16 +16,16 @@
     },
     {
       "name": "Theme Custom Extensions",
-      "slug": "mytheme-extensions",
-      "url": "https://github.com/yourname/mytheme-extensions/releases/download/v1.0.0/mytheme-extensions.zip",
+      "slug": "ConjureWP-extensions",
+      "url": "https://github.com/yourname/ConjureWP-extensions/releases/download/v1.0.0/ConjureWP-extensions.zip",
       "required": true,
       "version": "1.0.0",
       "description": "Custom functionality from GitHub releases"
     },
     {
       "name": "Private Theme Plugin",
-      "slug": "mytheme-private",
-      "url": "https://updates.yoursite.com/downloads/mytheme-private.zip",
+      "slug": "ConjureWP-private",
+      "url": "https://updates.yoursite.com/downloads/ConjureWP-private.zip",
       "required": true,
       "version": "2.0.0",
       "description": "Private plugin from your update server"
@@ -44,4 +44,3 @@
     }
   ]
 }
-

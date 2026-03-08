@@ -1,7 +1,7 @@
 <?php
 
 test('rest api class exists and can be loaded', function () {
-    $apiFile = getPluginPath('includes/class-conjure-rest-api.php');
+    $apiFile = conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     expect(file_exists($apiFile))->toBeTrue();
     
     require_once $apiFile;
@@ -9,7 +9,7 @@ test('rest api class exists and can be loaded', function () {
 });
 
 test('rest api has correct namespace', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     $reflection = new ReflectionClass('Conjure_REST_API');
     $namespaceProperty = $reflection->getProperty('namespace');
@@ -22,35 +22,35 @@ test('rest api has correct namespace', function () {
     $api = new Conjure_REST_API($mockConjure);
     $namespace = $namespaceProperty->getValue($api);
     
-    expect($namespace)->toBe('conjurewp/v1');
+    expect($namespace)->toBe('ConjureWP/v1');
 });
 
 test('rest api has register_routes method', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     expect(method_exists('Conjure_REST_API', 'register_routes'))->toBeTrue();
 });
 
 test('rest api has permission callback method', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     expect(method_exists('Conjure_REST_API', 'check_permission'))->toBeTrue();
 });
 
 test('rest api has list_demos endpoint callback', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     expect(method_exists('Conjure_REST_API', 'list_demos'))->toBeTrue();
 });
 
 test('rest api has import_demo endpoint callback', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     expect(method_exists('Conjure_REST_API', 'import_demo'))->toBeTrue();
 });
 
 test('rest api class requires conjure instance', function () {
-    require_once getPluginPath('includes/class-conjure-rest-api.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     $reflection = new ReflectionClass('Conjure_REST_API');
     $constructor = $reflection->getConstructor();

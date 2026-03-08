@@ -1,4 +1,8 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Example: Require ConjureWP Plugin in Your Theme
  *
@@ -28,12 +32,12 @@ require_once get_template_directory() . '/includes/class-tgm-plugin-activation.p
 /**
  * Register required plugins.
  */
-function mytheme_register_required_plugins() {
+function conjurewp_register_required_plugins() {
 	$plugins = array(
 		// Require ConjureWP from WordPress.org.
 		array(
 			'name'     => 'ConjureWP',
-			'slug'     => 'conjurewp',
+			'slug'     => 'ConjureWP',
 			'required' => true, // Theme requires this plugin.
 		),
 		
@@ -46,7 +50,7 @@ function mytheme_register_required_plugins() {
 	);
 
 	$config = array(
-		'id'           => 'mytheme',
+		'id'           => 'ConjureWP',
 		'default_path' => '',
 		'menu'         => 'tgmpa-install-plugins',
 		'has_notices'  => true,
@@ -58,7 +62,7 @@ function mytheme_register_required_plugins() {
 
 	tgmpa( $plugins, $config );
 }
-add_action( 'tgmpa_register', 'mytheme_register_required_plugins' );
+add_action( 'tgmpa_register', 'conjurewp_register_required_plugins' );
 
 /**
  * OPTION 2: Simple Admin Notice (No TGMPA)
@@ -68,16 +72,16 @@ add_action( 'tgmpa_register', 'mytheme_register_required_plugins' );
  * Add this to your theme's functions.php:
  */
 
-function mytheme_check_conjurewp() {
+function conjurewp_check_conjurewp() {
 	// Check if ConjureWP is active.
 	if ( ! class_exists( 'Conjure' ) ) {
-		add_action( 'admin_notices', 'mytheme_conjurewp_notice' );
+		add_action( 'admin_notices', 'conjurewp_conjurewp_notice' );
 	}
 }
-add_action( 'admin_init', 'mytheme_check_conjurewp' );
+add_action( 'admin_init', 'conjurewp_check_conjurewp' );
 
-function mytheme_conjurewp_notice() {
-	$plugin_slug = 'conjurewp';
+function conjurewp_conjurewp_notice() {
+	$plugin_slug = 'ConjureWP';
 	$install_url = wp_nonce_url(
 		self_admin_url( 'update.php?action=install-plugin&plugin=' . $plugin_slug ),
 		'install-plugin_' . $plugin_slug
@@ -105,22 +109,22 @@ function mytheme_conjurewp_notice() {
  * Add this to your theme's functions.php:
  */
 
-function mytheme_activation_check() {
+function conjurewp_activation_check() {
 	// Check if ConjureWP is installed and active.
 	if ( ! class_exists( 'Conjure' ) ) {
 		// Switch back to previous theme.
 		switch_theme( get_option( 'theme_switched' ) );
 		
 		// Show error message.
-		add_action( 'admin_notices', 'mytheme_activation_error' );
+		add_action( 'admin_notices', 'conjurewp_activation_error' );
 		
 		// Deactivate the theme.
 		return false;
 	}
 }
-add_action( 'after_switch_theme', 'mytheme_activation_check' );
+add_action( 'after_switch_theme', 'conjurewp_activation_check' );
 
-function mytheme_activation_error() {
+function conjurewp_activation_error() {
 	?>
 	<div class="notice notice-error">
 		<p>
@@ -157,17 +161,17 @@ function mytheme_activation_error() {
  * 3. Add to functions.php:
  *    require_once get_template_directory() . '/includes/class-tgm-plugin-activation.php';
  *    
- *    function mytheme_register_required_plugins() {
+ *    function conjurewp_register_required_plugins() {
  *        $plugins = array(
  *            array(
  *                'name'     => 'ConjureWP',
- *                'slug'     => 'conjurewp',
+ *                'slug'     => 'ConjureWP',
  *                'required' => true,
  *            ),
  *        );
  *        
  *        $config = array(
- *            'id'           => 'mytheme',
+ *            'id'           => 'ConjureWP',
  *            'default_path' => '',
  *            'menu'         => 'tgmpa-install-plugins',
  *            'has_notices'  => true,
@@ -178,10 +182,10 @@ function mytheme_activation_error() {
  *        
  *        tgmpa( $plugins, $config );
  *    }
- *    add_action( 'tgmpa_register', 'mytheme_register_required_plugins' );
+ *    add_action( 'tgmpa_register', 'conjurewp_register_required_plugins' );
  * 
  * 4. Create demo folder:
- *    /your-theme/conjurewp-demos/
+ *    /your-theme/ConjureWP-demos/
  *    ├── content.xml
  *    ├── widgets.json
  *    ├── customizer.dat

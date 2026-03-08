@@ -5,7 +5,7 @@
  * @package   Conjure
  * @author    ConjureWP
  * @license   GPL-3.0
- * @link      https://conjurewp.com
+ * @link      https://ConjureWP.com
  */
 
 // Exit if accessed directly.
@@ -64,9 +64,9 @@ function example_get_individual_values() {
 	// Get MySQL version.
 	$mysql = $server_health->get_mysql_version();
 
-	echo "Memory: $memory ($memory_value MB)<br>";
-	echo "Execution Time: $execution<br>";
-	echo "MySQL: $mysql<br>";
+	echo esc_html( sprintf( 'Memory: %1$s (%2$s MB)', $memory, $memory_value ) ) . '<br>';
+	echo esc_html( sprintf( 'Execution Time: %s', $execution ) ) . '<br>';
+	echo esc_html( sprintf( 'MySQL: %s', $mysql ) ) . '<br>';
 }
 
 /**
@@ -87,8 +87,8 @@ function example_get_health_info_array() {
 	- max_execution_value (int)
 	- mysql_version (string)
 	*/
-	
-	print_r( $info );
+
+	echo '<pre>' . esc_html( wp_json_encode( $info, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ) . '</pre>';
 }
 
 /**
@@ -140,7 +140,7 @@ function example_get_html_only() {
 	);
 
 	// You can now use $html wherever you need.
-	echo $html;
+	echo wp_kses_post( $html );
 }
 
 /**
@@ -158,7 +158,7 @@ function example_admin_page_integration() {
 		$server_health = new Conjure_Server_Health();
 		$server_health->render_complete(
 			array(
-				'requirements_url' => 'https://mytheme.com/docs/requirements',
+				'requirements_url' => 'https://ConjureWP.com/docs/requirements',
 				'theme_name'       => 'My Theme',
 			)
 		);
@@ -180,7 +180,7 @@ function example_format_filesize() {
 	$size_bytes = 1073741824; // 1GB in bytes.
 	$formatted = $server_health->format_filesize( $size_bytes ); // "1 GiB".
 	
-	echo $formatted;
+	echo esc_html( $formatted );
 }
 
 /**
@@ -202,7 +202,7 @@ function example_wizard_integration() {
 		<?php
 		$server_health->render_complete(
 			array(
-				'requirements_url' => 'https://mytheme.com/docs/requirements',
+				'requirements_url' => 'https://ConjureWP.com/docs/requirements',
 			)
 		);
 		?>

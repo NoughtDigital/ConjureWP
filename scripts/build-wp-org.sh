@@ -19,7 +19,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Colour
 
-PLUGIN_SLUG="conjurewp"
+PLUGIN_SLUG="ConjureWP"
 BUILD_DIR="build-wp-org"
 DIST_DIR="dist"
 
@@ -88,11 +88,11 @@ cd ../..
 # Create ZIP
 echo -e "${YELLOW}Creating WordPress.org ZIP...${NC}"
 cd "$BUILD_DIR"
-zip -r "../$DIST_DIR/conjurewp.zip" "$PLUGIN_SLUG" -q
+zip -r "../$DIST_DIR/ConjureWP.zip" "$PLUGIN_SLUG" -q
 cd ..
 
 # Get file size
-FILE_SIZE=$(du -h "$DIST_DIR/conjurewp.zip" | cut -f1)
+FILE_SIZE=$(du -h "$DIST_DIR/ConjureWP.zip" | cut -f1)
 
 # Clean up build directory
 echo -e "${YELLOW}Cleaning up...${NC}"
@@ -102,7 +102,7 @@ echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Build Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo -e "File:     ${YELLOW}$DIST_DIR/conjurewp.zip${NC}"
+echo -e "File:     ${YELLOW}$DIST_DIR/ConjureWP.zip${NC}"
 echo -e "Size:     ${YELLOW}$FILE_SIZE${NC}"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"

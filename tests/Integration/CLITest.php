@@ -1,7 +1,7 @@
 <?php
 
 test('cli class exists and can be loaded', function () {
-    $cliFile = getPluginPath('includes/class-conjure-cli.php');
+    $cliFile = conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     expect(file_exists($cliFile))->toBeTrue();
     
     require_once $cliFile;
@@ -9,13 +9,13 @@ test('cli class exists and can be loaded', function () {
 });
 
 test('cli has list_demos command', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     expect(method_exists('Conjure_CLI', 'list_demos'))->toBeTrue();
 });
 
 test('cli has import command', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     // The import command is typically named 'import' or similar
     $methods = get_class_methods('Conjure_CLI');
@@ -32,7 +32,7 @@ test('cli has import command', function () {
 });
 
 test('cli class requires conjure instance', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     $reflection = new ReflectionClass('Conjure_CLI');
     $constructor = $reflection->getConstructor();
@@ -43,21 +43,21 @@ test('cli class requires conjure instance', function () {
 });
 
 test('cli has logger property', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     $reflection = new ReflectionClass('Conjure_CLI');
     expect($reflection->hasProperty('logger'))->toBeTrue();
 });
 
 test('cli has conjure property', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     $reflection = new ReflectionClass('Conjure_CLI');
     expect($reflection->hasProperty('conjure'))->toBeTrue();
 });
 
 test('cli list_demos accepts required parameters', function () {
-    require_once getPluginPath('includes/class-conjure-cli.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-cli.php');
     
     $reflection = new ReflectionClass('Conjure_CLI');
     $method = $reflection->getMethod('list_demos');

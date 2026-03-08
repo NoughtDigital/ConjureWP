@@ -281,4 +281,4 @@ define( 'WP_MAX_MEMORY_LIMIT', '512M' );
 For issues or questions:
 
 -   GitHub: https://github.com/NoughtDigital/ConjureWP
--   Documentation: https://conjurewp.com/
+-   Documentation: https://ConjureWP.com/

@@ -1,17 +1,17 @@
 <?php
 
 test('conjure wizard ui class file exists', function () {
-    $classFile = getPluginPath('includes/class-conjure-wizard-ui.php');
+    $classFile = conjurewp_test_get_plugin_path('includes/class-conjure-wizard-ui.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('conjure wizard ui class can be loaded', function () {
-    require_once getPluginPath('includes/class-conjure-wizard-ui.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-wizard-ui.php');
     expect(class_exists('Conjure_Wizard_UI'))->toBeTrue();
 });
 
 test('conjure wizard ui class has required methods', function () {
-    require_once getPluginPath('includes/class-conjure-wizard-ui.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-wizard-ui.php');
     
     $requiredMethods = [
         '__construct',

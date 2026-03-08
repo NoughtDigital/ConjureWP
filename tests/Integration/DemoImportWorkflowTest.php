@@ -1,7 +1,7 @@
 <?php
 
 test('demo content files exist in demo directory', function () {
-    $demoDir = getPluginPath('demo');
+    $demoDir = conjurewp_test_get_plugin_path('demo');
     
     expect(is_dir($demoDir))->toBeTrue();
     
@@ -20,7 +20,7 @@ test('demo content files exist in demo directory', function () {
 });
 
 test('demo content xml is valid xml', function () {
-    $contentFile = getPluginPath('demo/content.xml');
+    $contentFile = conjurewp_test_get_plugin_path('demo/content.xml');
     
     if (!file_exists($contentFile)) {
         $this->markTestSkipped('Demo content.xml not found');
@@ -31,7 +31,7 @@ test('demo content xml is valid xml', function () {
 });
 
 test('demo widgets json is valid json', function () {
-    $widgetsFile = getPluginPath('demo/widgets.json');
+    $widgetsFile = conjurewp_test_get_plugin_path('demo/widgets.json');
     
     if (!file_exists($widgetsFile)) {
         $this->markTestSkipped('Demo widgets.json not found');
@@ -42,7 +42,7 @@ test('demo widgets json is valid json', function () {
 });
 
 test('demo redux options is valid json', function () {
-    $reduxFile = getPluginPath('demo/redux-options.json');
+    $reduxFile = conjurewp_test_get_plugin_path('demo/redux-options.json');
     
     if (!file_exists($reduxFile)) {
         $this->markTestSkipped('Demo redux-options.json not found');
@@ -53,7 +53,7 @@ test('demo redux options is valid json', function () {
 });
 
 test('conjure class has import workflow methods', function () {
-    require_once getPluginPath('class-conjure.php');
+    require_once conjurewp_test_get_plugin_path('class-conjure.php');
     
     $workflowMethods = [
         'get_import_data_info',
@@ -67,14 +67,14 @@ test('conjure class has import workflow methods', function () {
 });
 
 test('conjure class tracks import files', function () {
-    require_once getPluginPath('class-conjure.php');
+    require_once conjurewp_test_get_plugin_path('class-conjure.php');
     
     $reflection = new ReflectionClass('Conjure');
     expect($reflection->hasProperty('import_files'))->toBeTrue();
 });
 
 test('conjure class has step completion tracking', function () {
-    require_once getPluginPath('class-conjure.php');
+    require_once conjurewp_test_get_plugin_path('class-conjure.php');
     
     expect(method_exists('Conjure', 'get_step_completion_state'))->toBeTrue();
 });

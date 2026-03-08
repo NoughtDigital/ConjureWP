@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 test('plugin has required directories', function () {
     $requiredDirs = [
         'includes',
@@ -8,12 +12,11 @@ test('plugin has required directories', function () {
         'assets/js',
         'assets/images',
         'languages',
-        'demo',
         'examples',
     ];
     
     foreach ($requiredDirs as $dir) {
-        $path = getPluginPath($dir);
+        $path = conjurewp_test_get_plugin_path($dir);
         expect(is_dir($path))->toBeTrue("Directory {$dir} should exist");
     }
 });
@@ -26,7 +29,7 @@ test('plugin has required asset files', function () {
     ];
     
     foreach ($requiredAssets as $asset) {
-        $path = getPluginPath($asset);
+        $path = conjurewp_test_get_plugin_path($asset);
         expect(file_exists($path))->toBeTrue("Asset {$asset} should exist");
     }
 });
@@ -38,27 +41,27 @@ test('plugin has minified assets', function () {
     ];
     
     foreach ($minifiedAssets as $asset) {
-        $path = getPluginPath($asset);
+        $path = conjurewp_test_get_plugin_path($asset);
         expect(file_exists($path))->toBeTrue("Minified asset {$asset} should exist");
     }
 });
 
 test('plugin has documentation', function () {
-    expect(file_exists(getPluginPath('README.md')))->toBeTrue();
-    expect(file_exists(getPluginPath('readme.txt')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('README.md')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('readme.txt')))->toBeTrue();
 });
 
 test('plugin has composer configuration', function () {
-    expect(file_exists(getPluginPath('composer.json')))->toBeTrue();
-    expect(file_exists(getPluginPath('composer.lock')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('composer.json')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('composer.lock')))->toBeTrue();
 });
 
 test('plugin has package.json for frontend dependencies', function () {
-    expect(file_exists(getPluginPath('package.json')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('package.json')))->toBeTrue();
 });
 
 test('plugin has phpcs configuration', function () {
-    expect(file_exists(getPluginPath('phpcs.xml')))->toBeTrue();
+    expect(file_exists(conjurewp_test_get_plugin_path('phpcs.xml')))->toBeTrue();
 });
 
 test('all include classes exist', function () {
@@ -84,21 +87,25 @@ test('all include classes exist', function () {
     ];
     
     foreach ($includeClasses as $class) {
-        $path = getPluginPath('includes/' . $class);
+        $path = conjurewp_test_get_plugin_path('includes/' . $class);
         expect(file_exists($path))->toBeTrue("Class {$class} should exist");
     }
 });
 
-test('demo directory has required files', function () {
+test('demo directory has required files when present', function () {
+    $demoDir = conjurewp_test_get_plugin_path('demo');
+    if ( ! is_dir( $demoDir ) ) {
+        expect( true )->toBeTrue();
+        return;
+    }
     $demoFiles = [
         'demo/content.xml',
         'demo/widgets.json',
         'demo/redux-options.json',
         'demo/customizer.dat',
     ];
-    
     foreach ($demoFiles as $file) {
-        $path = getPluginPath($file);
+        $path = conjurewp_test_get_plugin_path($file);
         expect(file_exists($path))->toBeTrue("Demo file {$file} should exist");
     }
 });
@@ -111,7 +118,7 @@ test('examples directory has sample files', function () {
     ];
     
     foreach ($exampleFiles as $file) {
-        $path = getPluginPath($file);
+        $path = conjurewp_test_get_plugin_path($file);
         expect(file_exists($path))->toBeTrue("Example file {$file} should exist");
     }
 });

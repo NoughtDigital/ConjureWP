@@ -6,7 +6,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -93,20 +93,23 @@ class Conjure_Wizard_UI {
 	 */
 	public function body() {
 		if ( empty( $this->conjure->step ) || ! isset( $this->conjure->steps[ $this->conjure->step ] ) ) {
-			$this->logger->error( sprintf( __( 'Invalid step requested: %s', 'conjurewp' ), $this->conjure->step ) );
+			/* translators: %s: Requested wizard step key. */
+			$this->logger->error( sprintf( __( 'Invalid step requested: %s', 'ConjureWP' ), $this->conjure->step ) );
 			return;
 		}
 
 		if ( ! isset( $this->conjure->steps[ $this->conjure->step ]['view'] ) || ! is_callable( $this->conjure->steps[ $this->conjure->step ]['view'] ) ) {
-			$this->logger->error( sprintf( __( 'Step view is not callable: %s', 'conjurewp' ), $this->conjure->step ) );
+			/* translators: %s: Requested wizard step key. */
+			$this->logger->error( sprintf( __( 'Step view is not callable: %s', 'ConjureWP' ), $this->conjure->step ) );
 			return;
 		}
 
 		try {
 			call_user_func( $this->conjure->steps[ $this->conjure->step ]['view'] );
 		} catch ( Exception $e ) {
-			$this->logger->error( sprintf( __( 'Error rendering step %s: %s', 'conjurewp' ), $this->conjure->step, $e->getMessage() ) );
-			echo '<div class="error"><p>' . esc_html__( 'An error occurred while loading this step. Please check the error logs.', 'conjurewp' ) . '</p></div>';
+			/* translators: 1: Wizard step key, 2: Exception message. */
+			$this->logger->error( sprintf( __( 'Error rendering step %1$s: %2$s', 'ConjureWP' ), $this->conjure->step, $e->getMessage() ) );
+			echo '<div class="error"><p>' . esc_html__( 'An error occurred while loading this step. Please check the error logs.', 'ConjureWP' ) . '</p></div>';
 		}
 	}
 
@@ -211,12 +214,12 @@ class Conjure_Wizard_UI {
 
 		// Make sure $args are an array.
 		if ( empty( $args ) ) {
-			return __( 'Please define default parameters in the form of an array.', 'conjurewp' );
+			return __( 'Please define default parameters in the form of an array.', 'ConjureWP' );
 		}
 
 		// Define an icon.
 		if ( false === array_key_exists( 'icon', $args ) ) {
-			return __( 'Please define an SVG icon filename.', 'conjurewp' );
+			return __( 'Please define an SVG icon filename.', 'ConjureWP' );
 		}
 
 		// Set defaults.

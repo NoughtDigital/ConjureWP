@@ -1,4 +1,11 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * Example: Multiple Demo Imports with Visual Selector
  *
@@ -43,7 +50,7 @@
  * 
  * Folder structure:
  * 
- * /wp-content/themes/your-theme/conjurewp-demos/
+ * /wp-content/themes/your-theme/ConjureWP-demos/
  * ├── main-demo/
  * │   ├── content.xml
  * │   ├── widgets.json
@@ -74,24 +81,24 @@
  * 
  * Add this to your theme's functions.php for full control:
  */
-function mytheme_demo_imports() {
+function conjurewp_demo_imports() {
 	return array(
 		// Demo 1: Main/Full Demo
 		array(
 			'import_file_name'             => 'Main Demo',
 			'categories'                   => array( 'Complete', 'Business' ),
-			'local_import_file'            => get_template_directory() . '/conjurewp-demos/main/content.xml',
-			'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/main/widgets.json',
-			'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/main/customizer.dat',
+			'local_import_file'            => get_template_directory() . '/ConjureWP-demos/main/content.xml',
+			'local_import_widget_file'     => get_template_directory() . '/ConjureWP-demos/main/widgets.json',
+			'local_import_customizer_file' => get_template_directory() . '/ConjureWP-demos/main/customizer.dat',
 			'local_import_redux'           => array(
 				array(
-					'file_path'   => get_template_directory() . '/conjurewp-demos/main/redux-options.json',
-					'option_name' => 'mytheme_options',
+					'file_path'   => get_template_directory() . '/ConjureWP-demos/main/redux-options.json',
+					'option_name' => 'conjurewp_options',
 				),
 			),
-			'local_import_rev_slider_file' => get_template_directory() . '/conjurewp-demos/main/slider.zip',
-			'import_preview_image_url'     => get_template_directory_uri() . '/conjurewp-demos/main/preview.jpg',
-			'preview_url'                  => 'https://demo.yourtheme.com/main',
+			'local_import_rev_slider_file' => get_template_directory() . '/ConjureWP-demos/main/slider.zip',
+			'import_preview_image_url'     => get_template_directory_uri() . '/ConjureWP-demos/main/preview.jpg',
+			'preview_url'                  => 'https://demo.ConjureWP.com/main',
 			'import_notice'                => 'Complete demo with all features including Revolution Slider and WooCommerce.',
 		),
 
@@ -99,11 +106,11 @@ function mytheme_demo_imports() {
 		array(
 			'import_file_name'             => 'Shop Demo',
 			'categories'                   => array( 'E-commerce', 'WooCommerce' ),
-			'local_import_file'            => get_template_directory() . '/conjurewp-demos/shop/content.xml',
-			'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/shop/widgets.json',
-			'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/shop/customizer.dat',
-			'import_preview_image_url'     => get_template_directory_uri() . '/conjurewp-demos/shop/preview.jpg',
-			'preview_url'                  => 'https://demo.yourtheme.com/shop',
+			'local_import_file'            => get_template_directory() . '/ConjureWP-demos/shop/content.xml',
+			'local_import_widget_file'     => get_template_directory() . '/ConjureWP-demos/shop/widgets.json',
+			'local_import_customizer_file' => get_template_directory() . '/ConjureWP-demos/shop/customizer.dat',
+			'import_preview_image_url'     => get_template_directory_uri() . '/ConjureWP-demos/shop/preview.jpg',
+			'preview_url'                  => 'https://demo.ConjureWP.com/shop',
 			'import_notice'                => 'E-commerce focused demo with WooCommerce products and shop pages.',
 		),
 
@@ -111,11 +118,11 @@ function mytheme_demo_imports() {
 		array(
 			'import_file_name'             => 'Minimal Demo',
 			'categories'                   => array( 'Simple', 'Portfolio' ),
-			'local_import_file'            => get_template_directory() . '/conjurewp-demos/minimal/content.xml',
-			'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/minimal/widgets.json',
-			'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/minimal/customizer.dat',
-			'import_preview_image_url'     => get_template_directory_uri() . '/conjurewp-demos/minimal/preview.jpg',
-			'preview_url'                  => 'https://demo.yourtheme.com/minimal',
+			'local_import_file'            => get_template_directory() . '/ConjureWP-demos/minimal/content.xml',
+			'local_import_widget_file'     => get_template_directory() . '/ConjureWP-demos/minimal/widgets.json',
+			'local_import_customizer_file' => get_template_directory() . '/ConjureWP-demos/minimal/customizer.dat',
+			'import_preview_image_url'     => get_template_directory_uri() . '/ConjureWP-demos/minimal/preview.jpg',
+			'preview_url'                  => 'https://demo.ConjureWP.com/minimal',
 			'import_notice'                => 'Clean and minimal demo perfect for portfolios and personal sites.',
 		),
 
@@ -123,16 +130,16 @@ function mytheme_demo_imports() {
 		array(
 			'import_file_name'             => 'Blog Demo',
 			'categories'                   => array( 'Blog', 'Magazine' ),
-			'local_import_file'            => get_template_directory() . '/conjurewp-demos/blog/content.xml',
-			'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/blog/widgets.json',
-			'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/blog/customizer.dat',
-			'import_preview_image_url'     => get_template_directory_uri() . '/conjurewp-demos/blog/preview.jpg',
-			'preview_url'                  => 'https://demo.yourtheme.com/blog',
+			'local_import_file'            => get_template_directory() . '/ConjureWP-demos/blog/content.xml',
+			'local_import_widget_file'     => get_template_directory() . '/ConjureWP-demos/blog/widgets.json',
+			'local_import_customizer_file' => get_template_directory() . '/ConjureWP-demos/blog/customizer.dat',
+			'import_preview_image_url'     => get_template_directory_uri() . '/ConjureWP-demos/blog/preview.jpg',
+			'preview_url'                  => 'https://demo.ConjureWP.com/blog',
 			'import_notice'                => 'Magazine-style blog with multiple post formats and layouts.',
 		),
 	);
 }
-add_filter( 'conjure_import_files', 'mytheme_demo_imports' );
+add_filter( 'conjure_import_files', 'conjurewp_demo_imports' );
 
 /**
  * HOW IT APPEARS IN THE WIZARD
@@ -167,12 +174,12 @@ add_filter( 'conjure_import_files', 'mytheme_demo_imports' );
  * 
  * You can also show different plugins for different demos:
  */
-function mytheme_demo_with_plugins() {
+function conjurewp_demo_with_plugins() {
 	return array(
 		array(
 			'import_file_name'     => 'Main Demo',
-			'local_import_file'    => get_template_directory() . '/conjurewp-demos/main/content.xml',
-			'import_preview_image_url' => get_template_directory_uri() . '/conjurewp-demos/main/preview.jpg',
+			'local_import_file'    => get_template_directory() . '/ConjureWP-demos/main/content.xml',
+			'import_preview_image_url' => get_template_directory_uri() . '/ConjureWP-demos/main/preview.jpg',
 			// Plugins for this demo only
 			'required_plugins'     => array(
 				array(
@@ -187,8 +194,8 @@ function mytheme_demo_with_plugins() {
 		),
 		array(
 			'import_file_name'     => 'Shop Demo',
-			'local_import_file'    => get_template_directory() . '/conjurewp-demos/shop/content.xml',
-			'import_preview_image_url' => get_template_directory_uri() . '/conjurewp-demos/shop/preview.jpg',
+			'local_import_file'    => get_template_directory() . '/ConjureWP-demos/shop/content.xml',
+			'import_preview_image_url' => get_template_directory_uri() . '/ConjureWP-demos/shop/preview.jpg',
 			// Different plugins for this demo
 			'required_plugins'     => array(
 				array(
@@ -203,7 +210,7 @@ function mytheme_demo_with_plugins() {
 		),
 	);
 }
-// add_filter( 'conjure_import_files', 'mytheme_demo_with_plugins' );
+// add_filter( 'conjure_import_files', 'conjurewp_demo_with_plugins' );
 
 /**
  * PREVIEW IMAGE SPECIFICATIONS
@@ -254,15 +261,15 @@ function mytheme_demo_with_plugins() {
  * 
  * Run different code after each demo imports:
  */
-function mytheme_after_import_setup( $selected_import ) {
+function conjurewp_after_import_setup( $selected_import ) {
 	// Check which demo was imported
 	if ( isset( $selected_import['import_file_name'] ) ) {
 		$demo_name = $selected_import['import_file_name'];
 		
 		switch ( $demo_name ) {
 			case 'Main Demo':
-				// Set homepage for Main Demo
-				$home = get_page_by_title( 'Home' );
+				// Set homepage for Main Demo.
+				$home = conjurewp_example_get_page_by_title( 'Home' );
 				if ( $home ) {
 					update_option( 'page_on_front', $home->ID );
 					update_option( 'show_on_front', 'page' );
@@ -278,9 +285,9 @@ function mytheme_after_import_setup( $selected_import ) {
 				break;
 				
 			case 'Shop Demo':
-				// Set shop page as homepage for Shop Demo
+				// Set shop page as homepage for Shop Demo.
 				if ( class_exists( 'WooCommerce' ) ) {
-					$shop = get_page_by_title( 'Shop' );
+					$shop = conjurewp_example_get_page_by_title( 'Shop' );
 					if ( $shop ) {
 						update_option( 'page_on_front', $shop->ID );
 						update_option( 'show_on_front', 'page' );
@@ -289,8 +296,8 @@ function mytheme_after_import_setup( $selected_import ) {
 				break;
 				
 			case 'Minimal Demo':
-				// Different settings for Minimal Demo
-				$about = get_page_by_title( 'About' );
+				// Different settings for Minimal Demo.
+				$about = conjurewp_example_get_page_by_title( 'About' );
 				if ( $about ) {
 					update_option( 'page_on_front', $about->ID );
 					update_option( 'show_on_front', 'page' );
@@ -299,7 +306,7 @@ function mytheme_after_import_setup( $selected_import ) {
 		}
 	}
 }
-add_action( 'conjure_after_import', 'mytheme_after_import_setup' );
+add_action( 'conjure_after_import', 'conjurewp_after_import_setup' );
 
 /**
  * COMPLETE EXAMPLE

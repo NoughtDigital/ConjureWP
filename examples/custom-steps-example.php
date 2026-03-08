@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * any form submissions.
  */
 
-function mytheme_add_custom_info_step( $steps ) {
+function conjurewp_add_custom_info_step( $steps ) {
 	// Insert the step after 'welcome' and before 'child'.
 	$new_steps = array();
 	
@@ -37,24 +37,24 @@ function mytheme_add_custom_info_step( $steps ) {
 		// Insert our custom step after 'welcome'.
 		if ( 'welcome' === $key ) {
 			$new_steps['custom_info'] = array(
-				'name' => esc_html__( 'Information', 'your-textdomain' ),
-				'view' => 'mytheme_custom_info_step_view',
+				'name' => esc_html__( 'Information', 'ConjureWP' ),
+				'view' => 'conjurewp_custom_info_step_view',
 			);
 		}
 	}
 	
 	return $new_steps;
 }
-add_filter( 'conjure_steps', 'mytheme_add_custom_info_step' );
+add_filter( 'conjure_steps', 'conjurewp_add_custom_info_step' );
 
 /**
  * Display the custom info step content.
  */
-function mytheme_custom_info_step_view() {
+function conjurewp_custom_info_step_view() {
 	?>
 	<div class="conjure__intro-text">
-		<h1><?php esc_html_e( 'Welcome to Our Theme', 'your-textdomain' ); ?></h1>
-		<p><?php esc_html_e( 'This is a custom step added by the theme. It provides important information before proceeding.', 'your-textdomain' ); ?></p>
+		<h1><?php esc_html_e( 'Welcome to Our Theme', 'ConjureWP' ); ?></h1>
+		<p><?php esc_html_e( 'This is a custom step added by the theme. It provides important information before proceeding.', 'ConjureWP' ); ?></p>
 	</div>
 	
 	<form method="post">
@@ -62,15 +62,15 @@ function mytheme_custom_info_step_view() {
 		<p>
 			<label>
 				<input type="checkbox" name="acknowledged" value="1" required>
-				<?php esc_html_e( 'I have read and understood the information', 'your-textdomain' ); ?>
+				<?php esc_html_e( 'I have read and understood the information', 'ConjureWP' ); ?>
 			</label>
 		</p>
 		<p class="conjure__buttons">
 			<a href="<?php echo esc_url( admin_url( 'themes.php?page=conjure-setup' ) ); ?>" class="button">
-				<?php esc_html_e( 'Skip', 'your-textdomain' ); ?>
+				<?php esc_html_e( 'Skip', 'ConjureWP' ); ?>
 			</a>
 			<button type="submit" class="button button-primary" name="save_step">
-				<?php esc_html_e( 'Continue', 'your-textdomain' ); ?>
+				<?php esc_html_e( 'Continue', 'ConjureWP' ); ?>
 			</button>
 		</p>
 	</form>
@@ -86,7 +86,7 @@ function mytheme_custom_info_step_view() {
  * redirect to the next step or show different content based on user input.
  */
 
-function mytheme_add_custom_setup_step( $steps ) {
+function conjurewp_add_custom_setup_step( $steps ) {
 	// Insert the step before 'content'.
 	$new_steps = array();
 	
@@ -94,9 +94,9 @@ function mytheme_add_custom_setup_step( $steps ) {
 		// Insert our custom step before 'content'.
 		if ( 'content' === $key ) {
 			$new_steps['theme_setup'] = array(
-				'name'    => esc_html__( 'Theme Setup', 'your-textdomain' ),
-				'view'    => 'mytheme_theme_setup_step_view',
-				'handler' => 'mytheme_theme_setup_step_handler',
+				'name'    => esc_html__( 'Theme Setup', 'ConjureWP' ),
+				'view'    => 'conjurewp_theme_setup_step_view',
+				'handler' => 'conjurewp_theme_setup_step_handler',
 			);
 		}
 		$new_steps[ $key ] = $step;
@@ -104,19 +104,19 @@ function mytheme_add_custom_setup_step( $steps ) {
 	
 	return $new_steps;
 }
-add_filter( 'conjure_steps', 'mytheme_add_custom_setup_step' );
+add_filter( 'conjure_steps', 'conjurewp_add_custom_setup_step' );
 
 /**
  * Display the theme setup step content.
  */
-function mytheme_theme_setup_step_view() {
+function conjurewp_theme_setup_step_view() {
 	// Retrieve saved values if available.
-	$color_scheme = get_option( 'mytheme_color_scheme', 'light' );
-	$layout_style = get_option( 'mytheme_layout_style', 'boxed' );
+	$color_scheme = get_option( 'conjurewp_color_scheme', 'light' );
+	$layout_style = get_option( 'conjurewp_layout_style', 'boxed' );
 	?>
 	<div class="conjure__intro-text">
-		<h1><?php esc_html_e( 'Configure Your Theme', 'your-textdomain' ); ?></h1>
-		<p><?php esc_html_e( 'Choose your preferred settings before importing content.', 'your-textdomain' ); ?></p>
+		<h1><?php esc_html_e( 'Configure Your Theme', 'ConjureWP' ); ?></h1>
+		<p><?php esc_html_e( 'Choose your preferred settings before importing content.', 'ConjureWP' ); ?></p>
 	</div>
 	
 	<form method="post">
@@ -125,30 +125,30 @@ function mytheme_theme_setup_step_view() {
 		<table class="form-table">
 			<tr>
 				<th scope="row">
-					<label for="color_scheme"><?php esc_html_e( 'Color Scheme', 'your-textdomain' ); ?></label>
+					<label for="color_scheme"><?php esc_html_e( 'Color Scheme', 'ConjureWP' ); ?></label>
 				</th>
 				<td>
 					<select name="color_scheme" id="color_scheme">
 						<option value="light" <?php selected( $color_scheme, 'light' ); ?>>
-							<?php esc_html_e( 'Light', 'your-textdomain' ); ?>
+							<?php esc_html_e( 'Light', 'ConjureWP' ); ?>
 						</option>
 						<option value="dark" <?php selected( $color_scheme, 'dark' ); ?>>
-							<?php esc_html_e( 'Dark', 'your-textdomain' ); ?>
+							<?php esc_html_e( 'Dark', 'ConjureWP' ); ?>
 						</option>
 					</select>
 				</td>
 			</tr>
 			<tr>
 				<th scope="row">
-					<label for="layout_style"><?php esc_html_e( 'Layout Style', 'your-textdomain' ); ?></label>
+					<label for="layout_style"><?php esc_html_e( 'Layout Style', 'ConjureWP' ); ?></label>
 				</th>
 				<td>
 					<select name="layout_style" id="layout_style">
 						<option value="boxed" <?php selected( $layout_style, 'boxed' ); ?>>
-							<?php esc_html_e( 'Boxed', 'your-textdomain' ); ?>
+							<?php esc_html_e( 'Boxed', 'ConjureWP' ); ?>
 						</option>
 						<option value="fullwidth" <?php selected( $layout_style, 'fullwidth' ); ?>>
-							<?php esc_html_e( 'Full Width', 'your-textdomain' ); ?>
+							<?php esc_html_e( 'Full Width', 'ConjureWP' ); ?>
 						</option>
 					</select>
 				</td>
@@ -157,10 +157,10 @@ function mytheme_theme_setup_step_view() {
 		
 		<p class="conjure__buttons">
 			<a href="<?php echo esc_url( admin_url( 'themes.php?page=conjure-setup&step=content' ) ); ?>" class="button">
-				<?php esc_html_e( 'Skip', 'your-textdomain' ); ?>
+				<?php esc_html_e( 'Skip', 'ConjureWP' ); ?>
 			</a>
 			<button type="submit" class="button button-primary" name="save_step">
-				<?php esc_html_e( 'Save & Continue', 'your-textdomain' ); ?>
+				<?php esc_html_e( 'Save & Continue', 'ConjureWP' ); ?>
 			</button>
 		</p>
 	</form>
@@ -173,18 +173,17 @@ function mytheme_theme_setup_step_view() {
  * @return bool|void Return false to prevent showing the step view again,
  *                   or return nothing/true to show the view after processing.
  */
-function mytheme_theme_setup_step_handler() {
+function conjurewp_theme_setup_step_handler() {
 	check_admin_referer( 'conjure' );
 	
 	// Save the selected options.
 	if ( isset( $_POST['color_scheme'] ) ) {
-		$color_scheme = sanitize_text_field( $_POST['color_scheme'] );
-		update_option( 'mytheme_color_scheme', $color_scheme );
+		$color_scheme = sanitize_text_field( wp_unslash( $_POST['color_scheme'] ) );
+		update_option( 'conjurewp_color_scheme', $color_scheme );
 	}
-	
 	if ( isset( $_POST['layout_style'] ) ) {
-		$layout_style = sanitize_text_field( $_POST['layout_style'] );
-		update_option( 'mytheme_layout_style', $layout_style );
+		$layout_style = sanitize_text_field( wp_unslash( $_POST['layout_style'] ) );
+		update_option( 'conjurewp_layout_style', $layout_style );
 	}
 	
 	// Apply the settings immediately.
@@ -210,7 +209,7 @@ class MyTheme_Conjure_Steps {
 	public static function add_steps( $steps ) {
 		// Add a step after 'ready' (at the end).
 		$steps['final_config'] = array(
-			'name'    => esc_html__( 'Final Configuration', 'your-textdomain' ),
+			'name'    => esc_html__( 'Final Configuration', 'ConjureWP' ),
 			'view'    => array( __CLASS__, 'final_config_view' ),
 			'handler' => array( __CLASS__, 'final_config_handler' ),
 		);
@@ -224,8 +223,8 @@ class MyTheme_Conjure_Steps {
 	public static function final_config_view() {
 		?>
 		<div class="conjure__intro-text">
-			<h1><?php esc_html_e( 'Final Configuration', 'your-textdomain' ); ?></h1>
-			<p><?php esc_html_e( 'Complete the final setup steps.', 'your-textdomain' ); ?></p>
+			<h1><?php esc_html_e( 'Final Configuration', 'ConjureWP' ); ?></h1>
+			<p><?php esc_html_e( 'Complete the final setup steps.', 'ConjureWP' ); ?></p>
 		</div>
 		
 		<form method="post">
@@ -233,12 +232,12 @@ class MyTheme_Conjure_Steps {
 			<p>
 				<label>
 					<input type="checkbox" name="setup_complete" value="1">
-					<?php esc_html_e( 'Mark setup as complete', 'your-textdomain' ); ?>
+					<?php esc_html_e( 'Mark setup as complete', 'ConjureWP' ); ?>
 				</label>
 			</p>
 			<p class="conjure__buttons">
 				<button type="submit" class="button button-primary" name="save_step">
-					<?php esc_html_e( 'Finish', 'your-textdomain' ); ?>
+					<?php esc_html_e( 'Finish', 'ConjureWP' ); ?>
 				</button>
 			</p>
 		</form>
@@ -252,7 +251,7 @@ class MyTheme_Conjure_Steps {
 		check_admin_referer( 'conjure' );
 		
 		if ( isset( $_POST['setup_complete'] ) ) {
-			update_option( 'mytheme_setup_complete', true );
+			update_option( 'conjurewp_setup_complete', true );
 		}
 		
 		return false;
@@ -270,10 +269,10 @@ add_filter( 'conjure_steps', array( 'MyTheme_Conjure_Steps', 'add_steps' ) );
  * removing steps, or changing their display names.
  */
 
-function mytheme_modify_steps( $steps ) {
+function conjurewp_modify_steps( $steps ) {
 	// Change the name of the 'ready' step.
 	if ( isset( $steps['ready'] ) ) {
-		$steps['ready']['name'] = esc_html__( 'All Done!', 'your-textdomain' );
+		$steps['ready']['name'] = esc_html__( 'All Done!', 'ConjureWP' );
 	}
 	
 	// Remove the 'child' step if not needed.
@@ -299,7 +298,7 @@ function mytheme_modify_steps( $steps ) {
 	return $ordered_steps;
 }
 // Uncomment to enable:
-// add_filter( 'conjure_steps', 'mytheme_modify_steps', 20 );
+// add_filter( 'conjure_steps', 'conjurewp_modify_steps', 20 );
 
 /**
  * ========================================================================

@@ -6,7 +6,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -65,7 +65,7 @@ class Conjure_License_Manager {
 			wp_send_json(
 				array(
 					'success' => false,
-					'message' => esc_html__( 'Yikes! The license activation failed. Please try again or contact support.', 'conjurewp' ),
+					'message' => esc_html__( 'Yikes! The license activation failed. Please try again or contact support.', 'ConjureWP' ),
 				)
 			);
 		}
@@ -74,13 +74,13 @@ class Conjure_License_Manager {
 			wp_send_json(
 				array(
 					'success' => false,
-					'message' => esc_html__( 'Please add your license key before attempting to activate one.', 'conjurewp' ),
+					'message' => esc_html__( 'Please add your license key before attempting to activate one.', 'ConjureWP' ),
 				)
 			);
 		}
 
 		$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ) );
-		
+
 		// Ensure Freemius integration file is loaded.
 		if ( ! function_exists( 'con_fs' ) && file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
 			require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
@@ -107,7 +107,7 @@ class Conjure_License_Manager {
 			$result = $this->edd_activate_license( $license_key );
 		}
 
-		$this->logger->debug( __( 'The license activation was performed with the following results', 'conjurewp' ), $result );
+		$this->logger->debug( __( 'The license activation was performed with the following results', 'ConjureWP' ), $result );
 
 		// If activation succeeded, re-evaluate steps and provide the correct next step URL.
 		// This is needed because activating a license may unlock new steps (e.g. 'plugins').
@@ -136,7 +136,7 @@ class Conjure_License_Manager {
 		if ( ! function_exists( 'con_fs' ) ) {
 			return array(
 				'success' => false,
-				'message' => esc_html__( 'Freemius SDK is not available.', 'conjurewp' ),
+				'message' => esc_html__( 'Freemius SDK is not available.', 'ConjureWP' ),
 			);
 		}
 
@@ -144,7 +144,7 @@ class Conjure_License_Manager {
 		if ( ! $fs || ! is_object( $fs ) ) {
 			return array(
 				'success' => false,
-				'message' => esc_html__( 'Freemius SDK is not initialised.', 'conjurewp' ),
+				'message' => esc_html__( 'Freemius SDK is not initialised.', 'ConjureWP' ),
 			);
 		}
 
@@ -162,9 +162,9 @@ class Conjure_License_Manager {
 				} elseif ( is_object( $result->error ) && isset( $result->error->message ) ) {
 					$error_message = $result->error->message;
 				}
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			} else {
 				// Sync license and verify activation.
 				$this->sync_freemius_license( $fs );
@@ -174,13 +174,13 @@ class Conjure_License_Manager {
 					$theme = $this->conjure->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$this->step_manager->mark_step_completed( 'license' );
 				} else {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 				}
 			}
 		} elseif ( $fs->is_registered() ) {
@@ -189,7 +189,7 @@ class Conjure_License_Manager {
 			if ( ! $api ) {
 				return array(
 					'success' => false,
-					'message' => esc_html__( 'Unable to connect to Freemius API.', 'conjurewp' ),
+					'message' => esc_html__( 'Unable to connect to Freemius API.', 'ConjureWP' ),
 				);
 			}
 
@@ -212,13 +212,13 @@ class Conjure_License_Manager {
 					$theme = $this->conjure->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$this->step_manager->mark_step_completed( 'license' );
 				} else {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 				}
 			} else {
 				// Handle API errors.
@@ -232,9 +232,9 @@ class Conjure_License_Manager {
 					}
 				}
 
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			}
 		} else {
 			// User is not registered - need to register first via opt_in.
@@ -261,31 +261,31 @@ class Conjure_License_Manager {
 				} elseif ( is_object( $next_page->error ) && isset( $next_page->error->message ) ) {
 					$error_message = $next_page->error->message;
 				}
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			} else {
 				// opt_in with redirect=false completed. Now check if license was activated successfully.
 				$this->sync_freemius_license( $fs );
-				
+
 				// Check if user is now registered and has active license.
 				$is_registered = $fs->is_registered();
 				$has_license   = $this->freemius_has_active_license( $fs );
 
 				if ( ! $is_registered ) {
 					$success = false;
-					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'ConjureWP' );
 					$this->logger->warning( 'User not registered after Freemius opt_in' );
 				} elseif ( ! $has_license ) {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 					$this->logger->warning( 'License not active after Freemius opt_in' );
 				} else {
 					// Success - user is now registered and license is activated.
 					$theme = $this->conjure->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$success = true;
@@ -360,29 +360,35 @@ class Conjure_License_Manager {
 		// Make sure the response came back okay.
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
 			$success = false;
-			
+
 			if ( is_wp_error( $response ) ) {
 				$error_message = $response->get_error_message();
 				$error_code = $response->get_error_code();
-				$this->logger->error( 'EDD license activation HTTP error', array(
-					'error_code' => $error_code,
-					'error_message' => $error_message
-				) );
+				$this->logger->error(
+					'EDD license activation HTTP error',
+					array(
+						'error_code' => $error_code,
+						'error_message' => $error_message,
+					)
+				);
 				$message = sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Connection error: %s', 'conjurewp' ),
+					esc_html__( 'Connection error: %s', 'ConjureWP' ),
 					esc_html( $error_message )
 				);
 			} else {
 				$response_code = wp_remote_retrieve_response_code( $response );
 				$response_body = wp_remote_retrieve_body( $response );
-				$this->logger->error( 'EDD license activation failed', array(
-					'response_code' => $response_code,
-					'response_body' => substr( $response_body, 0, 500 )
-				) );
+				$this->logger->error(
+					'EDD license activation failed',
+					array(
+						'response_code' => $response_code,
+						'response_body' => substr( $response_body, 0, 500 ),
+					)
+				);
 				$message = sprintf(
 					/* translators: %d: HTTP response code */
-					esc_html__( 'Server returned error code %d. Please check your license key and try again.', 'conjurewp' ),
+					esc_html__( 'Server returned error code %d. Please check your license key and try again.', 'ConjureWP' ),
 					$response_code
 				);
 			}
@@ -397,35 +403,35 @@ class Conjure_License_Manager {
 					case 'expired':
 						$message = sprintf(
 						/* translators: Expiration date */
-							esc_html__( 'Your license key expired on %s.', 'conjurewp' ),
+							esc_html__( 'Your license key expired on %s.', 'ConjureWP' ),
 							date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, time() ) )
 						);
 						break;
 
 					case 'revoked':
-						$message = esc_html__( 'Your license key has been disabled.', 'conjurewp' );
+						$message = esc_html__( 'Your license key has been disabled.', 'ConjureWP' );
 						break;
 
 					case 'missing':
-						$message = esc_html__( 'This appears to be an invalid license key. Please try again or contact support.', 'conjurewp' );
+						$message = esc_html__( 'This appears to be an invalid license key. Please try again or contact support.', 'ConjureWP' );
 						break;
 
 					case 'invalid':
 					case 'site_inactive':
-						$message = esc_html__( 'Your license is not active for this URL.', 'conjurewp' );
+						$message = esc_html__( 'Your license is not active for this URL.', 'ConjureWP' );
 						break;
 
 					case 'item_name_mismatch':
 						/* translators: EDD Item Name */
-						$message = sprintf( esc_html__( 'This appears to be an invalid license key for %s.', 'conjurewp' ), $this->conjure->edd_item_name );
+						$message = sprintf( esc_html__( 'This appears to be an invalid license key for %s.', 'ConjureWP' ), $this->conjure->edd_item_name );
 						break;
 
 					case 'no_activations_left':
-						$message = esc_html__( 'Your license key has reached its activation limit.', 'conjurewp' );
+						$message = esc_html__( 'Your license key has reached its activation limit.', 'ConjureWP' );
 						break;
 
 					default:
-						$message = esc_html__( 'An error occurred, please try again.', 'conjurewp' );
+						$message = esc_html__( 'An error occurred, please try again.', 'ConjureWP' );
 						break;
 				}
 			} else {
@@ -438,7 +444,7 @@ class Conjure_License_Manager {
 
 					update_option( $this->conjure->edd_theme_slug . '_license_key', $license );
 					update_option( $this->conjure->edd_theme_slug . '_license_key_status', $license_data->license );
-					
+
 					$this->step_manager->mark_step_completed( 'license' );
 				}
 			}
@@ -509,4 +515,3 @@ class Conjure_License_Manager {
 		return apply_filters( 'conjure_is_theme_registered', $is_registered );
 	}
 }
-

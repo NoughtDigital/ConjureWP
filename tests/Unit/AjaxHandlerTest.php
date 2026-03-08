@@ -1,17 +1,17 @@
 <?php
 
 test('conjure ajax handler class file exists', function () {
-    $classFile = getPluginPath('includes/class-conjure-ajax-handler.php');
+    $classFile = conjurewp_test_get_plugin_path('includes/class-conjure-ajax-handler.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('conjure ajax handler class can be loaded', function () {
-    require_once getPluginPath('includes/class-conjure-ajax-handler.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-ajax-handler.php');
     expect(class_exists('Conjure_Ajax_Handler'))->toBeTrue();
 });
 
 test('conjure ajax handler class has required methods', function () {
-    require_once getPluginPath('includes/class-conjure-ajax-handler.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-ajax-handler.php');
     
     $requiredMethods = [
         '__construct',

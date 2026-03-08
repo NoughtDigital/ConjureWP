@@ -1,13 +1,17 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 test('plugin file exists', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     expect(file_exists($pluginFile))->toBeTrue();
 });
 
 test('plugin has correct headers', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
-    $pluginData = get_file_data($pluginFile, [
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
+    $pluginData = conjurewp_get_file_data($pluginFile, [
         'Name' => 'Plugin Name',
         'PluginURI' => 'Plugin URI',
         'Version' => 'Version',
@@ -20,24 +24,24 @@ test('plugin has correct headers', function () {
         'RequiresPHP' => 'Requires PHP',
     ]);
 
-    expect($pluginData['Name'])->toBe('ConjureWP - WordPress Setup Wizard');
+    expect($pluginData['Name'])->toBe('Conjure Setup Wizard');
     expect($pluginData['Version'])->toBe('1.0.0');
     expect($pluginData['TextDomain'])->toBe('conjurewp');
     expect($pluginData['RequiresPHP'])->toBe('7.4');
 });
 
 test('composer autoload file exists', function () {
-    $autoloadFile = getPluginPath('vendor/autoload.php');
+    $autoloadFile = conjurewp_test_get_plugin_path('vendor/autoload.php');
     expect(file_exists($autoloadFile))->toBeTrue();
 });
 
 test('main class file exists', function () {
-    $classFile = getPluginPath('class-conjure.php');
+    $classFile = conjurewp_test_get_plugin_path('class-conjure.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('includes directory exists with core classes', function () {
-    $includesDir = getPluginPath('includes');
+    $includesDir = conjurewp_test_get_plugin_path('includes');
     expect(is_dir($includesDir))->toBeTrue();
     
     $coreClasses = [
@@ -53,7 +57,7 @@ test('includes directory exists with core classes', function () {
     }
 });
 
-function get_file_data($file, $headers) {
+function conjurewp_get_file_data($file, $headers) {
     $file_data = file_get_contents($file);
     $file_data = str_replace("\r", "\n", $file_data);
     $all_headers = [];

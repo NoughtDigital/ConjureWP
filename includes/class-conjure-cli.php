@@ -7,7 +7,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -335,7 +335,7 @@ class Conjure_CLI {
 		if ( $progress ) {
 			add_action(
 				'wxr_importer.processed.post',
-				function() use ( $progress ) {
+				function () use ( $progress ) {
 					$progress->tick();
 				}
 			);
@@ -478,8 +478,8 @@ class Conjure_CLI {
 		$plugin_dir = Conjure_Theme_Plugins::get_theme_plugin_dir();
 
 		if ( ! $plugin_dir ) {
-			WP_CLI::warning( 'No conjurewp-plugins directory found in the current theme.' );
-			WP_CLI::line( sprintf( 'Expected location: %s/conjurewp-plugins/', get_template_directory() ) );
+			WP_CLI::warning( 'No ConjureWP-plugins directory found in the current theme.' );
+			WP_CLI::line( sprintf( 'Expected location: %s/ConjureWP-plugins/', get_template_directory() ) );
 			return;
 		}
 
@@ -487,7 +487,7 @@ class Conjure_CLI {
 
 		// Check for configuration file.
 		$config_file = trailingslashit( $plugin_dir ) . 'plugins.json';
-		
+
 		if ( ! file_exists( $config_file ) ) {
 			WP_CLI::error( 'Configuration file (plugins.json) not found in plugin directory.' );
 			return;
@@ -626,13 +626,13 @@ class Conjure_CLI {
 				}
 			} elseif ( ! empty( $plugin['external'] ) ) {
 				$response = wp_remote_head( $plugin['source'] );
-				
+
 				if ( is_wp_error( $response ) ) {
 					WP_CLI::error( sprintf( 'Failed to reach URL: %s', $response->get_error_message() ) );
 				}
 
 				$code = wp_remote_retrieve_response_code( $response );
-				
+
 				if ( 200 === $code ) {
 					WP_CLI::success( 'External URL is accessible.' );
 					$content_length = wp_remote_retrieve_header( $response, 'content-length' );
@@ -649,4 +649,3 @@ class Conjure_CLI {
 		}
 	}
 }
-

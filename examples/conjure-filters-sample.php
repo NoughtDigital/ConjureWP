@@ -1,10 +1,17 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * Available filters for extending Conjure WP.
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Inventionn LLC
  * @license   Licensed GPLv3 for Open Source Use
@@ -112,7 +119,7 @@ function prefix_conjure_import_files() {
 				),
 			),
 			'import_preview_image_url'   => 'https://www.example.com/conjure/preview_import_image1.jpg',
-			'import_notice'              => __( 'A special note for this import.', 'your-textdomain' ),
+			'import_notice'              => __( 'A special note for this import.', 'ConjureWP' ),
 			'preview_url'                => 'https://www.example.com/my-demo-1',
 		),
 		array(
@@ -127,7 +134,7 @@ function prefix_conjure_import_files() {
 				),
 			),
 			'import_preview_image_url'   => 'https://www.example.com/conjure/preview_import_image2.jpg',
-			'import_notice'              => __( 'A special note for this import.', 'your-textdomain' ),
+			'import_notice'              => __( 'A special note for this import.', 'ConjureWP' ),
 			'preview_url'                => 'https://www.example.com/my-demo-2',
 		),
 	);
@@ -158,7 +165,7 @@ function prefix_conjure_local_import_files() {
 				),
 			),
 			'import_preview_image_url'     => 'https://www.example.com/conjure/preview_import_image1.jpg',
-			'import_notice'                => __( 'After you import this demo, you will have to setup the slider separately.', 'your-textdomain' ),
+			'import_notice'                => __( 'After you import this demo, you will have to setup the slider separately.', 'ConjureWP' ),
 			'preview_url'                  => 'https://www.example.com/my-demo-1',
 		),
 		array(
@@ -173,7 +180,7 @@ function prefix_conjure_local_import_files() {
 				),
 			),
 			'import_preview_image_url'     => 'https://www.example.com/conjure/preview_import_image2.jpg',
-			'import_notice'                => __( 'A special note for this import.', 'your-textdomain' ),
+			'import_notice'                => __( 'A special note for this import.', 'ConjureWP' ),
 			'preview_url'                  => 'https://www.example.com/my-demo-2',
 		),
 	);
@@ -195,11 +202,15 @@ function prefix_conjure_after_import_setup() {
 	);
 
 	// Assign front page and posts page (blog page).
-	$front_page_id = get_page_by_title( 'Home' );
-	$blog_page_id  = get_page_by_title( 'Blog' );
+	$front_page_id = conjurewp_example_get_page_by_title( 'Home' );
+	$blog_page_id  = conjurewp_example_get_page_by_title( 'Blog' );
 
 	update_option( 'show_on_front', 'page' );
-	update_option( 'page_on_front', $front_page_id->ID );
-	update_option( 'page_for_posts', $blog_page_id->ID );
+	if ( $front_page_id ) {
+		update_option( 'page_on_front', $front_page_id->ID );
+	}
+	if ( $blog_page_id ) {
+		update_option( 'page_for_posts', $blog_page_id->ID );
+	}
 }
 add_action( 'conjure_after_all_import', 'prefix_conjure_after_import_setup' );

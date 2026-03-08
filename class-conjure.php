@@ -8,7 +8,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -474,7 +474,7 @@ class Conjure {
 	public function switch_theme() {
 		// Allow themes to disable redirect via filter (default: true).
 		$redirect_enabled = apply_filters( 'conjure_redirect_on_theme_switch_enabled', true );
-		
+
 		// Only set redirect transient if enabled and not a child theme.
 		if ( $redirect_enabled && ! is_child_theme() ) {
 			set_transient( $this->theme->template . '_conjure_redirect', 1 );
@@ -516,7 +516,7 @@ class Conjure {
 		}
 
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'conjurewp-ignore-nonce' ) ) {
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'ConjureWP-ignore-nonce' ) ) {
 			return;
 		}
 
@@ -629,7 +629,7 @@ class Conjure {
 		$step_keys = array_keys( $this->steps );
 		$default_step = ! empty( $step_keys ) ? $step_keys[0] : '';
 		$this->step = isset( $_GET['step'] ) && ! empty( $_GET['step'] ) ? sanitize_key( $_GET['step'] ) : $default_step;
-		
+
 		// Validate step exists in steps array.
 		if ( empty( $this->step ) || ! isset( $this->steps[ $this->step ] ) ) {
 			$this->logger->warning( sprintf( 'Invalid step "%s" requested, falling back to default: %s', $this->step, $default_step ) );
@@ -674,7 +674,7 @@ class Conjure {
 		wp_enqueue_script( 'conjure', trailingslashit( $this->base_url ) . $this->directory . '/assets/js/conjure' . $suffix . '.js', array( 'jquery-core', 'jquery-ui-core' ), $js_version, true );
 
 		$texts = array(
-			'something_went_wrong' => esc_html__( 'Something went wrong. Please refresh the page and try again!', 'conjurewp' ),
+			'something_went_wrong' => esc_html__( 'Something went wrong. Please refresh the page and try again!', 'ConjureWP' ),
 		);
 
 		// Localise the javascript.
@@ -719,7 +719,7 @@ class Conjure {
 
 			<?php echo sprintf( '<span class="return-to-dashboard" title="%s">%s</span>', esc_attr( $strings['return-to-dashboard'] ), esc_html( $strings['return-to-dashboard'] ) ); ?>
 
-			<?php $ignore_url = wp_nonce_url( admin_url( '?' . $this->ignore . '=true' ), 'conjurewp-ignore-nonce' ); ?>
+			<?php $ignore_url = wp_nonce_url( admin_url( '?' . $this->ignore . '=true' ), 'ConjureWP-ignore-nonce' ); ?>
 
 			<?php echo sprintf( '<a class="return-to-dashboard ignore" href="%s">%s</a>', esc_url( $ignore_url ), esc_html( $strings['ignore'] ) ); ?>
 
@@ -740,7 +740,7 @@ class Conjure {
 
 		// Get theme information.
 		$theme_name = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::get_current_theme_name() : $this->theme->name;
-		
+
 		// Always use minified files built with Vite.
 		$suffix = '.min';
 
@@ -758,20 +758,20 @@ class Conjure {
 				<div class="conjure__content--transition">
 					<?php echo wp_kses( $this->svg( array( 'icon' => 'license' ) ), $this->svg_allowed_html() ); ?>
 					
-					<h1><?php esc_html_e( 'ConjureWP License Required', 'conjurewp' ); ?></h1>
+					<h1><?php esc_html_e( 'ConjureWP License Required', 'ConjureWP' ); ?></h1>
 					
 					<p>
 						<?php
 						printf(
 							/* translators: %s: Theme name */
-							esc_html__( 'ConjureWP is free for open-source themes, but requires a license for commercial/premium themes like %s.', 'conjurewp' ),
+							esc_html__( 'ConjureWP is free for open-source themes, but requires a license for commercial/premium themes like %s.', 'ConjureWP' ),
 							esc_html( $theme_name )
 						);
 						?>
 					</p>
 					
 					<p>
-						<?php esc_html_e( 'To use ConjureWP with your premium theme, please purchase a license or switch to an open-source theme.', 'conjurewp' ); ?>
+						<?php esc_html_e( 'To use ConjureWP with your premium theme, please purchase a license or switch to an open-source theme.', 'ConjureWP' ); ?>
 					</p>
 
 				<?php if ( function_exists( 'con_fs' ) ) : ?>
@@ -780,19 +780,19 @@ class Conjure {
 							<div class="conjure__upgrade-actions" style="margin-top: 30px;">
 								<?php if ( ! $fs->is_registered() ) : ?>
 									<a href="<?php echo esc_url( $fs->get_activation_url() ); ?>" class="conjure__button conjure__button--next">
-										<?php esc_html_e( 'Get Started', 'conjurewp' ); ?>
+										<?php esc_html_e( 'Get Started', 'ConjureWP' ); ?>
 									</a>
 								<?php elseif ( ! $fs->has_active_valid_license() ) : ?>
 									<a href="<?php echo esc_url( $fs->get_upgrade_url() ); ?>" class="conjure__button conjure__button--next">
-										<?php esc_html_e( 'Upgrade Now', 'conjurewp' ); ?>
+										<?php esc_html_e( 'Upgrade Now', 'ConjureWP' ); ?>
 									</a>
 								<?php endif; ?>
 							</div>
 						<?php endif; ?>
 					<?php else : ?>
 						<p style="margin-top: 20px; color: #d63638;">
-							<strong><?php esc_html_e( 'Note:', 'conjurewp' ); ?></strong>
-							<?php esc_html_e( 'Freemius SDK is not properly configured. Please contact the plugin developer.', 'conjurewp' ); ?>
+							<strong><?php esc_html_e( 'Note:', 'ConjureWP' ); ?></strong>
+							<?php esc_html_e( 'Freemius SDK is not properly configured. Please contact the plugin developer.', 'ConjureWP' ); ?>
 						</p>
 					<?php endif; ?>
 				</div>
@@ -876,14 +876,14 @@ class Conjure {
 
 		$this->steps = array(
 			'welcome' => array(
-				'name'    => esc_html__( 'Welcome', 'conjurewp' ),
+				'name'    => esc_html__( 'Welcome', 'ConjureWP' ),
 				'view'    => array( $this, 'welcome' ),
 				'handler' => array( $this, 'welcome_handler' ),
 			),
 		);
 
 		$this->steps['child'] = array(
-			'name' => esc_html__( 'Child', 'conjurewp' ),
+			'name' => esc_html__( 'Child', 'ConjureWP' ),
 			'view' => array( $this, 'child' ),
 		);
 
@@ -892,7 +892,7 @@ class Conjure {
 
 		if ( $this->license_step_enabled && ! $has_lifetime_integration ) {
 			$this->steps['license'] = array(
-				'name' => esc_html__( 'License', 'conjurewp' ),
+				'name' => esc_html__( 'License', 'ConjureWP' ),
 				'view' => array( $this, 'license' ),
 			);
 		}
@@ -902,23 +902,24 @@ class Conjure {
 
 		if ( $can_auto_install ) {
 			$this->steps['plugins'] = array(
-				'name' => esc_html__( 'Plugins', 'conjurewp' ),
+				'name' => esc_html__( 'Plugins', 'ConjureWP' ),
 				'view' => array( $this, 'plugins' ),
 			);
 		}
 
 		// Content importer step - either with pre-configured files or manual upload.
 		$this->steps['content'] = array(
-			'name' => esc_html__( 'Content', 'conjurewp' ),
+			'name' => esc_html__( 'Content', 'ConjureWP' ),
 			'view' => array( $this, 'content' ),
 		);
 
 		$this->steps['ready'] = array(
-			'name' => esc_html__( 'Ready', 'conjurewp' ),
+			'name' => esc_html__( 'Ready', 'ConjureWP' ),
 			'view' => array( $this, 'ready' ),
 		);
 
 		// Allow theme-specific customisation (backward compatibility).
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Legacy theme-specific dynamic hook for backward compatibility.
 		$this->steps = apply_filters( $this->theme->template . '_conjure_steps', $this->steps );
 
 		// Allow generic customisation for all themes (recommended for theme developers).
@@ -992,7 +993,7 @@ class Conjure {
 		</footer>
 
 		<?php
-		$this->logger->debug( __( 'The welcome step has been displayed', 'conjurewp' ) );
+		$this->logger->debug( __( 'The welcome step has been displayed', 'ConjureWP' ) );
 	}
 
 	/**
@@ -1010,10 +1011,10 @@ class Conjure {
 	 * Theme EDD license step.
 	 */
 	public function license() {
-		$this->logger->debug( __( 'License step view method called', 'conjurewp' ) );
+		$this->logger->debug( __( 'License step view method called', 'ConjureWP' ) );
 
 		$is_theme_registered = $this->is_theme_registered();
-		
+
 		// Use Freemius account URL if available, otherwise use configured URL.
 		$action_url = $this->theme_license_help_url;
 		if ( function_exists( 'con_fs' ) ) {
@@ -1025,7 +1026,7 @@ class Conjure {
 				}
 			}
 		}
-		
+
 		$required            = $this->license_required;
 
 		$is_theme_registered_class = ( $is_theme_registered ) ? ' is-registered' : null;
@@ -1065,12 +1066,12 @@ class Conjure {
 				<?php
 				// Determine which license system is being used for better user messaging.
 				$license_system = 'EDD';
-				$license_system_name = __( 'Theme License', 'conjurewp' );
+				$license_system_name = __( 'Theme License', 'ConjureWP' );
 				if ( function_exists( 'con_fs' ) ) {
 					$fs = con_fs();
 					if ( $fs && is_object( $fs ) && method_exists( $fs, 'is_registered' ) ) {
 						$license_system = 'Freemius';
-						$license_system_name = __( 'ConjureWP License', 'conjurewp' );
+						$license_system_name = __( 'ConjureWP License', 'ConjureWP' );
 					}
 				}
 				?>
@@ -1078,12 +1079,12 @@ class Conjure {
 					<label for="license-key"><?php echo esc_html( $label ); ?></label>
 					<?php if ( 'Freemius' === $license_system ) : ?>
 						<p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 10px;">
-							<?php esc_html_e( 'Enter your ConjureWP license key to unlock premium features.', 'conjurewp' ); ?>
+							<?php esc_html_e( 'Enter your ConjureWP license key to unlock premium features.', 'ConjureWP' ); ?>
 						</p>
 					<?php endif; ?>
 
 					<div class="conjure__content--license-key-wrapper">
-						<input type="text" id="license-key" class="js-license-key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="<?php echo esc_attr( __( 'Enter your license key', 'conjurewp' ) ); ?>">
+						<input type="text" id="license-key" class="js-license-key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="<?php echo esc_attr( __( 'Enter your license key', 'ConjureWP' ) ); ?>">
 						<?php if ( ! empty( $action_url ) ) : ?>
 							<a href="<?php echo esc_url( $action_url ); ?>" alt="<?php echo esc_attr( $action ); ?>" target="_blank">
 								<span class="hint--top" aria-label="<?php echo esc_attr( $action ); ?>">
@@ -1117,7 +1118,7 @@ class Conjure {
 			<?php wp_nonce_field( 'conjure' ); ?>
 		</footer>
 		<?php
-		$this->logger->debug( __( 'The license activation step has been displayed', 'conjurewp' ) );
+		$this->logger->debug( __( 'The license activation step has been displayed', 'ConjureWP' ) );
 	}
 
 
@@ -1230,7 +1231,13 @@ class Conjure {
 		// Sanitise POST keys for filesystem credentials.
 		$fields = array();
 		if ( ! empty( $_POST ) ) {
-			foreach ( $_POST as $key => $value ) {
+			$nonce = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+
+			if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'conjure' ) ) {
+				return true;
+			}
+
+			foreach ( $_POST as $key => $unused_value ) {
 				$fields[] = sanitize_text_field( wp_unslash( $key ) );
 			}
 		}
@@ -1307,13 +1314,13 @@ class Conjure {
 		}
 
 		if ( $show_demo_selector && count( $this->import_files ) > 1 ) :
-		?>
+			?>
 			<div class="conjure__demo-selector">
 				<h3 style="margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
-					<?php echo esc_html__( 'Select your demo:', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Select your demo:', 'ConjureWP' ); ?>
 				</h3>
 				<p class="conjure__demo-grid-description">
-					<?php echo esc_html__( 'Each demo has different plugin requirements. Choose your demo to see required and recommended plugins.', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Each demo has different plugin requirements. Choose your demo to see required and recommended plugins.', 'ConjureWP' ); ?>
 				</p>
 				<div class="conjure__demo-grid">
 					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
@@ -1349,47 +1356,49 @@ class Conjure {
 
 				<ul class="conjure__drawer conjure__drawer--install-plugins">
 
-			<?php if ( ! empty( $required_plugins ) ) : ?>
+				<?php if ( ! empty( $required_plugins ) ) : ?>
 		<li class="plugin-section-header plugin-section-header--required">
-			<?php echo esc_html__( 'Required Plugins', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Required Plugins', 'ConjureWP' ); ?>
 			<span class="plugin-section-header__subtitle">
-				<?php echo esc_html__( 'These plugins are essential for the demo to work correctly', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'These plugins are essential for the demo to work correctly', 'ConjureWP' ); ?>
 			</span>
 		</li>
-		<?php foreach ( $required_plugins as $slug => $plugin ) :
-			$is_active = ! empty( $plugin['is_active'] );
-		?>
+					<?php
+					foreach ( $required_plugins as $slug => $plugin ) :
+						$is_active = ! empty( $plugin['is_active'] );
+						?>
 			<li data-slug="<?php echo esc_attr( $slug ); ?>" class="conjure-plugin-row conjure-plugin-row--required<?php echo $is_active ? ' plugin-active' : ''; ?>">
 				<!-- Hidden input ensures it's always submitted (no checkbox for required) -->
 				<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
 
 				<span class="conjure-plugin-row__indicator" aria-hidden="true">
-					<?php echo $is_active ? '✓' : '▸'; ?>
+						<?php echo $is_active ? '✓' : '▸'; ?>
 				</span>
 
 				<span class="conjure-plugin-row__title"><?php echo esc_html( $plugin['name'] ); ?></span>
 
-				<?php if ( $is_active ) : ?>
+						<?php if ( $is_active ) : ?>
 					<span class="badge badge--success">
-						<?php esc_html_e( 'Installed', 'conjurewp' ); ?>
+							<?php esc_html_e( 'Installed', 'ConjureWP' ); ?>
 					</span>
 				<?php endif; ?>
 			</li>
-		<?php endforeach; ?>
+					<?php endforeach; ?>
 		<?php endif; ?>
 
-	<?php if ( ! empty( $recommended_plugins ) ) : ?>
+				<?php if ( ! empty( $recommended_plugins ) ) : ?>
 		<li class="plugin-section-header plugin-section-header--recommended">
-			<?php echo esc_html__( 'Recommended Plugins', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Recommended Plugins', 'ConjureWP' ); ?>
 			<span class="plugin-section-header__subtitle">
-				<?php echo esc_html__( 'Optional plugins that enhance the demo (can be unchecked)', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Optional plugins that enhance the demo (can be unchecked)', 'ConjureWP' ); ?>
 			</span>
 		</li>
-	<?php foreach ( $recommended_plugins as $slug => $plugin ) :
-		$is_active = ! empty( $plugin['is_active'] );
-	?>
+					<?php
+					foreach ( $recommended_plugins as $slug => $plugin ) :
+						$is_active = ! empty( $plugin['is_active'] );
+						?>
 		<li data-slug="<?php echo esc_attr( $slug ); ?>" class="conjure-plugin-row<?php echo $is_active ? ' plugin-active conjure-plugin-row--installed' : ''; ?>">
-			<?php if ( $is_active ) : ?>
+						<?php if ( $is_active ) : ?>
 				<input type="hidden" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" value="1">
 			<?php endif; ?>
 			<input type="checkbox" name="default_plugins[<?php echo esc_attr( $slug ); ?>]" class="checkbox" id="default_plugins_<?php echo esc_attr( $slug ); ?>" value="1" <?php echo $is_active ? 'checked disabled="disabled"' : 'checked'; ?>>
@@ -1398,14 +1407,14 @@ class Conjure {
 				<i></i>
 				<span class="conjure-plugin-row__title"><?php echo esc_html( $plugin['name'] ); ?></span>
 				
-				<?php if ( $is_active ) : ?>
+						<?php if ( $is_active ) : ?>
 					<span class="badge badge--success">
-						<?php esc_html_e( 'Installed', 'conjurewp' ); ?>
+							<?php esc_html_e( 'Installed', 'ConjureWP' ); ?>
 					</span>
 				<?php endif; ?>
 			</label>
 		</li>
-			<?php endforeach; ?>
+							<?php endforeach; ?>
 				<?php endif; ?>
 
 				</ul>
@@ -1428,7 +1437,7 @@ class Conjure {
 		</form>
 
 		<?php
-		$this->logger->debug( __( 'The plugin installation step has been displayed', 'conjurewp' ) );
+		$this->logger->debug( __( 'The plugin installation step has been displayed', 'ConjureWP' ) );
 	}
 
 	/**
@@ -1437,9 +1446,9 @@ class Conjure {
 	public function content() {
 		// Check if any demo files are registered.
 		if ( empty( $this->import_files ) ) {
-			$this->logger->error( 
+			$this->logger->error(
 				'No demo import files are registered! The conjure_import_files filter returned empty.',
-				array( 
+				array(
 					'is_manual_upload_mode' => $this->is_manual_upload_mode(),
 				)
 			);
@@ -1447,7 +1456,7 @@ class Conjure {
 
 		// Get the selected demo index from transient or default to 0.
 		$selected_demo_index = get_transient( 'conjure_selected_demo_index' );
-		
+
 		// If no demo is selected or invalid, use the first demo.
 		if ( false === $selected_demo_index || ! isset( $this->import_files[ $selected_demo_index ] ) ) {
 			$selected_demo_index = 0;
@@ -1457,7 +1466,7 @@ class Conjure {
 			}
 		}
 
-		$this->logger->debug( 
+		$this->logger->debug(
 			'Content step loading',
 			array(
 				'selected_demo_index' => $selected_demo_index,
@@ -1470,16 +1479,16 @@ class Conjure {
 
 		// If import info is false or empty, log error and provide fallback.
 		if ( false === $import_info || empty( $import_info ) ) {
-			$this->logger->error( 
+			$this->logger->error(
 				'Failed to load import data info for content step',
-				array( 
+				array(
 					'selected_index' => $selected_demo_index,
 					'import_files_count' => count( $this->import_files ),
 					'import_files_empty' => empty( $this->import_files ),
 					'is_manual_upload_mode' => $this->is_manual_upload_mode(),
 				)
 			);
-			
+
 			// Check if we're in manual upload mode.
 			if ( ! $this->is_manual_upload_mode() ) {
 				// Provide a minimal fallback to prevent blank screen.
@@ -1503,7 +1512,7 @@ class Conjure {
 		$import    = $strings['btn-import'];
 
 		$multi_import = ( 1 < count( $this->import_files ) ) ? 'is-multi-import' : null;
-		
+
 		// Initialize server health checker.
 		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-server-health.php';
 		$server_health = new Conjure_Server_Health();
@@ -1526,16 +1535,16 @@ class Conjure {
 		// PREMIUM ONLY: Show upgrade notice for automatic plugin installation.
 		// In free version (WordPress.org), this entire block is removed.
 		$can_auto_install = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_auto_install_plugins() : false;
-		
+
 		if ( ! $can_auto_install && function_exists( 'con_fs' ) && con_fs() ) :
 			?>
 			<div style="background: #f0f6fc; border-left: 4px solid #0073aa; padding: 15px; margin: 20px 0; border-radius: 4px;">
 				<p style="margin: 0; font-size: 14px; line-height: 1.6;">
-					<?php 
+					<?php
 					printf(
 						/* translators: %s: Link to upgrade page */
-						esc_html__( 'Want to save time? %s for automatic plugin installation.', 'conjurewp' ),
-						'<a href="' . esc_url( con_fs()->get_upgrade_url() ) . '" style="color: #0073aa; font-weight: 600; text-decoration: underline;">' . esc_html__( 'Upgrade to Premium', 'conjurewp' ) . '</a>'
+						esc_html__( 'Want to save time? %s for automatic plugin installation.', 'ConjureWP' ),
+						'<a href="' . esc_url( con_fs()->get_upgrade_url() ) . '" style="color: #0073aa; font-weight: 600; text-decoration: underline;">' . esc_html__( 'Upgrade to Premium', 'ConjureWP' ) . '</a>'
 					);
 					?>
 				</p>
@@ -1543,13 +1552,13 @@ class Conjure {
 			<?php
 		endif;
 		// @freemius:premium-end
-		
+
 		// Display server health check.
-		echo $server_health->get_health_check_styles(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo wp_kses_post( $server_health->get_health_check_styles() );
 		$server_health->render_complete(
 			array(
 				'show_title'       => true,
-				'title'            => __( 'Server Health Check', 'conjurewp' ),
+				'title'            => __( 'Server Health Check', 'ConjureWP' ),
 				'requirements_url' => '',
 				'theme_name'       => $this->theme->name,
 			)
@@ -1560,10 +1569,10 @@ class Conjure {
 
 			<div class="conjure__demo-selector">
 				<h3 style="margin-bottom: 0.5em; font-weight: 600; font-size: 1.1em;">
-					<?php echo esc_html__( 'Select your demo:', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Select your demo:', 'ConjureWP' ); ?>
 				</h3>
 				<p class="conjure__demo-grid-description">
-					<?php echo esc_html__( 'Choose which demo content to import.', 'conjurewp' ); ?>
+					<?php echo esc_html__( 'Choose which demo content to import.', 'ConjureWP' ); ?>
 				</p>
 				<div class="conjure__demo-grid">
 					<?php foreach ( $this->import_files as $index => $import_file ) : ?>
@@ -1597,13 +1606,13 @@ class Conjure {
 			<?php if ( $this->is_manual_upload_mode() ) : ?>
 
 				<ul class="conjure__drawer conjure__drawer--import-content conjure__drawer--upload js-conjure-drawer-import-content">
-					<?php echo $this->get_manual_upload_html(); ?>
+					<?php echo wp_kses_post( $this->get_manual_upload_html() ); ?>
 				</ul>
 
 			<?php else : ?>
 
 			<ul class="conjure__drawer conjure__drawer--import-content conjure__drawer--upload js-conjure-drawer-import-content">
-				<?php 
+				<?php
 				// Add health telemetry at the top of the drawer.
 				// Hook at line 2574 area for extensibility via conjure_health_telemetry_in_drawer filter.
 				$health_telemetry_html = '';
@@ -1626,21 +1635,21 @@ class Conjure {
 							<li>Register them using the <code>conjure_import_files</code> filter</li>
 						</ol>
 						<br>
-						See: <code>conjurewp-config.php</code> or <code>examples/</code> directory for examples.
+						See: <code>ConjureWP-config.php</code> or <code>examples/</code> directory for examples.
 					</li>
 					<?php
 				} else {
 					$import_steps_html = $this->get_import_steps_html( $import_info );
-					
+
 					// Debug: Log if HTML is empty.
 					if ( empty( trim( $import_steps_html ) ) ) {
-						$this->logger->error( 
+						$this->logger->error(
 							'Import steps HTML is empty!',
 							array(
 								'import_info' => $import_info,
 								'selected_demo_index' => $selected_demo_index,
 								'import_files_count' => count( $this->import_files ),
-								'import_files_data' => ! empty( $this->import_files[$selected_demo_index] ) ? array_keys( $this->import_files[$selected_demo_index] ) : 'index not set',
+								'import_files_data' => ! empty( $this->import_files[ $selected_demo_index ] ) ? array_keys( $this->import_files[ $selected_demo_index ] ) : 'index not set',
 							)
 						);
 						?>
@@ -1656,7 +1665,7 @@ class Conjure {
 						</li>
 						<?php
 					} else {
-						echo $import_steps_html;
+						echo wp_kses_post( $import_steps_html );
 					}
 				}
 				?>
@@ -1685,7 +1694,7 @@ class Conjure {
 		</form>
 
 		<?php
-		$this->logger->debug( __( 'The content import step has been displayed', 'conjurewp' ) );
+		$this->logger->debug( __( 'The content import step has been displayed', 'ConjureWP' ) );
 	}
 
 
@@ -1742,7 +1751,7 @@ class Conjure {
 
 			<h1><?php echo esc_html( sprintf( $header, $theme ) ); ?></h1>
 
-			<p><?php wp_kses( printf( $paragraph, $author ), $allowed_html_array ); ?></p>
+			<p><?php echo wp_kses( sprintf( $paragraph, esc_html( $author ) ), $allowed_html_array ); ?></p>
 
 		</div>
 
@@ -1765,7 +1774,7 @@ class Conjure {
 		</footer>
 
 		<?php
-		$this->logger->debug( __( 'The final step has been displayed', 'conjurewp' ) );
+		$this->logger->debug( __( 'The final step has been displayed', 'ConjureWP' ) );
 	}
 
 	/**
@@ -1793,12 +1802,12 @@ class Conjure {
 		// Get demo-specific plugins if demo index provided.
 		if ( null !== $demo_index ) {
 			$demo_plugins = $this->demo_plugin_manager->get_demo_plugins_with_status( $demo_index, $this->import_files );
-			
+
 			if ( ! empty( $demo_plugins['all'] ) ) {
 				$this->logger->info( 'Using demo-specific plugins for demo index: ' . $demo_index );
 				return $demo_plugins;
 			}
-			
+
 			$this->logger->debug( 'No demo-specific plugins found for demo index: ' . $demo_index );
 		}
 
@@ -1817,7 +1826,7 @@ class Conjure {
 		if ( ! current_user_can( 'switch_themes' ) ) {
 			wp_send_json_error(
 				array(
-					'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ),
+					'message' => esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ),
 				)
 			);
 		}
@@ -1840,7 +1849,7 @@ class Conjure {
 		if ( ! file_exists( $path ) ) {
 
 			if ( ! WP_Filesystem() ) {
-				$error_message = __( 'Unable to initialise the WordPress filesystem. Cannot create child theme.', 'conjurewp' );
+				$error_message = __( 'Unable to initialise the WordPress filesystem. Cannot create child theme.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -1853,7 +1862,7 @@ class Conjure {
 			global $wp_filesystem;
 
 			if ( ! $wp_filesystem ) {
-				$error_message = __( 'WordPress filesystem is not available. Cannot create child theme.', 'conjurewp' );
+				$error_message = __( 'WordPress filesystem is not available. Cannot create child theme.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -1867,7 +1876,7 @@ class Conjure {
 			if ( ! $mkdir_result ) {
 				$error_message = sprintf(
 					/* translators: %s: directory path */
-					__( 'Unable to create child theme directory: %s', 'conjurewp' ),
+					__( 'Unable to create child theme directory: %s', 'ConjureWP' ),
 					$path
 				);
 				$this->logger->error( $error_message );
@@ -1881,7 +1890,7 @@ class Conjure {
 
 			$style_result = $wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $parent_slug, $parent_theme->name, $parent_theme->author, $parent_theme->version ) );
 			if ( ! $style_result ) {
-				$error_message = __( 'Unable to create child theme style.css file.', 'conjurewp' );
+				$error_message = __( 'Unable to create child theme style.css file.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -1893,7 +1902,7 @@ class Conjure {
 
 			$functions_result = $wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $parent_slug ) );
 			if ( ! $functions_result ) {
-				$error_message = __( 'Unable to create child theme functions.php file.', 'conjurewp' );
+				$error_message = __( 'Unable to create child theme functions.php file.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -1956,7 +1965,7 @@ class Conjure {
 			wp_send_json(
 				array(
 					'success' => false,
-					'message' => esc_html__( 'Yikes! The license activation failed. Please try again or contact support.', 'conjurewp' ),
+					'message' => esc_html__( 'Yikes! The license activation failed. Please try again or contact support.', 'ConjureWP' ),
 				)
 			);
 		}
@@ -1965,13 +1974,13 @@ class Conjure {
 			wp_send_json(
 				array(
 					'success' => false,
-					'message' => esc_html__( 'Please add your license key before attempting to activate one.', 'conjurewp' ),
+					'message' => esc_html__( 'Please add your license key before attempting to activate one.', 'ConjureWP' ),
 				)
 			);
 		}
 
 		$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ) );
-		
+
 		// Ensure Freemius integration file is loaded.
 		if ( ! function_exists( 'con_fs' ) && file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
 			require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
@@ -1998,7 +2007,7 @@ class Conjure {
 			$result = $this->edd_activate_license( $license_key );
 		}
 
-		$this->logger->debug( __( 'The license activation was performed with the following results', 'conjurewp' ), $result );
+		$this->logger->debug( __( 'The license activation was performed with the following results', 'ConjureWP' ), $result );
 
 		// If activation succeeded, re-evaluate steps and provide the correct next step URL.
 		// This is needed because activating a license may unlock new steps (e.g. 'plugins').
@@ -2027,7 +2036,7 @@ class Conjure {
 		if ( ! function_exists( 'con_fs' ) ) {
 			return array(
 				'success' => false,
-				'message' => esc_html__( 'Freemius SDK is not available.', 'conjurewp' ),
+				'message' => esc_html__( 'Freemius SDK is not available.', 'ConjureWP' ),
 			);
 		}
 
@@ -2035,7 +2044,7 @@ class Conjure {
 		if ( ! $fs || ! is_object( $fs ) ) {
 			return array(
 				'success' => false,
-				'message' => esc_html__( 'Freemius SDK is not initialized.', 'conjurewp' ),
+				'message' => esc_html__( 'Freemius SDK is not initialized.', 'ConjureWP' ),
 			);
 		}
 
@@ -2044,7 +2053,7 @@ class Conjure {
 		// Use Freemius SDK's activate_license method if available (preferred method).
 		if ( method_exists( $fs, 'activate_license' ) ) {
 			$result = $fs->activate_license( $license_key );
-			
+
 			$this->logger->debug( 'Freemius activate_license result', array( 'result' => $result ) );
 
 			if ( is_object( $result ) && isset( $result->error ) ) {
@@ -2055,9 +2064,9 @@ class Conjure {
 				} elseif ( is_object( $result->error ) && isset( $result->error->message ) ) {
 					$error_message = $result->error->message;
 				}
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			} else {
 				// Sync license and verify activation.
 				$this->sync_freemius_license( $fs );
@@ -2067,13 +2076,13 @@ class Conjure {
 					$theme = $this->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$this->mark_step_completed( 'license' );
 				} else {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 				}
 			}
 		} elseif ( $fs->is_registered() ) {
@@ -2082,7 +2091,7 @@ class Conjure {
 			if ( ! $api ) {
 				return array(
 					'success' => false,
-					'message' => esc_html__( 'Unable to connect to Freemius API.', 'conjurewp' ),
+					'message' => esc_html__( 'Unable to connect to Freemius API.', 'ConjureWP' ),
 				);
 			}
 
@@ -2107,13 +2116,13 @@ class Conjure {
 					$theme = $this->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$this->mark_step_completed( 'license' );
 				} else {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 				}
 			} else {
 				// Handle API errors.
@@ -2127,9 +2136,9 @@ class Conjure {
 					}
 				}
 
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			}
 		} else {
 			// User is not registered - need to register first via opt_in.
@@ -2149,7 +2158,14 @@ class Conjure {
 				null // license_owner_id
 			);
 
-			$this->logger->debug( 'Freemius opt_in result', array( 'result' => $next_page, 'type' => gettype( $next_page ), 'is_registered' => $fs->is_registered() ) );
+			$this->logger->debug(
+				'Freemius opt_in result',
+				array(
+					'result' => $next_page,
+					'type' => gettype( $next_page ),
+					'is_registered' => $fs->is_registered(),
+				)
+			);
 
 			// Check for errors in the response.
 			if ( is_object( $next_page ) && isset( $next_page->error ) ) {
@@ -2160,38 +2176,41 @@ class Conjure {
 				} elseif ( is_object( $next_page->error ) && isset( $next_page->error->message ) ) {
 					$error_message = $next_page->error->message;
 				}
-				$message = ! empty( $error_message ) 
+				$message = ! empty( $error_message )
 					? esc_html( $error_message )
-					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					: esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 			} else {
 				// opt_in with redirect=false completed. Now check if license was activated successfully.
 				// When redirect is false, opt_in returns a URL string (not an error).
 				// We need to sync and check if the user is now registered with a valid license.
 				$this->sync_freemius_license( $fs );
-				
+
 				// Check if user is now registered and has active license.
 				$is_registered = $fs->is_registered();
 				$has_license = $this->freemius_has_active_license( $fs );
-				
-				$this->logger->debug( 'After opt_in sync check', array( 
-					'is_registered' => $is_registered,
-					'has_license' => $has_license 
-				) );
+
+				$this->logger->debug(
+					'After opt_in sync check',
+					array(
+						'is_registered' => $is_registered,
+						'has_license' => $has_license,
+					)
+				);
 
 				if ( ! $is_registered ) {
 					$success = false;
-					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'Registration failed. Please verify your license key and try again.', 'ConjureWP' );
 					$this->logger->warning( 'User not registered after opt_in' );
 				} elseif ( ! $has_license ) {
 					$success = false;
-					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'conjurewp' );
+					$message = esc_html__( 'License activation failed. Please verify your license key and try again.', 'ConjureWP' );
 					$this->logger->warning( 'License activation failed after opt_in', array( 'is_registered' => $is_registered ) );
 				} else {
 					// Success - user is now registered and license is activated.
 					$theme = $this->theme->get( 'Name' );
 					$message = sprintf(
 						/* translators: %s: Theme name */
-						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'conjurewp' ),
+						esc_html__( 'Your ConjureWP license has been activated successfully! You can now use premium features with %s.', 'ConjureWP' ),
 						$theme
 					);
 					$success = true;
@@ -2267,29 +2286,35 @@ class Conjure {
 		// Make sure the response came back okay.
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
 			$success = false;
-			
+
 			if ( is_wp_error( $response ) ) {
 				$error_message = $response->get_error_message();
 				$error_code = $response->get_error_code();
-				$this->logger->error( 'EDD license activation HTTP error', array(
-					'error_code' => $error_code,
-					'error_message' => $error_message
-				) );
+				$this->logger->error(
+					'EDD license activation HTTP error',
+					array(
+						'error_code' => $error_code,
+						'error_message' => $error_message,
+					)
+				);
 				$message = sprintf(
 					/* translators: %s: Error message */
-					esc_html__( 'Connection error: %s', 'conjurewp' ),
+					esc_html__( 'Connection error: %s', 'ConjureWP' ),
 					esc_html( $error_message )
 				);
 			} else {
 				$response_code = wp_remote_retrieve_response_code( $response );
 				$response_body = wp_remote_retrieve_body( $response );
-				$this->logger->error( 'EDD license activation failed', array(
-					'response_code' => $response_code,
-					'response_body' => substr( $response_body, 0, 500 )
-				) );
+				$this->logger->error(
+					'EDD license activation failed',
+					array(
+						'response_code' => $response_code,
+						'response_body' => substr( $response_body, 0, 500 ),
+					)
+				);
 				$message = sprintf(
 					/* translators: %d: HTTP response code */
-					esc_html__( 'Server returned error code %d. Please check your license key and try again.', 'conjurewp' ),
+					esc_html__( 'Server returned error code %d. Please check your license key and try again.', 'ConjureWP' ),
 					$response_code
 				);
 			}
@@ -2304,35 +2329,35 @@ class Conjure {
 					case 'expired':
 						$message = sprintf(
 						/* translators: Expiration date */
-							esc_html__( 'Your license key expired on %s.', 'conjurewp' ),
+							esc_html__( 'Your license key expired on %s.', 'ConjureWP' ),
 							date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, time() ) )
 						);
 						break;
 
 					case 'revoked':
-						$message = esc_html__( 'Your license key has been disabled.', 'conjurewp' );
+						$message = esc_html__( 'Your license key has been disabled.', 'ConjureWP' );
 						break;
 
 					case 'missing':
-						$message = esc_html__( 'This appears to be an invalid license key. Please try again or contact support.', 'conjurewp' );
+						$message = esc_html__( 'This appears to be an invalid license key. Please try again or contact support.', 'ConjureWP' );
 						break;
 
 					case 'invalid':
 					case 'site_inactive':
-						$message = esc_html__( 'Your license is not active for this URL.', 'conjurewp' );
+						$message = esc_html__( 'Your license is not active for this URL.', 'ConjureWP' );
 						break;
 
 					case 'item_name_mismatch':
 						/* translators: EDD Item Name */
-						$message = sprintf( esc_html__( 'This appears to be an invalid license key for %s.', 'conjurewp' ), $this->edd_item_name );
+						$message = sprintf( esc_html__( 'This appears to be an invalid license key for %s.', 'ConjureWP' ), $this->edd_item_name );
 						break;
 
 					case 'no_activations_left':
-						$message = esc_html__( 'Your license key has reached its activation limit.', 'conjurewp' );
+						$message = esc_html__( 'Your license key has reached its activation limit.', 'ConjureWP' );
 						break;
 
 					default:
-						$message = esc_html__( 'An error occurred, please try again.', 'conjurewp' );
+						$message = esc_html__( 'An error occurred, please try again.', 'ConjureWP' );
 						break;
 				}
 			} else {
@@ -2373,10 +2398,11 @@ class Conjure {
 		if ( 'https' !== wp_parse_url( $api_url, PHP_URL_SCHEME ) ) {
 			return new WP_Error(
 				'insecure_api_url',
-				__( 'EDD API URL must use HTTPS protocol for security.', 'conjurewp' )
+				__( 'EDD API URL must use HTTPS protocol for security.', 'ConjureWP' )
 			);
 		}
 
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party EDD compatibility hook.
 		$verify_ssl = (bool) apply_filters( 'edd_sl_api_request_verify_ssl', true );
 
 		$response = wp_remote_post(
@@ -2436,7 +2462,7 @@ class Conjure {
 		// Let's remove the tabs so that it displays nicely.
 		$output = trim( preg_replace( '/\t+/', '', $output ) );
 
-		$this->logger->debug( __( 'The child theme functions.php content was generated', 'conjurewp' ) );
+		$this->logger->debug( __( 'The child theme functions.php content was generated', 'ConjureWP' ) );
 
 		// Filterable return.
 		return apply_filters( 'conjure_generate_child_functions_php', $output, $slug );
@@ -2465,7 +2491,7 @@ class Conjure {
 		// Let's remove the tabs so that it displays nicely.
 		$output = trim( preg_replace( '/\t+/', '', $output ) );
 
-		$this->logger->debug( __( 'The child theme style.css content was generated', 'conjurewp' ) );
+		$this->logger->debug( __( 'The child theme style.css content was generated', 'ConjureWP' ) );
 
 		return apply_filters( 'conjure_generate_child_style_css', $output, $slug, $parent_theme_name, $version );
 	}
@@ -2499,9 +2525,9 @@ class Conjure {
 		if ( ! empty( $screenshot ) && file_exists( $screenshot ) ) {
 			$copied = copy( $screenshot, $path . '/screenshot.' . $screenshot_ext );
 
-			$this->logger->debug( __( 'The child theme screenshot was copied to the child theme, with the following result', 'conjurewp' ), array( 'copied' => $copied ) );
+			$this->logger->debug( __( 'The child theme screenshot was copied to the child theme, with the following result', 'ConjureWP' ), array( 'copied' => $copied ) );
 		} else {
-			$this->logger->debug( __( 'The child theme screenshot was not generated, because of these results', 'conjurewp' ), array( 'screenshot' => $screenshot ) );
+			$this->logger->debug( __( 'The child theme screenshot was not generated, because of these results', 'ConjureWP' ), array( 'screenshot' => $screenshot ) );
 		}
 	}
 
@@ -2513,23 +2539,29 @@ class Conjure {
 	public function _ajax_install_plugin() {
 		// Verify nonce and check permissions.
 		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array(
-				'message' => esc_html__( 'Security check failed.', 'conjurewp' ),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Security check failed.', 'ConjureWP' ),
+				)
+			);
 		}
 
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_send_json_error( array(
-				'message' => esc_html__( 'You do not have permission to install plugins.', 'conjurewp' ),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'You do not have permission to install plugins.', 'ConjureWP' ),
+				)
+			);
 		}
 
 		$slug = isset( $_POST['slug'] ) ? sanitize_key( $_POST['slug'] ) : '';
 
 		if ( empty( $slug ) ) {
-			wp_send_json_error( array(
-				'message' => esc_html__( 'Plugin slug not provided.', 'conjurewp' ),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Plugin slug not provided.', 'ConjureWP' ),
+				)
+			);
 		}
 
 		$installer = $this->demo_plugin_manager->get_installer();
@@ -2540,11 +2572,13 @@ class Conjure {
 		$result = $installer->install_and_activate( $slug );
 
 		if ( is_wp_error( $result ) ) {
-			$this->logger->error( "Plugin installation failed: " . $result->get_error_message() );
+			$this->logger->error( 'Plugin installation failed: ' . $result->get_error_message() );
 
-			wp_send_json_error( array(
-				'message' => $result->get_error_message(),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => $result->get_error_message(),
+				)
+			);
 		}
 
 		$this->logger->info( "Successfully installed and activated plugin: {$slug}" );
@@ -2562,21 +2596,25 @@ class Conjure {
 
 			$this->logger->info( 'All plugins installed and activated, step marked as complete' );
 
-			wp_send_json_success( array(
-				'message'   => esc_html__( 'All plugins installed successfully!', 'conjurewp' ),
-				'done'      => true,
-				'completed' => true,
-			) );
+			wp_send_json_success(
+				array(
+					'message'   => esc_html__( 'All plugins installed successfully!', 'ConjureWP' ),
+					'done'      => true,
+					'completed' => true,
+				)
+			);
 		}
 
-		wp_send_json_success( array(
-			'message' => sprintf(
-				/* translators: %s: plugin slug */
-				esc_html__( 'Successfully installed %s', 'conjurewp' ),
-				$slug
-			),
-			'done' => false,
-		) );
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+				 /* translators: %s: plugin slug */
+					esc_html__( 'Successfully installed %s', 'ConjureWP' ),
+					$slug
+				),
+				'done' => false,
+			)
+		);
 	}
 
 	/**
@@ -2591,40 +2629,41 @@ class Conjure {
 
 			// Validate POST data exists.
 			if ( ! isset( $_POST['selected_index'] ) ) {
-				$this->logger->error( __( 'Content import AJAX missing selected_index', 'conjurewp' ) );
+				$this->logger->error( __( 'Content import AJAX missing selected_index', 'ConjureWP' ) );
 				wp_send_json_error(
 					array(
 						'error'   => 1,
-						'message' => esc_html__( 'Missing import index!', 'conjurewp' ),
+						'message' => esc_html__( 'Missing import index!', 'ConjureWP' ),
 					)
 				);
 			}
 
-			$selected_import = intval( $_POST['selected_index'] );
+			$selected_import = absint( wp_unslash( $_POST['selected_index'] ) );
+			$content_key     = isset( $_POST['content'] ) ? sanitize_key( wp_unslash( $_POST['content'] ) ) : '';
 
 			if ( null === $content ) {
 				$content = $this->get_import_data( $selected_import );
-				
+
 				// Check if we got valid import data.
 				if ( empty( $content ) || ! is_array( $content ) ) {
-					$this->logger->error( 
-						__( 'Failed to get import data for selected index', 'conjurewp' ),
+					$this->logger->error(
+						__( 'Failed to get import data for selected index', 'ConjureWP' ),
 						array( 'selected_import' => $selected_import )
 					);
 					wp_send_json_error(
 						array(
 							'error'   => 1,
-							'message' => esc_html__( 'Failed to load import configuration!', 'conjurewp' ),
+							'message' => esc_html__( 'Failed to load import configuration!', 'ConjureWP' ),
 						)
 					);
 				}
 			}
 
-			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['content'] ) || ! isset( $content[ $_POST['content'] ] ) ) {
-				$this->logger->error( 
-					__( 'The content importer AJAX call failed to start, because of incorrect data', 'conjurewp' ),
+			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $content_key ) || ! isset( $content[ $content_key ] ) ) {
+				$this->logger->error(
+					__( 'The content importer AJAX call failed to start, because of incorrect data', 'ConjureWP' ),
 					array(
-						'content_key' => isset( $_POST['content'] ) ? $_POST['content'] : 'not set',
+						'content_key' => ! empty( $content_key ) ? $content_key : 'not set',
 						'available_keys' => array_keys( $content ),
 					)
 				);
@@ -2632,18 +2671,18 @@ class Conjure {
 				wp_send_json_error(
 					array(
 						'error'   => 1,
-						'message' => esc_html__( 'Invalid content!', 'conjurewp' ),
+						'message' => esc_html__( 'Invalid content!', 'ConjureWP' ),
 					)
 				);
 			}
 
 			$json         = false;
-			$this_content = $content[ $_POST['content'] ];
+			$this_content = $content[ $content_key ];
 
 			if ( isset( $_POST['proceed'] ) ) {
 				if ( is_callable( $this_content['install_callback'] ) ) {
 					$this->logger->info(
-						__( 'The content import AJAX call will be executed with this import data', 'conjurewp' ),
+						__( 'The content import AJAX call will be executed with this import data', 'ConjureWP' ),
 						array(
 							'title' => $this_content['title'],
 							'data'  => $this_content['data'],
@@ -2656,10 +2695,10 @@ class Conjure {
 						ob_start();
 						$logs = call_user_func( $this_content['install_callback'], $this_content['data'] );
 						$callback_output = ob_get_clean();
-						
+
 						if ( ! empty( $callback_output ) ) {
-							$this->logger->warning( 
-								__( 'Import callback produced output', 'conjurewp' ),
+							$this->logger->warning(
+								__( 'Import callback produced output', 'ConjureWP' ),
 								array( 'output' => $callback_output )
 							);
 						}
@@ -2674,22 +2713,23 @@ class Conjure {
 							);
 
 							// The content import ended, so we should mark that all posts were imported.
-							if ( 'content' === $_POST['content'] ) {
+							if ( 'content' === $content_key ) {
 								$json['num_of_imported_posts'] = 'all';
 							}
 						} else {
-							$this->logger->warning( 
-								__( 'Import callback returned empty/false result', 'conjurewp' ),
-								array( 'content_type' => $_POST['content'] )
+							$this->logger->warning(
+								__( 'Import callback returned empty/false result', 'ConjureWP' ),
+								array( 'content_type' => $content_key )
 							);
 						}
 					} catch ( \Exception $e ) {
 						$error_message = sprintf(
-							__( 'Exception during content import: %s', 'conjurewp' ),
+							/* translators: %s: Exception message. */
+							__( 'Exception during content import: %s', 'ConjureWP' ),
 							$e->getMessage()
 						);
 						$this->logger->error( $error_message, array( 'trace' => $e->getTraceAsString() ) );
-						
+
 						wp_send_json_error(
 							array(
 								'error'   => 1,
@@ -2700,11 +2740,12 @@ class Conjure {
 						);
 					} catch ( \Error $e ) {
 						$error_message = sprintf(
-							__( 'Fatal error during content import: %s', 'conjurewp' ),
+							/* translators: %s: Fatal error message. */
+							__( 'Fatal error during content import: %s', 'ConjureWP' ),
 							$e->getMessage()
 						);
 						$this->logger->error( $error_message, array( 'trace' => $e->getTraceAsString() ) );
-						
+
 						wp_send_json_error(
 							array(
 								'error'   => 1,
@@ -2716,10 +2757,10 @@ class Conjure {
 					}
 				} else {
 					$this->logger->error(
-						__( 'Import callback is not callable', 'conjurewp' ),
+						__( 'Import callback is not callable', 'ConjureWP' ),
 						array(
 							'callback' => $this_content['install_callback'],
-							'content_type' => $_POST['content'],
+							'content_type' => $content_key,
 						)
 					);
 				}
@@ -2728,7 +2769,7 @@ class Conjure {
 					'url'            => admin_url( 'admin-ajax.php' ),
 					'action'         => 'conjure_content',
 					'proceed'        => 'true',
-					'content'        => $_POST['content'],
+					'content'        => $content_key,
 					'_wpnonce'       => wp_create_nonce( 'conjure_nonce' ),
 					'selected_index' => $selected_import,
 					'message'        => $this_content['installing'],
@@ -2742,10 +2783,10 @@ class Conjure {
 				wp_send_json( $json );
 			} else {
 				$this->logger->error(
-					__( 'The content import AJAX call failed with this passed data', 'conjurewp' ),
+					__( 'The content import AJAX call failed with this passed data', 'ConjureWP' ),
 					array(
 						'selected_content_index' => $selected_import,
-						'importing_content'      => $_POST['content'],
+						'importing_content'      => $content_key,
 						'importing_data'         => $this_content['data'],
 					)
 				);
@@ -2753,7 +2794,7 @@ class Conjure {
 				wp_send_json(
 					array(
 						'error'   => 1,
-						'message' => esc_html__( 'Error', 'conjurewp' ),
+						'message' => esc_html__( 'Error', 'ConjureWP' ),
 						'logs'    => '',
 						'errors'  => '',
 					)
@@ -2761,7 +2802,7 @@ class Conjure {
 			}
 		} catch ( \Exception $e ) {
 			$this->logger->error(
-				__( 'Uncaught exception in content import AJAX handler', 'conjurewp' ),
+				__( 'Uncaught exception in content import AJAX handler', 'ConjureWP' ),
 				array(
 					'message' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
@@ -2773,7 +2814,7 @@ class Conjure {
 					'error'   => 1,
 					'message' => sprintf(
 						/* translators: %s: error message */
-						esc_html__( 'Import error: %s', 'conjurewp' ),
+						esc_html__( 'Import error: %s', 'ConjureWP' ),
 						$e->getMessage()
 					),
 					'logs'    => '',
@@ -2782,7 +2823,7 @@ class Conjure {
 			);
 		} catch ( \Error $e ) {
 			$this->logger->error(
-				__( 'Fatal error in content import AJAX handler', 'conjurewp' ),
+				__( 'Fatal error in content import AJAX handler', 'ConjureWP' ),
 				array(
 					'message' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
@@ -2794,7 +2835,7 @@ class Conjure {
 					'error'   => 1,
 					'message' => sprintf(
 						/* translators: %s: error message */
-						esc_html__( 'Fatal import error: %s', 'conjurewp' ),
+						esc_html__( 'Fatal import error: %s', 'ConjureWP' ),
 						$e->getMessage()
 					),
 					'logs'    => '',
@@ -2816,12 +2857,12 @@ class Conjure {
 
 			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce' ) || empty( $_POST['selected_index'] ) ) {
 				ob_end_clean();
-				$this->logger->error( __( 'The content importer AJAX call for retrieving total content import items failed to start, because of incorrect data.', 'conjurewp' ) );
+				$this->logger->error( __( 'The content importer AJAX call for retrieving total content import items failed to start, because of incorrect data.', 'ConjureWP' ) );
 
 				wp_send_json_error(
 					array(
 						'error'   => 1,
-						'message' => esc_html__( 'Invalid data!', 'conjurewp' ),
+						'message' => esc_html__( 'Invalid data!', 'ConjureWP' ),
 					)
 				);
 			}
@@ -2841,7 +2882,7 @@ class Conjure {
 			// Clean any buffered output before sending JSON.
 			$buffered_output = ob_get_clean();
 			if ( ! empty( $buffered_output ) ) {
-				$this->logger->warning( 
+				$this->logger->warning(
 					'Unexpected output during content item counting',
 					array( 'output' => $buffered_output )
 				);
@@ -2853,7 +2894,7 @@ class Conjure {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Exception in _ajax_get_total_content_import_items',
 				array(
@@ -2869,7 +2910,7 @@ class Conjure {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Fatal error in _ajax_get_total_content_import_items',
 				array(
@@ -2896,7 +2937,7 @@ class Conjure {
 				ob_end_clean();
 				wp_send_json_error(
 					array(
-						'message' => esc_html__( 'Security check failed.', 'conjurewp' ),
+						'message' => esc_html__( 'Security check failed.', 'ConjureWP' ),
 					)
 				);
 			}
@@ -2905,7 +2946,7 @@ class Conjure {
 				ob_end_clean();
 				wp_send_json_error(
 					array(
-						'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ),
+						'message' => esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ),
 					)
 				);
 			}
@@ -2918,7 +2959,7 @@ class Conjure {
 			// Clean any buffered output before sending JSON.
 			$buffered_output = ob_get_clean();
 			if ( ! empty( $buffered_output ) ) {
-				$this->logger->warning( 
+				$this->logger->warning(
 					'Unexpected output during health metrics check',
 					array( 'output' => $buffered_output )
 				);
@@ -2943,7 +2984,7 @@ class Conjure {
 				array(
 					'message' => sprintf(
 						/* translators: %s: error message */
-						esc_html__( 'Health check error: %s', 'conjurewp' ),
+						esc_html__( 'Health check error: %s', 'ConjureWP' ),
 						$e->getMessage()
 					),
 				)
@@ -2953,7 +2994,7 @@ class Conjure {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Fatal error in _ajax_get_health_metrics',
 				array(
@@ -2966,7 +3007,7 @@ class Conjure {
 				array(
 					'message' => sprintf(
 						/* translators: %s: error message */
-						esc_html__( 'Fatal health check error: %s', 'conjurewp' ),
+						esc_html__( 'Fatal health check error: %s', 'ConjureWP' ),
 						$e->getMessage()
 					),
 				)
@@ -3060,11 +3101,11 @@ class Conjure {
 
 		if ( ! empty( $import_files['content'] ) ) {
 			$content['content'] = array(
-				'title'            => esc_html__( 'Content', 'conjurewp' ),
-				'description'      => esc_html__( 'Demo content data.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'Content', 'ConjureWP' ),
+				'description'      => esc_html__( 'Demo content data.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'install_callback' => array( $this->importer, 'import' ),
 				'data'             => $import_files['content'],
@@ -3073,11 +3114,11 @@ class Conjure {
 
 		if ( ! empty( $import_files['widgets'] ) ) {
 			$content['widgets'] = array(
-				'title'            => esc_html__( 'Widgets', 'conjurewp' ),
-				'description'      => esc_html__( 'Sample widgets data.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'Widgets', 'ConjureWP' ),
+				'description'      => esc_html__( 'Sample widgets data.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'install_callback' => array( 'Conjure_Widget_Importer', 'import' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'data'             => $import_files['widgets'],
@@ -3086,14 +3127,14 @@ class Conjure {
 
 		// Revolution Slider import (available in free and premium).
 		$can_use_advanced_imports = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_use_advanced_imports() : true;
-		
+
 		if ( ! empty( $import_files['sliders'] ) && $can_use_advanced_imports ) {
 			$content['sliders'] = array(
-				'title'            => esc_html__( 'Revolution Slider', 'conjurewp' ),
-				'description'      => esc_html__( 'Sample Revolution sliders data.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'Revolution Slider', 'ConjureWP' ),
+				'description'      => esc_html__( 'Sample Revolution sliders data.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'install_callback' => array( $this, 'import_revolution_sliders' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'data'             => $import_files['sliders'],
@@ -3102,11 +3143,11 @@ class Conjure {
 
 		if ( ! empty( $import_files['options'] ) ) {
 			$content['options'] = array(
-				'title'            => esc_html__( 'Options', 'conjurewp' ),
-				'description'      => esc_html__( 'Sample theme options data.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'Options', 'ConjureWP' ),
+				'description'      => esc_html__( 'Sample theme options data.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'install_callback' => array( 'Conjure_Customizer_Importer', 'import' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'data'             => $import_files['options'],
@@ -3116,11 +3157,11 @@ class Conjure {
 		// Redux Framework options import (available in free and premium).
 		if ( ! empty( $import_files['redux'] ) && $can_use_advanced_imports ) {
 			$content['redux'] = array(
-				'title'            => esc_html__( 'Redux Options', 'conjurewp' ),
-				'description'      => esc_html__( 'Redux framework options.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'Redux Options', 'ConjureWP' ),
+				'description'      => esc_html__( 'Redux framework options.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'install_callback' => array( 'Conjure_Redux_Importer', 'import' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'data'             => $import_files['redux'],
@@ -3129,11 +3170,11 @@ class Conjure {
 
 		if ( false !== has_action( 'conjure_after_all_import' ) ) {
 			$content['after_import'] = array(
-				'title'            => esc_html__( 'After import setup', 'conjurewp' ),
-				'description'      => esc_html__( 'After import setup.', 'conjurewp' ),
-				'pending'          => esc_html__( 'Pending', 'conjurewp' ),
-				'installing'       => esc_html__( 'Installing', 'conjurewp' ),
-				'success'          => esc_html__( 'Success', 'conjurewp' ),
+				'title'            => esc_html__( 'After import setup', 'ConjureWP' ),
+				'description'      => esc_html__( 'After import setup.', 'ConjureWP' ),
+				'pending'          => esc_html__( 'Pending', 'ConjureWP' ),
+				'installing'       => esc_html__( 'Installing', 'ConjureWP' ),
+				'success'          => esc_html__( 'Success', 'ConjureWP' ),
 				'install_callback' => array( $this->hooks, 'after_all_import_action' ),
 				'checked'          => $this->is_possible_upgrade() ? 0 : 1,
 				'data'             => $selected_import_index,
@@ -3162,7 +3203,7 @@ class Conjure {
 
 		$response = $importer->importSliderFromPost( true, true, $file );
 
-		$this->logger->info( __( 'The revolution slider import was executed', 'conjurewp' ) );
+		$this->logger->info( __( 'The revolution slider import was executed', 'ConjureWP' ) );
 
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			return 'true';
@@ -3178,14 +3219,43 @@ class Conjure {
 	 */
 	public function pt_importer_new_ajax_request_response_data( $data ) {
 		$data['url']      = admin_url( 'admin-ajax.php' );
-		$data['message']  = esc_html__( 'Installing', 'conjurewp' );
+		$data['message']  = esc_html__( 'Installing', 'ConjureWP' );
 		$data['proceed']  = 'true';
 		$data['action']   = 'conjure_content';
 		$data['content']  = 'content';
 		$data['_wpnonce'] = wp_create_nonce( 'conjure_nonce' );
-		$data['hash']     = md5( rand() ); // Has to be unique (check JS code catching this AJAX response).
+		$data['hash']     = md5( (string) wp_rand() ); // Has to be unique (check JS code catching this AJAX response).
 
 		return $data;
+	}
+
+	/**
+	 * Get the first post matching an exact title.
+	 *
+	 * @param string       $title     The title to find.
+	 * @param string|array $post_type Optional. Post type or types. Defaults to 'page'.
+	 *
+	 * @return WP_Post|null
+	 */
+	private function get_post_by_title( $title, $post_type = 'page' ) {
+		$query = new WP_Query(
+			array(
+				'post_type'              => $post_type,
+				'title'                  => $title,
+				'post_status'            => 'any',
+				'posts_per_page'         => 1,
+				'no_found_rows'          => true,
+				'ignore_sticky_posts'    => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		if ( empty( $query->posts[0] ) || ! $query->posts[0] instanceof WP_Post ) {
+			return null;
+		}
+
+		return $query->posts[0];
 	}
 
 	/**
@@ -3193,23 +3263,23 @@ class Conjure {
 	 */
 	public function after_content_import_setup() {
 		// Set static homepage.
-		$homepage = get_page_by_title( apply_filters( 'conjure_content_home_page_title', 'Home' ) );
+		$homepage = $this->get_post_by_title( apply_filters( 'conjure_content_home_page_title', 'Home' ) );
 
 		if ( $homepage ) {
 			update_option( 'page_on_front', $homepage->ID );
 			update_option( 'show_on_front', 'page' );
 
-			$this->logger->debug( __( 'The home page was set', 'conjurewp' ), array( 'homepage_id' => $homepage ) );
+			$this->logger->debug( __( 'The home page was set', 'ConjureWP' ), array( 'homepage_id' => $homepage ) );
 		}
 
 		// Set static blog page.
-		$blogpage = get_page_by_title( apply_filters( 'conjure_content_blog_page_title', 'Blog' ) );
+		$blogpage = $this->get_post_by_title( apply_filters( 'conjure_content_blog_page_title', 'Blog' ) );
 
 		if ( $blogpage ) {
 			update_option( 'page_for_posts', $blogpage->ID );
 			update_option( 'show_on_front', 'page' );
 
-			$this->logger->debug( __( 'The blog page was set', 'conjurewp' ), array( 'blog_page_id' => $blogpage ) );
+			$this->logger->debug( __( 'The blog page was set', 'ConjureWP' ), array( 'blog_page_id' => $blogpage ) );
 		}
 	}
 
@@ -3218,13 +3288,13 @@ class Conjure {
 	 */
 	public function before_content_import_setup() {
 		// Update the Hello World! post by making it a draft.
-		$hello_world = get_page_by_title( 'Hello World!', OBJECT, 'post' );
+		$hello_world = $this->get_post_by_title( 'Hello World!', 'post' );
 
 		if ( ! empty( $hello_world ) && apply_filters( 'conjure_draft_hello_world', true ) ) {
 			$hello_world->post_status = 'draft';
 			wp_update_post( $hello_world );
 
-			$this->logger->debug( __( 'The Hello world post status was set to draft', 'conjurewp' ) );
+			$this->logger->debug( __( 'The Hello world post status was set to draft', 'ConjureWP' ) );
 		}
 	}
 
@@ -3280,7 +3350,7 @@ class Conjure {
 			if ( ! empty( $import_file['import_file_name'] ) ) {
 				$filtered_import_file_info[] = $import_file;
 			} else {
-				$this->logger->warning( __( 'This predefined demo import does not have the name parameter: import_file_name', 'conjurewp' ), $import_file );
+				$this->logger->warning( __( 'This predefined demo import does not have the name parameter: import_file_name', 'ConjureWP' ), $import_file );
 			}
 		}
 
@@ -3512,19 +3582,19 @@ class Conjure {
 
 			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
 				ob_end_clean();
-				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'ConjureWP' ) ) );
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				ob_end_clean();
-				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ) ) );
 			}
 
 			$selected_index = ! isset( $_POST['selected_index'] ) ? false : intval( $_POST['selected_index'] );
 
 			if ( false === $selected_index ) {
 				ob_end_clean();
-				wp_send_json_error( array( 'message' => esc_html__( 'Invalid demo selection.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'Invalid demo selection.', 'ConjureWP' ) ) );
 			}
 
 			// Store the selected demo index for demo-specific plugin installation.
@@ -3533,12 +3603,12 @@ class Conjure {
 			$this->logger->info( 'Demo selected: ' . $selected_index );
 
 			$import_info = $this->get_import_data_info( $selected_index );
-			
+
 			// Check if we got valid import info.
 			if ( false === $import_info ) {
 				ob_end_clean();
 				$this->logger->error( 'Failed to get import data info for demo: ' . $selected_index );
-				wp_send_json_error( array( 'message' => esc_html__( 'Failed to load demo configuration.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'Failed to load demo configuration.', 'ConjureWP' ) ) );
 			}
 
 			$import_info_html = $this->get_import_steps_html( $import_info );
@@ -3552,23 +3622,25 @@ class Conjure {
 			// Clean any buffered output before sending JSON.
 			$buffered_output = ob_get_clean();
 			if ( ! empty( $buffered_output ) ) {
-				$this->logger->warning( 
+				$this->logger->warning(
 					'Unexpected output during demo selection update',
 					array( 'output' => $buffered_output )
 				);
 			}
 
-			wp_send_json_success( array(
-				'import_info_html' => $import_info_html,
-				'demo_plugins'     => $demo_plugins,
-				'has_plugins'      => ! empty( $demo_plugins['all'] ),
-			) );
+			wp_send_json_success(
+				array(
+					'import_info_html' => $import_info_html,
+					'demo_plugins'     => $demo_plugins,
+					'has_plugins'      => ! empty( $demo_plugins['all'] ),
+				)
+			);
 
 		} catch ( \Exception $e ) {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Exception in update_selected_import_data_info',
 				array(
@@ -3577,19 +3649,21 @@ class Conjure {
 				)
 			);
 
-			wp_send_json_error( array(
-				'message' => sprintf(
-					/* translators: %s: error message */
-					esc_html__( 'Error loading demo: %s', 'conjurewp' ),
-					$e->getMessage()
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: error message */
+						esc_html__( 'Error loading demo: %s', 'ConjureWP' ),
+						$e->getMessage()
+					),
+				)
+			);
 
 		} catch ( \Error $e ) {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Fatal error in update_selected_import_data_info',
 				array(
@@ -3598,13 +3672,15 @@ class Conjure {
 				)
 			);
 
-			wp_send_json_error( array(
-				'message' => sprintf(
-					/* translators: %s: error message */
-					esc_html__( 'Fatal error loading demo: %s', 'conjurewp' ),
-					$e->getMessage()
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: error message */
+						esc_html__( 'Fatal error loading demo: %s', 'ConjureWP' ),
+						$e->getMessage()
+					),
+				)
+			);
 		}
 	}
 
@@ -3656,7 +3732,7 @@ class Conjure {
 						</label>
 
 						<?php if ( $has_upload_section ) : ?>
-							<?php echo $this->render_upload_zone_markup( $slug, $upload_options[ $slug ], $has_file, $file_info ); ?>
+							<?php echo wp_kses_post( $this->render_upload_zone_markup( $slug, $upload_options[ $slug ], $has_file, $file_info ) ); ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -3679,12 +3755,12 @@ class Conjure {
 
 			if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
 				ob_end_clean();
-				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'ConjureWP' ) ) );
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
 				ob_end_clean();
-				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) ) );
+				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ) ) );
 			}
 
 			delete_transient( 'conjure_import_file_base_name' );
@@ -3696,7 +3772,7 @@ class Conjure {
 			// Clean any buffered output before sending JSON.
 			$buffered_output = ob_get_clean();
 			if ( ! empty( $buffered_output ) ) {
-				$this->logger->warning( 
+				$this->logger->warning(
 					'Unexpected output during import finish cleanup',
 					array( 'output' => $buffered_output )
 				);
@@ -3708,7 +3784,7 @@ class Conjure {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Exception in import_finished',
 				array(
@@ -3717,19 +3793,21 @@ class Conjure {
 				)
 			);
 
-			wp_send_json_error( array(
-				'message' => sprintf(
-					/* translators: %s: error message */
-					esc_html__( 'Error finishing import: %s', 'conjurewp' ),
-					$e->getMessage()
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: error message */
+						esc_html__( 'Error finishing import: %s', 'ConjureWP' ),
+						$e->getMessage()
+					),
+				)
+			);
 
 		} catch ( \Error $e ) {
 			if ( ob_get_level() > 0 ) {
 				ob_end_clean();
 			}
-			
+
 			$this->logger->error(
 				'Fatal error in import_finished',
 				array(
@@ -3738,13 +3816,15 @@ class Conjure {
 				)
 			);
 
-			wp_send_json_error( array(
-				'message' => sprintf(
-					/* translators: %s: error message */
-					esc_html__( 'Fatal error finishing import: %s', 'conjurewp' ),
-					$e->getMessage()
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: error message */
+						esc_html__( 'Fatal error finishing import: %s', 'ConjureWP' ),
+						$e->getMessage()
+					),
+				)
+			);
 		}
 	}
 
@@ -3759,22 +3839,19 @@ class Conjure {
 
 		if ( ! file_exists( $conjure_dir ) ) {
 			$mkdir_result = wp_mkdir_p( $conjure_dir );
-			
+
 			if ( ! $mkdir_result || ! file_exists( $conjure_dir ) ) {
 				$error_message = sprintf(
-					__( 'Failed to create upload directory: %s', 'conjurewp' ),
+					/* translators: %s: Upload directory path. */
+					__( 'Failed to create upload directory: %s', 'ConjureWP' ),
 					$conjure_dir
 				);
-				
+
 				$this->logger->error( $error_message );
-				
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					trigger_error( $error_message, E_USER_ERROR );
-				}
-				
+
 				return false;
 			}
-			
+
 			// Add .htaccess for security (Apache 2.4+ syntax).
 			$htaccess_content = "# Deny access to all files in this directory\n";
 			$htaccess_content .= "<IfModule mod_authz_core.c>\n";
@@ -3795,7 +3872,8 @@ class Conjure {
 
 			if ( false === $htaccess_result ) {
 				$error_message = sprintf(
-					__( 'Failed to create .htaccess file in upload directory: %s', 'conjurewp' ),
+					/* translators: %s: Upload directory path. */
+					__( 'Failed to create .htaccess file in upload directory: %s', 'ConjureWP' ),
 					$conjure_dir
 				);
 
@@ -3808,7 +3886,8 @@ class Conjure {
 
 			if ( false === $index_result ) {
 				$error_message = sprintf(
-					__( 'Failed to create index.php file in upload directory: %s', 'conjurewp' ),
+					/* translators: %s: Upload directory path. */
+					__( 'Failed to create index.php file in upload directory: %s', 'ConjureWP' ),
 					$conjure_dir
 				);
 
@@ -3824,19 +3903,24 @@ class Conjure {
 	 */
 	public function _ajax_upload_file() {
 		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'ConjureWP' ) ) );
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'ConjureWP' ) ) );
 		}
 
-		if ( empty( $_FILES['file'] ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'No file uploaded.', 'conjurewp' ) ) );
+		if ( empty( $_FILES['file'] ) || ! is_array( $_FILES['file'] ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'No file uploaded.', 'ConjureWP' ) ) );
 		}
 
-		$file = $_FILES['file'];
-		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
+		$file = array(
+			'name'     => isset( $_FILES['file']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['file']['name'] ) ) : '',
+			'tmp_name' => isset( $_FILES['file']['tmp_name'] ) ? sanitize_text_field( wp_unslash( $_FILES['file']['tmp_name'] ) ) : '',
+			'error'    => isset( $_FILES['file']['error'] ) ? (int) $_FILES['file']['error'] : UPLOAD_ERR_NO_FILE,
+			'size'     => isset( $_FILES['file']['size'] ) ? (int) $_FILES['file']['size'] : 0,
+		);
+		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( wp_unslash( $_POST['file_type'] ) ) : '';
 
 		// Validate file type.
 		$allowed_types = array(
@@ -3850,43 +3934,54 @@ class Conjure {
 		);
 
 		if ( ! isset( $allowed_types[ $file_type ] ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'ConjureWP' ) ) );
 		}
 
 		$file_extension = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
 
 		if ( ! in_array( $file_extension, $allowed_types[ $file_type ], true ) ) {
-			wp_send_json_error( array(
-				'message' => sprintf(
-					esc_html__( 'Invalid file extension. Allowed: %s', 'conjurewp' ),
-					implode( ', ', $allowed_types[ $file_type ] )
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: Comma-separated list of allowed file extensions. */
+						esc_html__( 'Invalid file extension. Allowed: %s', 'ConjureWP' ),
+						implode( ', ', $allowed_types[ $file_type ] )
+					),
+				)
+			);
 		}
 
 		// Check for upload errors.
 		if ( $file['error'] !== UPLOAD_ERR_OK ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'File upload error.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'File upload error.', 'ConjureWP' ) ) );
 		}
 
 		// Validate file size (max 50MB).
 		$max_size = 50 * 1024 * 1024;
 		if ( $file['size'] > $max_size ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'File is too large. Maximum size is 50MB.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'File is too large. Maximum size is 50MB.', 'ConjureWP' ) ) );
 		}
 
 		// Move file to upload directory.
 		$upload_dir = $this->get_upload_dir();
-		
+
 		if ( false === $upload_dir ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'ConjureWP' ) ) );
 		}
-		
+
 		$filename = $file_type . '-' . time() . '.' . $file_extension;
 		$destination = $upload_dir . $filename;
 
-		if ( ! move_uploaded_file( $file['tmp_name'], $destination ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to save uploaded file.', 'conjurewp' ) ) );
+		global $wp_filesystem;
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		WP_Filesystem();
+
+		$moved = ( $wp_filesystem && method_exists( $wp_filesystem, 'move' ) ) ? $wp_filesystem->move( $file['tmp_name'], $destination, true ) : false;
+
+		if ( ! $moved ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to save uploaded file.', 'ConjureWP' ) ) );
 		}
 
 		// Store file info in transient.
@@ -3905,7 +4000,7 @@ class Conjure {
 		set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
 
 		$this->logger->info(
-			__( 'File uploaded successfully', 'conjurewp' ),
+			__( 'File uploaded successfully', 'ConjureWP' ),
 			array(
 				'type' => $file_type,
 				'name' => $file['name'],
@@ -3913,11 +4008,13 @@ class Conjure {
 			)
 		);
 
-		wp_send_json_success( array(
-			'message' => esc_html__( 'File uploaded successfully.', 'conjurewp' ),
-			'filename' => $file['name'],
-			'size' => size_format( $file['size'] ),
-		) );
+		wp_send_json_success(
+			array(
+				'message' => esc_html__( 'File uploaded successfully.', 'ConjureWP' ),
+				'filename' => $file['name'],
+				'size' => size_format( $file['size'] ),
+			)
+		);
 	}
 
 	/**
@@ -3925,15 +4022,15 @@ class Conjure {
 	 */
 	public function _ajax_upload_from_media() {
 		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'ConjureWP' ) ) );
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to upload files.', 'ConjureWP' ) ) );
 		}
 
 		if ( empty( $_POST['attachment_id'] ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'No file selected.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'No file selected.', 'ConjureWP' ) ) );
 		}
 
 		$attachment_id = intval( $_POST['attachment_id'] );
@@ -3943,14 +4040,14 @@ class Conjure {
 		$allowed_types = array( 'content', 'widgets', 'options', 'redux', 'sliders', 'images', 'menus' );
 
 		if ( ! in_array( $file_type, $allowed_types, true ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'ConjureWP' ) ) );
 		}
 
 		// Get attachment file path.
 		$file_path = get_attached_file( $attachment_id );
 
 		if ( ! $file_path || ! file_exists( $file_path ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'File not found in media library.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'File not found in media library.', 'ConjureWP' ) ) );
 		}
 
 		// Validate file extension.
@@ -3966,26 +4063,29 @@ class Conjure {
 		);
 
 		if ( ! isset( $allowed_extensions[ $file_type ] ) || ! in_array( $file_extension, $allowed_extensions[ $file_type ], true ) ) {
-			wp_send_json_error( array(
-				'message' => sprintf(
-					esc_html__( 'Invalid file extension. Allowed: %s', 'conjurewp' ),
-					implode( ', ', $allowed_extensions[ $file_type ] )
-				),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+					 /* translators: %s: Comma-separated list of allowed file extensions. */
+						esc_html__( 'Invalid file extension. Allowed: %s', 'ConjureWP' ),
+						implode( ', ', $allowed_extensions[ $file_type ] )
+					),
+				)
+			);
 		}
 
 		// Copy file to upload directory.
 		$upload_dir = $this->get_upload_dir();
-		
+
 		if ( false === $upload_dir ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to create upload directory. Please check file permissions.', 'ConjureWP' ) ) );
 		}
-		
+
 		$filename = $file_type . '-' . time() . '.' . $file_extension;
 		$destination = $upload_dir . $filename;
 
 		if ( ! copy( $file_path, $destination ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to copy file.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Failed to copy file.', 'ConjureWP' ) ) );
 		}
 
 		// Get file info.
@@ -4008,7 +4108,7 @@ class Conjure {
 		set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
 
 		$this->logger->info(
-			__( 'File copied from media library successfully', 'conjurewp' ),
+			__( 'File copied from media library successfully', 'ConjureWP' ),
 			array(
 				'type' => $file_type,
 				'name' => $file_name,
@@ -4016,11 +4116,13 @@ class Conjure {
 			)
 		);
 
-		wp_send_json_success( array(
-			'message' => esc_html__( 'File uploaded successfully.', 'conjurewp' ),
-			'filename' => $file_name,
-			'size' => size_format( $file_size ),
-		) );
+		wp_send_json_success(
+			array(
+				'message' => esc_html__( 'File uploaded successfully.', 'ConjureWP' ),
+				'filename' => $file_name,
+				'size' => size_format( $file_size ),
+			)
+		);
 	}
 
 	/**
@@ -4028,17 +4130,17 @@ class Conjure {
 	 */
 	public function _ajax_delete_uploaded_file() {
 		if ( ! check_ajax_referer( 'conjure_nonce', 'wpnonce', false ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'ConjureWP' ) ) );
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to delete files.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to delete files.', 'ConjureWP' ) ) );
 		}
 
 		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
 
 		if ( empty( $file_type ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'No file type specified.', 'conjurewp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'No file type specified.', 'ConjureWP' ) ) );
 		}
 
 		$uploaded_files = get_transient( 'conjure_uploaded_files' );
@@ -4053,10 +4155,10 @@ class Conjure {
 			unset( $uploaded_files[ $file_type ] );
 			set_transient( 'conjure_uploaded_files', $uploaded_files, HOUR_IN_SECONDS );
 
-			$this->logger->info( __( 'Uploaded file deleted', 'conjurewp' ), array( 'type' => $file_type ) );
+			$this->logger->info( __( 'Uploaded file deleted', 'ConjureWP' ), array( 'type' => $file_type ) );
 		}
 
-		wp_send_json_success( array( 'message' => esc_html__( 'File deleted successfully.', 'conjurewp' ) ) );
+		wp_send_json_success( array( 'message' => esc_html__( 'File deleted successfully.', 'ConjureWP' ) ) );
 	}
 
 	/**
@@ -4074,7 +4176,7 @@ class Conjure {
 
 			delete_transient( 'conjure_uploaded_files' );
 
-			$this->logger->info( __( 'All uploaded files cleaned up', 'conjurewp' ) );
+			$this->logger->info( __( 'All uploaded files cleaned up', 'ConjureWP' ) );
 		}
 	}
 
@@ -4151,7 +4253,7 @@ class Conjure {
 						</span>
 					</label>
 
-					<?php echo $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ); ?>
+					<?php echo wp_kses_post( $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ) ); ?>
 
 				</div>
 			</li>
@@ -4171,39 +4273,39 @@ class Conjure {
 	private function get_upload_options( $uploaded_files ) {
 		$upload_options = array(
 			'content' => array(
-				'title'       => esc_html__( 'Content', 'conjurewp' ),
-				'description' => esc_html__( 'Posts, pages, and site structure', 'conjurewp' ),
+				'title'       => esc_html__( 'Content', 'ConjureWP' ),
+				'description' => esc_html__( 'Posts, pages, and site structure', 'ConjureWP' ),
 				'accept'      => '.xml',
 			),
 			'images' => array(
-				'title'       => esc_html__( 'Images & Media', 'conjurewp' ),
-				'description' => esc_html__( 'Import media library attachments', 'conjurewp' ),
-				'tooltip'     => esc_html__( 'Uncheck if replacing images or on shared hosting to speed up import', 'conjurewp' ),
+				'title'       => esc_html__( 'Images & Media', 'ConjureWP' ),
+				'description' => esc_html__( 'Import media library attachments', 'ConjureWP' ),
+				'tooltip'     => esc_html__( 'Uncheck if replacing images or on shared hosting to speed up import', 'ConjureWP' ),
 				'accept'      => '.xml',
 			),
 			'widgets' => array(
-				'title'       => esc_html__( 'Widgets', 'conjurewp' ),
-				'description' => esc_html__( 'Sidebar widgets and widget areas', 'conjurewp' ),
+				'title'       => esc_html__( 'Widgets', 'ConjureWP' ),
+				'description' => esc_html__( 'Sidebar widgets and widget areas', 'ConjureWP' ),
 				'accept'      => '.json,.wie',
 			),
 			'options' => array(
-				'title'       => esc_html__( 'Theme Options', 'conjurewp' ),
-				'description' => esc_html__( 'Customizer settings and theme options', 'conjurewp' ),
+				'title'       => esc_html__( 'Theme Options', 'ConjureWP' ),
+				'description' => esc_html__( 'Customizer settings and theme options', 'ConjureWP' ),
 				'accept'      => '.dat,.json',
 			),
-		'sliders' => array(
-				'title'       => esc_html__( 'Revolution Slider', 'conjurewp' ),
-				'description' => esc_html__( 'Revolution Slider packages (.zip)', 'conjurewp' ),
+			'sliders' => array(
+				'title'       => esc_html__( 'Revolution Slider', 'ConjureWP' ),
+				'description' => esc_html__( 'Revolution Slider packages (.zip)', 'ConjureWP' ),
 				'accept'      => '.zip',
 			),
 			'redux' => array(
-				'title'       => esc_html__( 'Redux Options', 'conjurewp' ),
-				'description' => esc_html__( 'Redux framework settings', 'conjurewp' ),
+				'title'       => esc_html__( 'Redux Options', 'ConjureWP' ),
+				'description' => esc_html__( 'Redux framework settings', 'ConjureWP' ),
 				'accept'      => '.json',
 			),
 			'menus' => array(
-				'title'       => esc_html__( 'Menus', 'conjurewp' ),
-				'description' => esc_html__( 'Navigation menu assignments', 'conjurewp' ),
+				'title'       => esc_html__( 'Menus', 'ConjureWP' ),
+				'description' => esc_html__( 'Navigation menu assignments', 'ConjureWP' ),
 				'accept'      => '.json',
 			),
 		);
@@ -4237,7 +4339,7 @@ class Conjure {
 					<line x1="12" y1="3" x2="12" y2="15"></line>
 				</svg>
 				<p class="conjure__upload-text">
-					<strong><?php esc_html_e( 'Click to select file', 'conjurewp' ); ?></strong>
+					<strong><?php esc_html_e( 'Click to select file', 'ConjureWP' ); ?></strong>
 					<span class="conjure__upload-file-type"><?php echo esc_html( $option['accept'] ); ?></span>
 				</p>
 			</div>
@@ -4250,7 +4352,7 @@ class Conjure {
 					<strong class="conjure__file-name"><?php echo esc_html( $file_name ); ?></strong>
 					<span class="conjure__file-size"><?php echo esc_html( $file_size ); ?></span>
 				</div>
-				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'conjurewp' ); ?>" aria-label="<?php esc_attr_e( 'Remove uploaded file', 'conjurewp' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
+				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'ConjureWP' ); ?>" aria-label="<?php esc_attr_e( 'Remove uploaded file', 'ConjureWP' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 						<line x1="18" y1="6" x2="6" y2="18"></line>
 						<line x1="6" y1="6" x2="18" y2="18"></line>
@@ -4259,10 +4361,10 @@ class Conjure {
 			</div>
 
 			<div class="conjure__upload-progress" style="display:none;" role="status" aria-live="polite">
-				<div class="conjure__progress-bar-small" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="<?php esc_attr_e( 'Upload progress', 'conjurewp' ); ?>">
+				<div class="conjure__progress-bar-small" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="<?php esc_attr_e( 'Upload progress', 'ConjureWP' ); ?>">
 					<div class="conjure__progress-fill"></div>
 				</div>
-				<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'conjurewp' ); ?></span>
+				<span class="conjure__upload-status"><?php esc_html_e( 'Uploading...', 'ConjureWP' ); ?></span>
 			</div>
 		</div>
 		<?php
@@ -4291,7 +4393,8 @@ class Conjure {
 		update_option( 'conjure_' . $this->slug . '_step_completion', $step_states );
 
 		$this->logger->info(
-			sprintf( __( 'Step "%s" marked as completed', 'conjurewp' ), $step_key ),
+			/* translators: %s: Step key identifier. */
+			sprintf( __( 'Step "%s" marked as completed', 'ConjureWP' ), $step_key ),
 			array( 'step' => $step_key )
 		);
 	}
@@ -4303,13 +4406,14 @@ class Conjure {
 	 */
 	public function reset_step( $step_key ) {
 		$step_states = get_option( 'conjure_' . $this->slug . '_step_completion', array() );
-		
+
 		if ( isset( $step_states[ $step_key ] ) ) {
 			unset( $step_states[ $step_key ] );
 			update_option( 'conjure_' . $this->slug . '_step_completion', $step_states );
 
 			$this->logger->info(
-				sprintf( __( 'Step "%s" reset for rerunning', 'conjurewp' ), $step_key ),
+				/* translators: %s: Step key identifier. */
+				sprintf( __( 'Step "%s" reset for rerunning', 'ConjureWP' ), $step_key ),
 				array( 'step' => $step_key )
 			);
 		}
@@ -4322,7 +4426,7 @@ class Conjure {
 		delete_option( 'conjure_' . $this->slug . '_step_completion' );
 		delete_option( 'conjure_' . $this->slug . '_completed' );
 
-		$this->logger->info( __( 'All Conjure steps have been reset', 'conjurewp' ) );
+		$this->logger->info( __( 'All Conjure steps have been reset', 'ConjureWP' ) );
 	}
 
 	/**
@@ -4344,10 +4448,10 @@ class Conjure {
 		$wp_admin_bar->add_node(
 			array(
 				'id'    => 'conjure-rerun',
-				'title' => '<span class="ab-icon dashicons-update"></span><span class="ab-label">' . esc_html__( 'Conjure WP', 'conjurewp' ) . '</span>',
+				'title' => '<span class="ab-icon dashicons-update"></span><span class="ab-label">' . esc_html__( 'Conjure WP', 'ConjureWP' ) . '</span>',
 				'href'  => admin_url( 'themes.php?page=' . $this->conjure_url ),
 				'meta'  => array(
-					'title' => esc_html__( 'Rerun Conjure WP steps', 'conjurewp' ),
+					'title' => esc_html__( 'Rerun Conjure WP steps', 'ConjureWP' ),
 				),
 			)
 		);
@@ -4357,12 +4461,13 @@ class Conjure {
 
 		// Define available steps for rerunning.
 		$rerun_steps = array(
-			'child'   => esc_html__( 'Child Theme', 'conjurewp' ),
-			'license' => esc_html__( 'License Activation', 'conjurewp' ),
-			'plugins' => esc_html__( 'Plugins', 'conjurewp' ),
-			'content' => esc_html__( 'Content Import', 'conjurewp' ),
+			'child'   => esc_html__( 'Child Theme', 'ConjureWP' ),
+			'license' => esc_html__( 'License Activation', 'ConjureWP' ),
+			'plugins' => esc_html__( 'Plugins', 'ConjureWP' ),
+			'content' => esc_html__( 'Content Import', 'ConjureWP' ),
 		);
 
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Legacy theme-specific dynamic hook for backward compatibility.
 		$rerun_steps = apply_filters( $this->theme->template . '_conjure_rerun_steps', $rerun_steps, $this->steps );
 
 		// Add individual step reset options.
@@ -4388,7 +4493,7 @@ class Conjure {
 					'meta'   => array(
 						'title' => sprintf(
 							/* translators: %s: step name */
-							esc_html__( 'Reset and rerun: %s', 'conjurewp' ),
+							esc_html__( 'Reset and rerun: %s', 'ConjureWP' ),
 							$step_label
 						),
 					),
@@ -4414,14 +4519,14 @@ class Conjure {
 			array(
 				'parent' => 'conjure-rerun',
 				'id'     => 'conjure-reset-all',
-				'title'  => '↻ ' . esc_html__( 'Reset All Steps', 'conjurewp' ),
+				'title'  => '↻ ' . esc_html__( 'Reset All Steps', 'ConjureWP' ),
 				'href'   => wp_nonce_url(
 					admin_url( '?conjure_reset_step=all' ),
 					'conjure_reset_step_all',
 					'_conjure_nonce'
 				),
 				'meta'   => array(
-					'title' => esc_html__( 'Reset all steps and rerun complete onboarding', 'conjurewp' ),
+					'title' => esc_html__( 'Reset all steps and rerun complete onboarding', 'ConjureWP' ),
 				),
 			)
 		);
@@ -4431,10 +4536,10 @@ class Conjure {
 			array(
 				'parent' => 'conjure-rerun',
 				'id'     => 'conjure-open-wizard',
-				'title'  => '→ ' . esc_html__( 'Open Wizard', 'conjurewp' ),
+				'title'  => '→ ' . esc_html__( 'Open Wizard', 'ConjureWP' ),
 				'href'   => admin_url( 'themes.php?page=' . $this->conjure_url ),
 				'meta'   => array(
-					'title' => esc_html__( 'Open Conjure WP setup wizard', 'conjurewp' ),
+					'title' => esc_html__( 'Open Conjure WP setup wizard', 'ConjureWP' ),
 				),
 			)
 		);
@@ -4449,29 +4554,30 @@ class Conjure {
 			return;
 		}
 
-		$step = sanitize_key( $_GET['conjure_reset_step'] );
+		$step  = sanitize_key( wp_unslash( $_GET['conjure_reset_step'] ) );
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_conjure_nonce'] ) );
 
 		// Verify nonce.
-		if ( ! wp_verify_nonce( $_GET['_conjure_nonce'], 'conjure_reset_step_' . $step ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'conjurewp' ) );
+		if ( ! wp_verify_nonce( $nonce, 'conjure_reset_step_' . $step ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'ConjureWP' ) );
 		}
 
 		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ) );
 		}
 
 		// Handle reset.
 		if ( 'all' === $step ) {
 			$this->reset_all_steps();
 			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure_url );
-			$message = __( 'All steps have been reset. You can now rerun the complete onboarding.', 'conjurewp' );
+			$message = __( 'All steps have been reset. You can now rerun the complete onboarding.', 'ConjureWP' );
 		} else {
 			$this->reset_step( $step );
 			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure_url . '&step=' . $step );
 			$message = sprintf(
 				/* translators: %s: step name */
-				__( 'Step "%s" has been reset. You can now rerun this step.', 'conjurewp' ),
+				__( 'Step "%s" has been reset. You can now rerun this step.', 'ConjureWP' ),
 				ucfirst( str_replace( '_', ' ', $step ) )
 			);
 		}
@@ -4494,7 +4600,7 @@ class Conjure {
 			delete_transient( 'conjure_admin_notice' );
 			?>
 			<div class="notice notice-success is-dismissible">
-				<p><strong><?php echo esc_html__( 'Conjure WP:', 'conjurewp' ); ?></strong> <?php echo esc_html( $message ); ?></p>
+				<p><strong><?php echo esc_html__( 'Conjure WP:', 'ConjureWP' ); ?></strong> <?php echo esc_html( $message ); ?></p>
 			</div>
 			<?php
 		}

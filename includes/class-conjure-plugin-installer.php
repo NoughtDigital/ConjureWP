@@ -7,7 +7,7 @@
  *
  * @package   ConjureWP
  * @version   2.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall
  * @copyright Copyright (c) 2024, ConjureWP
  * @license   GPL-3.0-or-later
@@ -401,16 +401,16 @@ class Conjure_Plugin_Installer {
 
 		foreach ( $slugs as $slug ) {
 			$current++;
-			
+
 			// Get plugin name.
 			$plugin = $this->get_plugin( $slug );
 			$plugin_name = $plugin ? $plugin['name'] : $slug;
-			
+
 			// Log progress.
 			$this->logger->info(
 				sprintf(
 					/* translators: 1: current number, 2: total number, 3: plugin name */
-					__( 'Installing plugin %1$d of %2$d: %3$s', 'conjurewp' ),
+					__( 'Installing plugin %1$d of %2$d: %3$s', 'ConjureWP' ),
 					$current,
 					$total,
 					$plugin_name
@@ -424,7 +424,7 @@ class Conjure_Plugin_Installer {
 
 			$results[ $slug ] = array(
 				'success' => ! is_wp_error( $result ),
-				'message' => is_wp_error( $result ) ? $result->get_error_message() : __( 'Successfully installed and activated', 'conjurewp' ),
+				'message' => is_wp_error( $result ) ? $result->get_error_message() : __( 'Successfully installed and activated', 'ConjureWP' ),
 				'name'    => $plugin_name,
 				'progress' => round( ( $current / $total ) * 100, 0 ),
 			);
@@ -515,4 +515,3 @@ class Conjure_Plugin_Installer_Skin extends WP_Upgrader_Skin {
 		// Errors are handled by the installer class.
 	}
 }
-

@@ -1,17 +1,17 @@
 <?php
 
 test('conjure file upload handler class file exists', function () {
-    $classFile = getPluginPath('includes/class-conjure-file-upload-handler.php');
+    $classFile = conjurewp_test_get_plugin_path('includes/class-conjure-file-upload-handler.php');
     expect(file_exists($classFile))->toBeTrue();
 });
 
 test('conjure file upload handler class can be loaded', function () {
-    require_once getPluginPath('includes/class-conjure-file-upload-handler.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-file-upload-handler.php');
     expect(class_exists('Conjure_File_Upload_Handler'))->toBeTrue();
 });
 
 test('conjure file upload handler class has required methods', function () {
-    require_once getPluginPath('includes/class-conjure-file-upload-handler.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-file-upload-handler.php');
     
     $requiredMethods = [
         '__construct',

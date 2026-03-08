@@ -14,4 +14,3 @@ class WXRImportInfo {
 	public $generator = '';
 	public $version;
 }
-

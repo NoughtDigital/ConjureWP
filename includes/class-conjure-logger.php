@@ -63,7 +63,7 @@ class Conjure_Logger {
 	 * 1. Passed $config parameter
 	 * 2. Filter hook 'conjurewp_logger_config' (THEME LEVEL CONTROL)
 	 * 3. wp-config.php constant CONJUREWP_LOGGER_CONFIG (SERVER LEVEL OVERRIDE)
-	 * 4. Default config from conjurewp-config.php
+	 * 4. Default config from ConjureWP-config.php
 	 *
 	 * @param array $config Optional configuration array (only used on first instantiation).
 	 *
@@ -195,8 +195,6 @@ class Conjure_Logger {
 			$handler->setFormatter( $formatter );
 			$this->log->pushHandler( $handler );
 		} catch ( \Exception $e ) {
-			// Fallback: if logger fails, we'll just continue without logging.
-			error_log( 'ConjureWP Logger failed to initialize: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -253,7 +251,10 @@ class Conjure_Logger {
 
 		// Rename current log file.
 		if ( file_exists( $this->log_path ) ) {
-			rename( $this->log_path, $rotated_file );
+			$filesystem = $this->get_filesystem();
+			if ( $filesystem ) {
+				$filesystem->move( $this->log_path, $rotated_file, true );
+			}
 		}
 
 		// Clean up old log files if we exceed max_files.
@@ -285,10 +286,31 @@ class Conjure_Logger {
 			$files_to_remove = array_slice( $log_files, 0, count( $log_files ) - $this->config['max_files'] );
 			foreach ( $files_to_remove as $file ) {
 				if ( file_exists( $file ) ) {
-					unlink( $file );
+					wp_delete_file( $file );
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get a WP_Filesystem instance.
+	 *
+	 * @return WP_Filesystem_Base|null Filesystem instance or null on failure.
+	 */
+	private function get_filesystem() {
+		global $wp_filesystem;
+
+		if ( $wp_filesystem instanceof WP_Filesystem_Base ) {
+			return $wp_filesystem;
+		}
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		WP_Filesystem();
+
+		return $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem : null;
 	}
 
 

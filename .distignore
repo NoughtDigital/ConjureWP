@@ -39,6 +39,8 @@ tsconfig.json
 # Build scripts
 /scripts/
 /build/
+build.sh
+*.sh
 
 # Source files (we only need compiled versions)
 /assets/scss/

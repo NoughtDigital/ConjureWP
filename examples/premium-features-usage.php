@@ -80,7 +80,7 @@ function conjurewp_render_advanced_demo_options() {
  */
 function conjurewp_register_premium_endpoints() {
 	register_rest_route(
-		'conjurewp/v1',
+		'ConjureWP/v1',
 		'/batch-import',
 		array(
 			'methods'             => 'POST',
@@ -101,7 +101,7 @@ function conjurewp_register_premium_endpoints() {
  * Add menu item with premium badge.
  */
 function conjurewp_add_premium_menu_item() {
-	$menu_title = __( 'Batch Import', 'conjurewp' );
+	$menu_title = __( 'Batch Import', 'ConjureWP' );
 	
 	// Add premium badge if user doesn't have license.
 	if ( ! Conjure_Premium_Features::is_premium() ) {
@@ -109,11 +109,11 @@ function conjurewp_add_premium_menu_item() {
 	}
 
 	add_submenu_page(
-		'conjurewp-setup',
-		__( 'Batch Import', 'conjurewp' ),
+		'ConjureWP-setup',
+		__( 'Batch Import', 'ConjureWP' ),
 		$menu_title,
 		'manage_options',
-		'conjurewp-batch-import',
+		'ConjureWP-batch-import',
 		'conjurewp_batch_import_page'
 	);
 }
@@ -148,9 +148,9 @@ function conjurewp_add_premium_setting() {
 	?>
 	<tr>
 		<th scope="row">
-			<?php esc_html_e( 'Auto Install Plugins', 'conjurewp' ); ?>
+			<?php esc_html_e( 'Auto Install Plugins', 'ConjureWP' ); ?>
 			<?php if ( ! Conjure_Premium_Features::is_premium() ) : ?>
-				<?php echo Conjure_Premium_Features::get_premium_badge(); ?>
+				<?php echo wp_kses_post( Conjure_Premium_Features::get_premium_badge() ); ?>
 			<?php endif; ?>
 		</th>
 		<td>
@@ -162,13 +162,13 @@ function conjurewp_add_premium_setting() {
 						value="1" 
 						<?php checked( get_option( 'conjurewp_auto_install_plugins' ), 1 ); ?>
 					/>
-					<?php esc_html_e( 'Automatically install required plugins', 'conjurewp' ); ?>
+					<?php esc_html_e( 'Automatically install required plugins', 'ConjureWP' ); ?>
 				</label>
 			<?php else : ?>
 				<p class="description">
-					<?php esc_html_e( 'This feature requires a premium license.', 'conjurewp' ); ?>
+					<?php esc_html_e( 'This feature requires a premium license.', 'ConjureWP' ); ?>
 					<a href="<?php echo esc_url( Conjure_Premium_Features::get_upgrade_url() ); ?>">
-						<?php esc_html_e( 'Upgrade now', 'conjurewp' ); ?>
+						<?php esc_html_e( 'Upgrade now', 'ConjureWP' ); ?>
 					</a>
 				</p>
 			<?php endif; ?>
@@ -195,10 +195,10 @@ add_filter( 'conjure_import_files', function( $demos ) {
 			?>
 			<div class="notice notice-warning">
 				<p>
-					<strong><?php esc_html_e( 'Want more demos?', 'conjurewp' ); ?></strong>
-					<?php esc_html_e( 'Upgrade to premium to unlock all demo imports.', 'conjurewp' ); ?>
+					<strong><?php esc_html_e( 'Want more demos?', 'ConjureWP' ); ?></strong>
+					<?php esc_html_e( 'Upgrade to premium to unlock all demo imports.', 'ConjureWP' ); ?>
 					<a href="<?php echo esc_url( Conjure_Premium_Features::get_upgrade_url() ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Upgrade Now', 'conjurewp' ); ?>
+						<?php esc_html_e( 'Upgrade Now', 'ConjureWP' ); ?>
 					</a>
 				</p>
 			</div>
@@ -223,10 +223,10 @@ add_shortcode( 'conjure_advanced_layout', function( $atts ) {
 				<p><strong>%s</strong></p>
 				<p>%s <a href="%s">%s</a></p>
 			</div>',
-			esc_html__( 'Premium Feature', 'conjurewp' ),
-			esc_html__( 'This shortcode requires a premium license.', 'conjurewp' ),
+			esc_html__( 'Premium Feature', 'ConjureWP' ),
+			esc_html__( 'This shortcode requires a premium license.', 'ConjureWP' ),
 			esc_url( Conjure_Premium_Features::get_upgrade_url() ),
-			esc_html__( 'Upgrade Now', 'conjurewp' )
+			esc_html__( 'Upgrade Now', 'ConjureWP' )
 		);
 	}
 
@@ -241,21 +241,21 @@ add_shortcode( 'conjure_advanced_layout', function( $atts ) {
 /**
  * Handle premium AJAX request.
  */
-add_action( 'wp_ajax_conjurewp_batch_process', function() {
+add_action( 'wp_ajax_ConjureWP_batch_process', function() {
 	// Security check.
 	check_ajax_referer( 'conjurewp_nonce', 'nonce' );
 
 	// Premium check.
 	if ( ! Conjure_Premium_Features::is_premium() ) {
 		wp_send_json_error( array(
-			'message' => __( 'This feature requires a premium license.', 'conjurewp' ),
+			'message' => __( 'This feature requires a premium license.', 'ConjureWP' ),
 			'upgrade_url' => Conjure_Premium_Features::get_upgrade_url(),
 		) );
 	}
 
 	// Process premium feature.
 	wp_send_json_success( array(
-		'message' => __( 'Batch processing completed!', 'conjurewp' ),
+		'message' => __( 'Batch processing completed!', 'ConjureWP' ),
 	) );
 });
 
@@ -328,16 +328,16 @@ function conjurewp_register_premium_features() {
 	add_action( 'conjurewp_settings_page', function() {
 		?>
 		<h2>
-			<?php esc_html_e( 'Batch Import', 'conjurewp' ); ?>
+			<?php esc_html_e( 'Batch Import', 'ConjureWP' ); ?>
 			<?php if ( ! Conjure_Premium_Features::is_premium() ) : ?>
-				<?php echo Conjure_Premium_Features::get_premium_badge(); ?>
+				<?php echo wp_kses_post( Conjure_Premium_Features::get_premium_badge() ); ?>
 			<?php endif; ?>
 		</h2>
 		
 		<?php if ( ! Conjure_Premium_Features::is_premium() ) : ?>
-			<p><?php esc_html_e( 'Batch import multiple demos at once.', 'conjurewp' ); ?></p>
+			<p><?php esc_html_e( 'Batch import multiple demos at once.', 'ConjureWP' ); ?></p>
 			<a href="<?php echo esc_url( Conjure_Premium_Features::get_upgrade_url() ); ?>" class="button button-primary">
-				<?php esc_html_e( 'Upgrade to Unlock', 'conjurewp' ); ?>
+				<?php esc_html_e( 'Upgrade to Unlock', 'ConjureWP' ); ?>
 			</a>
 		<?php else : ?>
 			<!-- Show actual batch import UI -->
@@ -357,7 +357,7 @@ function conjurewp_register_premium_features() {
 		// Register premium endpoints.
 		add_action( 'rest_api_init', function() {
 			// This entire REST API won't exist in free version.
-			register_rest_route( 'conjurewp/v1', '/batch-import', array(
+			register_rest_route( 'ConjureWP/v1', '/batch-import', array(
 				'methods'  => 'POST',
 				'callback' => array( 'Conjure_Batch_Importer', 'process' ),
 			));

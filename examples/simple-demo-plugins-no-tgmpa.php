@@ -22,6 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * ========================================================================
  * STEP 1: Define Your Demos with Plugin Requirements
@@ -29,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Just define plugins directly in your demos - no external setup needed!
  */
-function mytheme_simple_demos() {
+function conjurewp_simple_demos() {
 	$demo_path = get_template_directory() . '/demo-content/';
 	
 	return array(
@@ -112,7 +114,7 @@ function mytheme_simple_demos() {
 		),
 	);
 }
-add_filter( 'conjure_import_files', 'mytheme_simple_demos' );
+add_filter( 'conjure_import_files', 'conjurewp_simple_demos' );
 
 /**
  * ========================================================================
@@ -122,7 +124,7 @@ add_filter( 'conjure_import_files', 'mytheme_simple_demos' );
  * Register all possible plugins your theme might use.
  * This gives you one place to manage plugin configurations.
  */
-function mytheme_register_plugins() {
+function conjurewp_register_plugins() {
 	// Get the demo plugin manager
 	global $conjure_demo_plugin_manager;
 	
@@ -164,7 +166,7 @@ function mytheme_register_plugins() {
 	
 	$conjure_demo_plugin_manager->register_plugins( $plugins );
 }
-add_action( 'init', 'mytheme_register_plugins' );
+add_action( 'init', 'conjurewp_register_plugins' );
 
 /**
  * ========================================================================
@@ -173,7 +175,7 @@ add_action( 'init', 'mytheme_register_plugins' );
  *
  * Configure your site after demo import completes.
  */
-function mytheme_after_import( $selected_import ) {
+function conjurewp_after_import( $selected_import ) {
 	// Set up menus
 	$main_menu = get_term_by( 'name', 'Main Menu', 'nav_menu' );
 	if ( $main_menu ) {
@@ -182,8 +184,8 @@ function mytheme_after_import( $selected_import ) {
 		) );
 	}
 	
-	// Set front page
-	$front_page = get_page_by_title( 'Home' );
+	// Set front page.
+	$front_page = conjurewp_example_get_page_by_title( 'Home' );
 	if ( $front_page ) {
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $front_page->ID );
@@ -195,7 +197,7 @@ function mytheme_after_import( $selected_import ) {
 			case 'ecommerce-demo':
 				// WooCommerce setup
 				if ( class_exists( 'WooCommerce' ) ) {
-					$shop_page = get_page_by_title( 'Shop' );
+					$shop_page = conjurewp_example_get_page_by_title( 'Shop' );
 					if ( $shop_page ) {
 						update_option( 'woocommerce_shop_page_id', $shop_page->ID );
 					}
@@ -206,7 +208,7 @@ function mytheme_after_import( $selected_import ) {
 	
 	flush_rewrite_rules();
 }
-add_action( 'conjure_after_all_import', 'mytheme_after_import' );
+add_action( 'conjure_after_all_import', 'conjurewp_after_import' );
 
 /**
  * ========================================================================
@@ -276,7 +278,7 @@ add_action( 'conjure_after_all_import', 'mytheme_after_import' );
  * Plugins not showing?
  * - Check that 'required_plugins' is defined in demo array
  * - Verify plugin slugs are correct
- * - Check logs in wp-content/uploads/conjurewp-logs/
+ * - Check logs in wp-content/uploads/ConjureWP-logs/
  *
  * Plugin installation failing?
  * - Verify plugin exists on WordPress.org

@@ -1,7 +1,11 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 test('plugin can be activated without errors', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
     
     // Plugin should initialize properly via includes or admin_init hooks
@@ -13,7 +17,7 @@ test('plugin can be activated without errors', function () {
 });
 
 test('plugin initializes core classes on load', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
     
     // Should load core classes
@@ -21,7 +25,7 @@ test('plugin initializes core classes on load', function () {
 });
 
 test('plugin defines required constants on load', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
     
     expect($content)->toContain("define( 'CONJUREWP_VERSION'");
@@ -31,14 +35,14 @@ test('plugin defines required constants on load', function () {
 });
 
 test('plugin loads composer autoloader', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
     
     expect($content)->toContain('vendor/autoload.php');
 });
 
 test('plugin checks for direct access', function () {
-    $pluginFile = getPluginPath('conjurewp.php');
+    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
     
     expect($content)->toContain("if ( ! defined( 'ABSPATH' ) )");

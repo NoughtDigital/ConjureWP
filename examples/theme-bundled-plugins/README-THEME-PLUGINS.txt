@@ -8,7 +8,7 @@ OVERVIEW
 --------
 
 Instead of configuring plugins for each demo separately, you can:
-1. Create a /conjurewp-plugins/ folder in your theme
+1. Create a /ConjureWP-plugins/ folder in your theme
 2. Add a plugins.json configuration file
 3. Place plugin ZIP files in the folder (for premium/custom plugins)
 4. ConjureWP automatically discovers and registers them
@@ -29,7 +29,7 @@ SETUP INSTRUCTIONS
 In your theme directory, create:
 
 ```
-/wp-content/themes/your-theme/conjurewp-plugins/
+/wp-content/themes/your-theme/ConjureWP-plugins/
 ```
 
 ### Step 2: Create Configuration File
@@ -68,10 +68,10 @@ Create `plugins.json` in that folder:
 For bundled/premium plugins, place ZIP files in the folder:
 
 ```
-/conjurewp-plugins/
+/ConjureWP-plugins/
 ├── plugins.json
 ├── elementor-pro.zip
-└── mytheme-extensions.zip
+└── ConjureWP-extensions.zip
 ```
 
 CONFIGURATION OPTIONS
@@ -98,7 +98,7 @@ Each plugin in the JSON file supports these fields:
 - Note: "mandatory" also works (backward compatibility)
 
 **file** (string, optional)
-- Filename of bundled ZIP in conjurewp-plugins folder
+- Filename of bundled ZIP in ConjureWP-plugins folder
 - Only needed for premium/custom plugins
 - Omit for WordPress.org free plugins
 - Example: "elementor-pro.zip"
@@ -129,7 +129,7 @@ No "file" or "url" field - ConjureWP fetches from WordPress.org:
 
 ### Option 2: Bundled Plugins (ZIP in Theme Folder)
 
-Include "file" field pointing to ZIP in conjurewp-plugins folder:
+Include "file" field pointing to ZIP in ConjureWP-plugins folder:
 
 ```json
 {
@@ -181,7 +181,7 @@ https://updates.yoursite.com/downloads/plugin.zip
 
 ✅ **Private Update Servers:**
 ```
-https://licenses.yourtheme.com/download/plugin.zip?key=abc123
+https://licenses.ConjureWP.com/download/plugin.zip?key=abc123
 ```
 
 REQUIRED VS OPTIONAL
@@ -241,8 +241,8 @@ EXAMPLE CONFIGURATIONS
     },
     {
       "name": "Theme Extensions",
-      "slug": "mytheme-pro",
-      "file": "mytheme-pro.zip",
+      "slug": "ConjureWP-pro",
+      "file": "ConjureWP-pro.zip",
       "required": true,
       "version": "1.0.0"
     }
@@ -265,7 +265,7 @@ EXAMPLE CONFIGURATIONS
     },
     {
       "name": "Theme Companion",
-      "slug": "mytheme-companion",
+      "slug": "ConjureWP-companion",
       "url": "https://github.com/username/companion/releases/latest/download/companion.zip",
       "required": true,
       "description": "Always gets latest from GitHub"
@@ -297,7 +297,7 @@ This shows the full power - mixing WordPress.org, bundled ZIPs, and external URL
     },
     {
       "name": "Theme Extensions",
-      "slug": "mytheme-extensions",
+      "slug": "ConjureWP-extensions",
       "url": "https://github.com/yourname/extensions/releases/download/v1.5.0/extensions.zip",
       "required": true,
       "version": "1.5.0",
@@ -305,7 +305,7 @@ This shows the full power - mixing WordPress.org, bundled ZIPs, and external URL
     },
     {
       "name": "Private Updates",
-      "slug": "mytheme-pro-updates",
+      "slug": "ConjureWP-pro-updates",
       "url": "https://updates.yoursite.com/api/download/plugin.zip",
       "required": false,
       "version": "2.0.0",
@@ -396,7 +396,7 @@ Example:
 
 ### Demo configuration:
 ```php
-function mytheme_import_files() {
+function ConjureWP_import_files() {
     return array(
         array(
             'import_file_name' => 'Shop Demo',
@@ -418,11 +418,11 @@ FOLDER STRUCTURE EXAMPLE
 /wp-content/themes/your-theme/
 ├── style.css
 ├── functions.php
-├── conjurewp-plugins/              ← Create this folder
+├── ConjureWP-plugins/              ← Create this folder
 │   ├── plugins.json                ← Configuration file
 │   ├── elementor-pro.zip           ← Premium plugin
 │   ├── acf-pro.zip                 ← Premium plugin
-│   └── mytheme-extensions.zip      ← Your custom plugin
+│   └── ConjureWP-extensions.zip      ← Your custom plugin
 └── demos/
     ├── main/
     │   └── content.xml
@@ -494,7 +494,7 @@ TESTING
 
 ### Test Theme Plugin Bundling:
 
-1. Create /conjurewp-plugins/ folder in theme
+1. Create /ConjureWP-plugins/ folder in theme
 2. Add plugins.json file
 3. Add any premium plugin ZIPs
 4. Activate your theme
@@ -508,7 +508,7 @@ Use this code to validate your configuration:
 
 ```php
 $result = Conjure_Theme_Plugins::validate_config( 
-    get_template_directory() . '/conjurewp-plugins/plugins.json' 
+    get_template_directory() . '/ConjureWP-plugins/plugins.json' 
 );
 
 if ( is_wp_error( $result ) ) {
@@ -524,7 +524,7 @@ TROUBLESHOOTING
 ### Plugins Not Appearing in Wizard
 
 Check:
-1. Folder name is exactly "conjurewp-plugins" (no typo)
+1. Folder name is exactly "ConjureWP-plugins" (no typo)
 2. Folder is in THEME directory, not plugin directory
 3. JSON file is named exactly "plugins.json"
 4. JSON syntax is valid (use a JSON validator)
@@ -533,7 +533,7 @@ Check:
 ### Bundled Plugin Not Installing
 
 Check:
-1. ZIP file exists in conjurewp-plugins folder
+1. ZIP file exists in ConjureWP-plugins folder
 2. "file" field matches ZIP filename exactly
 3. ZIP file is valid WordPress plugin package
 4. Check ConjureWP logs for specific errors
@@ -551,7 +551,7 @@ SUPPORT
 
 Need help?
 - Check ConjureWP logs: /wp-content/uploads/conjure-wp/main.log
-- Visit: https://conjurewp.com/support/
+- Visit: https://ConjureWP.com/support/
 - Or ask in the support forum
 
 EXAMPLE THEMES

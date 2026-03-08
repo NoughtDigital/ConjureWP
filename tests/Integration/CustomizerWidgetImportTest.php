@@ -1,7 +1,7 @@
 <?php
 
 test('customizer option class file exists and has proper structure', function () {
-    $customizerOptionFile = getPluginPath('includes/class-conjure-customizer-option.php');
+    $customizerOptionFile = conjurewp_test_get_plugin_path('includes/class-conjure-customizer-option.php');
     $content = file_get_contents($customizerOptionFile);
     
     expect($content)->toContain('class Conjure_Customizer_Option');
@@ -9,9 +9,9 @@ test('customizer option class file exists and has proper structure', function ()
 });
 
 test('customizer importer can import data file', function () {
-    require_once getPluginPath('includes/class-conjure-customizer-importer.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-customizer-importer.php');
     
-    $customizerFile = getPluginPath('demo/customizer.dat');
+    $customizerFile = conjurewp_test_get_plugin_path('demo/customizer.dat');
     
     if (!file_exists($customizerFile)) {
         expect(true)->toBeTrue(); // Skip if demo file doesn't exist
@@ -23,9 +23,9 @@ test('customizer importer can import data file', function () {
 });
 
 test('widget importer can parse widget data', function () {
-    require_once getPluginPath('includes/class-conjure-widget-importer.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-widget-importer.php');
     
-    $widgetsFile = getPluginPath('demo/widgets.json');
+    $widgetsFile = conjurewp_test_get_plugin_path('demo/widgets.json');
     
     if (!file_exists($widgetsFile)) {
         expect(true)->toBeTrue(); // Skip if demo file doesn't exist
@@ -37,13 +37,13 @@ test('widget importer can parse widget data', function () {
 });
 
 test('widget importer handles empty sidebars', function () {
-    require_once getPluginPath('includes/class-conjure-widget-importer.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-widget-importer.php');
     
     expect(method_exists('Conjure_Widget_Importer', 'import'))->toBeTrue();
 });
 
 test('customizer importer validates data before import', function () {
-    require_once getPluginPath('includes/class-conjure-customizer-importer.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-customizer-importer.php');
     
     $methods = get_class_methods('Conjure_Customizer_Importer');
     $hasValidation = false;
@@ -60,9 +60,9 @@ test('customizer importer validates data before import', function () {
 });
 
 test('redux importer can handle redux framework options', function () {
-    require_once getPluginPath('includes/class-conjure-redux-importer.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-redux-importer.php');
     
-    $reduxFile = getPluginPath('demo/redux-options.json');
+    $reduxFile = conjurewp_test_get_plugin_path('demo/redux-options.json');
     
     if (!file_exists($reduxFile)) {
         expect(true)->toBeTrue(); // Skip if demo file doesn't exist
@@ -76,7 +76,7 @@ test('redux importer can handle redux framework options', function () {
 });
 
 test('customizer option class has import method', function () {
-    $customizerOptionFile = getPluginPath('includes/class-conjure-customizer-option.php');
+    $customizerOptionFile = conjurewp_test_get_plugin_path('includes/class-conjure-customizer-option.php');
     $content = file_get_contents($customizerOptionFile);
     
     expect($content)->toContain('function import');

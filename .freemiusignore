@@ -7,9 +7,18 @@
 .gitignore
 .github
 .DS_Store
+.editorconfig
+.nvmrc
+.gitattributes
+.distignore
+.freemiusignore
 node_modules/
 .vscode/
 .idea/
+
+# Shell scripts (application files not permitted in package)
+build.sh
+*.sh
 
 # Build tools
 package.json

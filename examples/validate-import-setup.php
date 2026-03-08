@@ -220,10 +220,7 @@ function conjurewp_validate_import_setup() {
 
 	$output[] = "\n========================================\n";
 
-	// Log to WordPress debug log.
-	error_log( implode( "\n", $output ) );
-
-	// Also output to admin notices if in admin.
+	// Output to admin notices.
 	if ( current_user_can( 'manage_options' ) ) {
 		add_action(
 			'admin_notices',
@@ -240,14 +237,20 @@ function conjurewp_validate_import_setup() {
 	}
 }
 
-// Run validation on admin_init (only once per session to avoid spam).
+// Run validation on admin_init when requested via nonced link.
 add_action(
 	'admin_init',
 	function () {
-		// Only run if a specific query parameter is set.
-		if ( isset( $_GET['conjurewp_validate'] ) && current_user_can( 'manage_options' ) ) {
-			conjurewp_validate_import_setup();
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
 		}
+		if ( ! isset( $_GET['conjurewp_validate'] ) ) {
+			return;
+		}
+		if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'conjurewp_validate' ) ) {
+			return;
+		}
+		conjurewp_validate_import_setup();
 	},
 	999
 );
@@ -268,14 +271,14 @@ add_action(
 			'ConjureWP Validation',
 			'ConjureWP Validation',
 			'manage_options',
-			'conjurewp-validate',
+			'ConjureWP-validate',
 			function () {
 				?>
 			<div class="wrap">
 				<h1>ConjureWP Import Setup Validation</h1>
 				<p>Click the button below to validate your import setup configuration.</p>
 				<p>
-						<a href="<?php echo esc_url( admin_url( 'tools.php?page=conjurewp-validate&conjurewp_validate=1' ) ); ?>" class="button button-primary">
+						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'tools.php?page=ConjureWP-validate&conjurewp_validate=1' ), 'conjurewp_validate' ) ); ?>" class="button button-primary">
 						Run Validation
 					</a>
 				</p>

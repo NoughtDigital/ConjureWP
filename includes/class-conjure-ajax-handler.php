@@ -6,7 +6,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -104,4 +104,3 @@ class Conjure_Ajax_Handler {
 		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $this->conjure, 'update_selected_import_data_info' ) );
 	}
 }
-

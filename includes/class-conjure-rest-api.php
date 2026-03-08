@@ -7,7 +7,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -42,7 +42,7 @@ class Conjure_REST_API {
 	 *
 	 * @var string
 	 */
-	private $namespace = 'conjurewp/v1';
+	private $namespace = 'ConjureWP/v1';
 
 	/**
 	 * Constructor.
@@ -124,7 +124,7 @@ class Conjure_REST_API {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				__( 'You do not have permission to perform this action.', 'conjurewp' ),
+				__( 'You do not have permission to perform this action.', 'ConjureWP' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -146,7 +146,7 @@ class Conjure_REST_API {
 				return new WP_REST_Response(
 					array(
 						'demos' => array(),
-						'message' => __( 'No demo imports are registered. Use the conjure_import_files filter to register demos.', 'conjurewp' ),
+						'message' => __( 'No demo imports are registered. Use the conjure_import_files filter to register demos.', 'ConjureWP' ),
 					),
 					200
 				);
@@ -179,7 +179,7 @@ class Conjure_REST_API {
 
 			return new WP_Error(
 				'rest_list_demos_error',
-				__( 'An error occurred while listing demos.', 'conjurewp' ),
+				__( 'An error occurred while listing demos.', 'ConjureWP' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -198,7 +198,7 @@ class Conjure_REST_API {
 			if ( empty( $demo ) ) {
 				return new WP_Error(
 					'rest_missing_param',
-					__( 'You must specify a demo using the demo parameter.', 'conjurewp' ),
+					__( 'You must specify a demo using the demo parameter.', 'ConjureWP' ),
 					array( 'status' => 400 )
 				);
 			}
@@ -209,7 +209,7 @@ class Conjure_REST_API {
 			if ( empty( $import_files ) ) {
 				return new WP_Error(
 					'rest_no_demos',
-					__( 'No demo imports are registered. Use the conjure_import_files filter to register demos.', 'conjurewp' ),
+					__( 'No demo imports are registered. Use the conjure_import_files filter to register demos.', 'ConjureWP' ),
 					array( 'status' => 404 )
 				);
 			}
@@ -222,7 +222,7 @@ class Conjure_REST_API {
 					'rest_demo_not_found',
 					sprintf(
 						/* translators: %s: demo identifier */
-						__( 'Demo "%s" not found.', 'conjurewp' ),
+						__( 'Demo "%s" not found.', 'ConjureWP' ),
 						$demo
 					),
 					array( 'status' => 404 )
@@ -249,7 +249,7 @@ class Conjure_REST_API {
 			return new WP_REST_Response(
 				array(
 					'success' => true,
-					'message' => __( 'Import completed successfully.', 'conjurewp' ),
+					'message' => __( 'Import completed successfully.', 'ConjureWP' ),
 					'demo'    => array(
 						'index' => $selected_index,
 						'name'  => $selected_import['import_file_name'],
@@ -274,7 +274,7 @@ class Conjure_REST_API {
 				'rest_import_error',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'An error occurred during import: %s', 'conjurewp' ),
+					__( 'An error occurred during import: %s', 'ConjureWP' ),
 					$e->getMessage()
 				),
 				array( 'status' => 500 )
@@ -418,7 +418,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: file path */
-					__( 'Content file not found: %s', 'conjurewp' ),
+					__( 'Content file not found: %s', 'ConjureWP' ),
 					$file_path
 				),
 			);
@@ -441,7 +441,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: error message */
-					__( 'Content import failed: %s', 'conjurewp' ),
+					__( 'Content import failed: %s', 'ConjureWP' ),
 					$result->get_error_message()
 				),
 			);
@@ -449,7 +449,7 @@ class Conjure_REST_API {
 
 		return array(
 			'success' => true,
-			'message' => __( 'Content imported successfully.', 'conjurewp' ),
+			'message' => __( 'Content imported successfully.', 'ConjureWP' ),
 			'total'   => $total,
 		);
 	}
@@ -466,7 +466,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: file path */
-					__( 'Widgets file not found: %s', 'conjurewp' ),
+					__( 'Widgets file not found: %s', 'ConjureWP' ),
 					$file_path
 				),
 			);
@@ -479,7 +479,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: error message */
-					__( 'Widget import failed: %s', 'conjurewp' ),
+					__( 'Widget import failed: %s', 'ConjureWP' ),
 					$result->get_error_message()
 				),
 			);
@@ -487,7 +487,7 @@ class Conjure_REST_API {
 
 		return array(
 			'success' => true,
-			'message' => __( 'Widgets imported successfully.', 'conjurewp' ),
+			'message' => __( 'Widgets imported successfully.', 'ConjureWP' ),
 		);
 	}
 
@@ -503,7 +503,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: file path */
-					__( 'Options file not found: %s', 'conjurewp' ),
+					__( 'Options file not found: %s', 'ConjureWP' ),
 					$file_path
 				),
 			);
@@ -516,7 +516,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: error message */
-					__( 'Options import failed: %s', 'conjurewp' ),
+					__( 'Options import failed: %s', 'ConjureWP' ),
 					$result->get_error_message()
 				),
 			);
@@ -524,7 +524,7 @@ class Conjure_REST_API {
 
 		return array(
 			'success' => true,
-			'message' => __( 'Customizer options imported successfully.', 'conjurewp' ),
+			'message' => __( 'Customizer options imported successfully.', 'ConjureWP' ),
 		);
 	}
 
@@ -540,7 +540,7 @@ class Conjure_REST_API {
 				'success' => false,
 				'message' => sprintf(
 					/* translators: %s: file path */
-					__( 'Sliders file not found: %s', 'conjurewp' ),
+					__( 'Sliders file not found: %s', 'ConjureWP' ),
 					$file_path
 				),
 			);
@@ -549,7 +549,7 @@ class Conjure_REST_API {
 		if ( ! class_exists( 'RevSlider', false ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Revolution Slider plugin is not active. Skipping slider import.', 'conjurewp' ),
+				'message' => __( 'Revolution Slider plugin is not active. Skipping slider import.', 'ConjureWP' ),
 				'skipped' => true,
 			);
 		}
@@ -562,13 +562,13 @@ class Conjure_REST_API {
 		if ( 'failed' === $result ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Slider import failed.', 'conjurewp' ),
+				'message' => __( 'Slider import failed.', 'ConjureWP' ),
 			);
 		}
 
 		return array(
 			'success' => true,
-			'message' => __( 'Sliders imported successfully.', 'conjurewp' ),
+			'message' => __( 'Sliders imported successfully.', 'ConjureWP' ),
 		);
 	}
 
@@ -582,7 +582,7 @@ class Conjure_REST_API {
 		if ( empty( $redux_files ) || ! is_array( $redux_files ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'No Redux files provided.', 'conjurewp' ),
+				'message' => __( 'No Redux files provided.', 'ConjureWP' ),
 			);
 		}
 
@@ -591,7 +591,7 @@ class Conjure_REST_API {
 			if ( empty( $redux_file['file_path'] ) || ! file_exists( $redux_file['file_path'] ) ) {
 				$errors[] = sprintf(
 					/* translators: %s: file path */
-					__( 'Redux file not found: %s', 'conjurewp' ),
+					__( 'Redux file not found: %s', 'ConjureWP' ),
 					$redux_file['file_path'] ?? 'unknown'
 				);
 				continue;
@@ -602,7 +602,7 @@ class Conjure_REST_API {
 			if ( is_wp_error( $result ) ) {
 				$errors[] = sprintf(
 					/* translators: %s: error message */
-					__( 'Redux import failed: %s', 'conjurewp' ),
+					__( 'Redux import failed: %s', 'ConjureWP' ),
 					$result->get_error_message()
 				);
 			}
@@ -617,8 +617,7 @@ class Conjure_REST_API {
 
 		return array(
 			'success' => true,
-			'message' => __( 'Redux options imported successfully.', 'conjurewp' ),
+			'message' => __( 'Redux options imported successfully.', 'ConjureWP' ),
 		);
 	}
 }
-

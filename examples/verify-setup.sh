@@ -174,11 +174,11 @@ echo ""
 
 # PHP syntax check
 echo "Checking PHP syntax..."
-php -l conjurewp.php > /dev/null 2>&1
+php -l ConjureWP.php > /dev/null 2>&1
 if [ $? -eq 0 ]; then
-    echo -e "  ${GREEN}✓${NC} conjurewp.php has no syntax errors"
+    echo -e "  ${GREEN}✓${NC} ConjureWP.php has no syntax errors"
 else
-    echo -e "  ${RED}✗${NC} conjurewp.php has syntax errors"
+    echo -e "  ${RED}✗${NC} ConjureWP.php has syntax errors"
     ALL_GOOD=false
 fi
 

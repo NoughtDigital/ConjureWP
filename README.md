@@ -17,7 +17,7 @@ WordPress theme setup wizard with demo content import.
 -   **Revolution Slider import** - Import slider configurations for advanced demo replication
 -   **Redux Framework import** - Import theme option panel settings
 -   **Demo-specific plugin dependencies** - Show only relevant plugins per demo
--   **Theme bundled plugins** - Auto-merge plugins from theme's `/conjurewp-plugins/` folder
+-   **Theme bundled plugins** - Auto-merge plugins from theme's `/ConjureWP-plugins/` folder
 -   **Server health check** - PHP memory limit, execution time, MySQL version monitoring
 -   **Comprehensive logging** - Detailed logs with rotation, filtering, and admin viewer
 -   **Admin tools** - Log viewer, clear/download logs, wizard reset controls
@@ -60,7 +60,7 @@ Activate via WordPress admin, then configure imports using filters.
 
 **Important:** For production builds, `dev_mode` and verbose logging are **disabled by default** to prevent accidental exposure of reset tools or DEBUG-level log noise.
 
-In `conjurewp-config.php`:
+In `ConjureWP-config.php`:
 
 -   `dev_mode`: Defaults to `false` - prevents wizard from being rerun after completion (hides reset tools)
 -   `logging['min_log_level']`: Defaults to `'INFO'` - suppresses DEBUG-level verbose logging
@@ -68,7 +68,7 @@ In `conjurewp-config.php`:
 To enable these features during development:
 
 ```php
-// In conjurewp-config.php
+// In ConjureWP-config.php
 'dev_mode' => true, // Enable development mode
 'logging' => array(
     'min_log_level' => 'DEBUG', // Enable verbose logging
@@ -114,16 +114,16 @@ Demos are automatically discovered and registered.
 
 #### Option 2: Theme Directory
 
-Store in: `wp-content/themes/your-theme/conjurewp-demos/`
+Store in: `wp-content/themes/your-theme/ConjureWP-demos/`
 
 ```php
 function my_theme_import_files() {
     return array(
         array(
             'import_file_name'             => 'Demo Import',
-            'local_import_file'            => get_template_directory() . '/conjurewp-demos/content.xml',
-            'local_import_widget_file'     => get_template_directory() . '/conjurewp-demos/widgets.json',
-            'local_import_customizer_file' => get_template_directory() . '/conjurewp-demos/customizer.dat',
+            'local_import_file'            => get_template_directory() . '/ConjureWP-demos/content.xml',
+            'local_import_widget_file'     => get_template_directory() . '/ConjureWP-demos/widgets.json',
+            'local_import_customizer_file' => get_template_directory() . '/ConjureWP-demos/customizer.dat',
         ),
     );
 }
@@ -151,8 +151,8 @@ function my_theme_after_import_setup( $selected_import ) {
 ### Demo Location Priority
 
 1. `CONJUREWP_DEMO_PATH` constant (wp-config.php)
-2. Theme directory `/conjurewp-demos/`
-3. Uploads directory `/conjurewp-demos/`
+2. Theme directory `/ConjureWP-demos/`
+3. Uploads directory `/ConjureWP-demos/`
 4. Plugin directory `/demo/` (examples only)
 
 ### Securing Demo Directories
@@ -160,7 +160,7 @@ function my_theme_after_import_setup( $selected_import ) {
 Demo directories in the uploads folder are automatically protected with `.htaccess` (Apache/LiteSpeed) and `index.php` placeholders. For nginx, add this to your server configuration:
 
 ```nginx
-location ~* /wp-content/uploads/conjurewp-demos/ {
+location ~* /wp-content/uploads/ConjureWP-demos/ {
     deny all;
     return 403;
 }
@@ -180,7 +180,7 @@ When `CONJUREWP_AUTO_REGISTER_DEMOS` is enabled:
 Add preview images to display demos in a visual grid (similar to "One Click Demo Import"):
 
 ```
-/themes/your-theme/conjurewp-demos/
+/themes/your-theme/ConjureWP-demos/
 ├── main-demo/
 │   ├── content.xml
 │   ├── widgets.json
@@ -270,7 +270,7 @@ See `examples/conjure-filters-sample.php` and `examples/theme-integration.php` f
 Define different plugins for each demo, improving UX and reducing installation time:
 
 ```php
-function mytheme_import_files() {
+function ConjureWP_import_files() {
     return array(
         array(
             'import_file_name'     => 'Business Demo',
@@ -300,7 +300,7 @@ function mytheme_import_files() {
         ),
     );
 }
-add_filter( 'conjure_import_files', 'mytheme_import_files' );
+add_filter( 'conjure_import_files', 'ConjureWP_import_files' );
 ```
 
 **Benefits:**
@@ -321,20 +321,20 @@ Automatically bundle plugins with your theme for seamless distribution.
 
 **Setup:**
 
-1. Create `/conjurewp-plugins/` folder in your theme
+1. Create `/ConjureWP-plugins/` folder in your theme
 2. Add `plugins.json` configuration:
 
 ```json
 {
-    "plugins": [
-        {
-            "name": "My Premium Plugin",
-            "slug": "my-premium-plugin",
-            "source": "my-premium-plugin.zip",
-            "required": true,
-            "version": "1.0.0"
-        }
-    ]
+	"plugins": [
+		{
+			"name": "My Premium Plugin",
+			"slug": "my-premium-plugin",
+			"source": "my-premium-plugin.zip",
+			"required": true,
+			"version": "1.0.0"
+		}
+	]
 }
 ```
 
@@ -392,7 +392,7 @@ wp plugin install contact-form-7 --activate
 wp conjure import --demo=0
 ```
 
-For complete documentation, see [WP-CLI.md](WP-CLI.md).
+For complete documentation, see [WP-CLI.md](docs/WP-CLI.md).
 
 ## REST API
 
@@ -403,13 +403,13 @@ ConjureWP exposes REST API endpoints for hosting dashboards and automation tools
 **List Demos:**
 
 ```bash
-GET /wp-json/conjurewp/v1/demos
+GET /wp-json/ConjureWP/v1/demos
 ```
 
 **Import Demo:**
 
 ```bash
-POST /wp-json/conjurewp/v1/import
+POST /wp-json/ConjureWP/v1/import
 {
     "demo": "demo-slug-or-index",
     "skip_content": false,
@@ -505,7 +505,7 @@ Features:
 
 ### Log Configuration
 
-In `conjurewp-config.php`:
+In `ConjureWP-config.php`:
 
 ```php
 'logging' => array(
@@ -571,11 +571,12 @@ Build a WordPress.org compatible distribution:
 npm run build:wp
 ```
 
-This creates `dist/conjurewp.zip` with:
-- Production-optimised assets
-- Required vendor dependencies (Monolog)
-- No development files (tests, examples, build configs)
-- WordPress.org ready structure
+This creates `dist/ConjureWP.zip` with:
+
+-   Production-optimised assets
+-   Required vendor dependencies (Monolog)
+-   No development files (tests, examples, build configs)
+-   WordPress.org ready structure
 
 Upload the generated zip to WordPress.org SVN repository.
 
@@ -583,7 +584,7 @@ Upload the generated zip to WordPress.org SVN repository.
 
 ### User Documentation
 
--   **[WP-CLI Documentation](WP-CLI.md)** - Complete WP-CLI command reference for automated imports
+-   **[WP-CLI Documentation](docs/WP-CLI.md)** - Complete WP-CLI command reference for automated imports
 
 ### Developer Documentation
 
@@ -623,7 +624,7 @@ See [examples/README.md](examples/README.md) for the complete list with descript
 
 -   **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
 -   **GitHub Repository** - [github.com/NoughtDigital/ConjureWP](https://github.com/NoughtDigital/ConjureWP)
--   **Support** - [conjurewp.com](https://conjurewp.com/)
+-   **Support** - [ConjureWP.com](https://ConjureWP.com/)
 
 ## Credits
 

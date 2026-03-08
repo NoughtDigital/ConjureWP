@@ -6,7 +6,7 @@
  *
  * @package   Conjure WP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from Nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
  * @license   Licensed GPLv3 for Open Source Use
@@ -58,7 +58,7 @@ class Conjure_Child_Theme_Generator {
 		if ( ! current_user_can( 'switch_themes' ) ) {
 			wp_send_json_error(
 				array(
-					'message' => esc_html__( 'You do not have permission to perform this action.', 'conjurewp' ),
+					'message' => esc_html__( 'You do not have permission to perform this action.', 'ConjureWP' ),
 				)
 			);
 		}
@@ -81,7 +81,7 @@ class Conjure_Child_Theme_Generator {
 		if ( ! file_exists( $path ) ) {
 
 			if ( ! WP_Filesystem() ) {
-				$error_message = __( 'Unable to initialise the WordPress filesystem. Cannot create child theme.', 'conjurewp' );
+				$error_message = __( 'Unable to initialise the WordPress filesystem. Cannot create child theme.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -94,7 +94,7 @@ class Conjure_Child_Theme_Generator {
 			global $wp_filesystem;
 
 			if ( ! $wp_filesystem ) {
-				$error_message = __( 'WordPress filesystem is not available. Cannot create child theme.', 'conjurewp' );
+				$error_message = __( 'WordPress filesystem is not available. Cannot create child theme.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -108,7 +108,7 @@ class Conjure_Child_Theme_Generator {
 			if ( ! $mkdir_result ) {
 				$error_message = sprintf(
 					/* translators: %s: directory path */
-					__( 'Unable to create child theme directory: %s', 'conjurewp' ),
+					__( 'Unable to create child theme directory: %s', 'ConjureWP' ),
 					$path
 				);
 				$this->logger->error( $error_message );
@@ -122,7 +122,7 @@ class Conjure_Child_Theme_Generator {
 
 			$style_result = $wp_filesystem->put_contents( $path . '/style.css', $this->generate_child_style_css( $parent_slug, $parent_theme->name, $parent_theme->author, $parent_theme->version ) );
 			if ( ! $style_result ) {
-				$error_message = __( 'Unable to create child theme style.css file.', 'conjurewp' );
+				$error_message = __( 'Unable to create child theme style.css file.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -134,7 +134,7 @@ class Conjure_Child_Theme_Generator {
 
 			$functions_result = $wp_filesystem->put_contents( $path . '/functions.php', $this->generate_child_functions_php( $parent_slug ) );
 			if ( ! $functions_result ) {
-				$error_message = __( 'Unable to create child theme functions.php file.', 'conjurewp' );
+				$error_message = __( 'Unable to create child theme functions.php file.', 'ConjureWP' );
 				$this->logger->error( $error_message );
 
 				wp_send_json_error(
@@ -157,7 +157,7 @@ class Conjure_Child_Theme_Generator {
 				switch_theme( $slug );
 			endif;
 
-			$this->logger->debug( __( 'The existing child theme was activated', 'conjurewp' ) );
+			$this->logger->debug( __( 'The existing child theme was activated', 'ConjureWP' ) );
 
 			wp_send_json(
 				array(
@@ -175,7 +175,7 @@ class Conjure_Child_Theme_Generator {
 			switch_theme( $slug );
 		endif;
 
-		$this->logger->debug( __( 'A new child theme was created and activated', 'conjurewp' ) );
+		$this->logger->debug( __( 'A new child theme was created and activated', 'ConjureWP' ) );
 
 		wp_send_json(
 			array(
@@ -234,7 +234,7 @@ class Conjure_Child_Theme_Generator {
 		// Let's remove the tabs so that it displays nicely.
 		$output = trim( preg_replace( '/\t+/', '', $output ) );
 
-		$this->logger->debug( __( 'The child theme functions.php content was generated', 'conjurewp' ) );
+		$this->logger->debug( __( 'The child theme functions.php content was generated', 'ConjureWP' ) );
 
 		// Filterable return.
 		return apply_filters( 'conjure_generate_child_functions_php', $output, $slug );
@@ -264,7 +264,7 @@ class Conjure_Child_Theme_Generator {
 		// Let's remove the tabs so that it displays nicely.
 		$output = trim( preg_replace( '/\t+/', '', $output ) );
 
-		$this->logger->debug( __( 'The child theme style.css content was generated', 'conjurewp' ) );
+		$this->logger->debug( __( 'The child theme style.css content was generated', 'ConjureWP' ) );
 
 		return apply_filters( 'conjure_generate_child_style_css', $output, $slug, $parent_theme_name, $version );
 	}
@@ -298,10 +298,9 @@ class Conjure_Child_Theme_Generator {
 		if ( ! empty( $screenshot ) && file_exists( $screenshot ) ) {
 			$copied = copy( $screenshot, $path . '/screenshot.' . $screenshot_ext );
 
-			$this->logger->debug( __( 'The child theme screenshot was copied to the child theme, with the following result', 'conjurewp' ), array( 'copied' => $copied ) );
+			$this->logger->debug( __( 'The child theme screenshot was copied to the child theme, with the following result', 'ConjureWP' ), array( 'copied' => $copied ) );
 		} else {
-			$this->logger->debug( __( 'The child theme screenshot was not generated, because of these results', 'conjurewp' ), array( 'screenshot' => $screenshot ) );
+			$this->logger->debug( __( 'The child theme screenshot was not generated, because of these results', 'ConjureWP' ), array( 'screenshot' => $screenshot ) );
 		}
 	}
 }
-

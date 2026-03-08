@@ -7,7 +7,7 @@
  *
  * @package   ConjureWP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Inventionn LLC
  * @licence   Licenced GPLv3 for Open Source Use
@@ -29,8 +29,8 @@ class Conjure_Demo_Helpers {
 	 *
 	 * Priority order (theme-first approach):
 	 * 1. Filtered custom path (via 'conjurewp_custom_demo_path') - THEME LEVEL CONTROL
-	 * 2. Theme directory /conjurewp-demos/
-	 * 3. Uploads directory /conjurewp-demos/
+	 * 2. Theme directory /ConjureWP-demos/
+	 * 3. Uploads directory /ConjureWP-demos/
 	 * 4. wp-config.php constant CONJUREWP_DEMO_PATH - SERVER LEVEL OVERRIDE
 	 * 5. Plugin directory /demo/ (default, but NOT update-safe)
 	 *
@@ -83,10 +83,10 @@ class Conjure_Demo_Helpers {
 		$theme_dir = get_template_directory();
 
 		if ( ! empty( $theme_slug ) ) {
-			return trailingslashit( $theme_dir . '/conjurewp-demos/' . $theme_slug );
+			return trailingslashit( $theme_dir . '/ConjureWP-demos/' . $theme_slug );
 		}
 
-		return trailingslashit( $theme_dir . '/conjurewp-demos' );
+		return trailingslashit( $theme_dir . '/ConjureWP-demos' );
 	}
 
 	/**
@@ -97,7 +97,7 @@ class Conjure_Demo_Helpers {
 	 */
 	public static function get_uploads_demo_directory( $theme_slug = '' ) {
 		$upload_dir = wp_upload_dir();
-		$base_path = trailingslashit( $upload_dir['basedir'] ) . 'conjurewp-demos';
+		$base_path = trailingslashit( $upload_dir['basedir'] ) . 'ConjureWP-demos';
 
 		if ( ! empty( $theme_slug ) ) {
 			return trailingslashit( $base_path . '/' . $theme_slug );
@@ -188,7 +188,7 @@ class Conjure_Demo_Helpers {
 		if ( ! wp_mkdir_p( $directory ) ) {
 			return new WP_Error(
 				'directory_creation_failed',
-				__( 'Failed to create demo content directory.', 'conjurewp' )
+				__( 'Failed to create demo content directory.', 'ConjureWP' )
 			);
 		}
 
@@ -241,7 +241,7 @@ class Conjure_Demo_Helpers {
 			'has_demos'   => is_dir( $theme_path ) && self::has_demo_files( $theme_path ),
 			'update_safe' => true,
 			'priority'    => 1,
-			'description' => __( 'Theme directory (survives plugin updates)', 'conjurewp' ),
+			'description' => __( 'Theme directory (survives plugin updates)', 'ConjureWP' ),
 		);
 
 		// Uploads directory.
@@ -252,7 +252,7 @@ class Conjure_Demo_Helpers {
 			'has_demos'   => is_dir( $uploads_path ) && self::has_demo_files( $uploads_path ),
 			'update_safe' => true,
 			'priority'    => 2,
-			'description' => __( 'Uploads directory (survives plugin AND theme updates)', 'conjurewp' ),
+			'description' => __( 'Uploads directory (survives plugin AND theme updates)', 'ConjureWP' ),
 		);
 
 		// Plugin directory.
@@ -263,7 +263,7 @@ class Conjure_Demo_Helpers {
 			'has_demos'   => is_dir( $plugin_path ) && self::has_demo_files( $plugin_path ),
 			'update_safe' => false,
 			'priority'    => 3,
-			'description' => __( 'Plugin directory (NOT update-safe, for examples only)', 'conjurewp' ),
+			'description' => __( 'Plugin directory (NOT update-safe, for examples only)', 'ConjureWP' ),
 		);
 
 		return apply_filters( 'conjurewp_demo_locations_status', $locations, $theme_slug );
@@ -296,7 +296,7 @@ class Conjure_Demo_Helpers {
 	 */
 	public static function auto_discover_demos( $base_path = '' ) {
 		$logger = Conjure_Logger::get_instance();
-		
+
 		if ( empty( $base_path ) ) {
 			$base_path = self::get_demo_directory();
 		}
@@ -304,7 +304,7 @@ class Conjure_Demo_Helpers {
 		$base_path = trailingslashit( $base_path );
 		$demos = array();
 
-		$logger->debug( 
+		$logger->debug(
 			'Auto-discovering demos',
 			array(
 				'base_path' => $base_path,
@@ -321,15 +321,15 @@ class Conjure_Demo_Helpers {
 		// Check for subdirectories with demo files (xxx-demo/, abc-demo/, etc).
 		if ( is_dir( $base_path ) ) {
 			$subdirs = glob( $base_path . '*', GLOB_ONLYDIR );
-			
-			$logger->debug( 
+
+			$logger->debug(
 				'Scanning subdirectories',
 				array(
 					'subdirs_found' => is_array( $subdirs ) ? count( $subdirs ) : 0,
 					'subdirs' => is_array( $subdirs ) ? array_map( 'basename', $subdirs ) : array(),
 				)
 			);
-			
+
 			if ( is_array( $subdirs ) ) {
 				foreach ( $subdirs as $subdir ) {
 					if ( self::has_demo_files( $subdir ) ) {
@@ -345,17 +345,17 @@ class Conjure_Demo_Helpers {
 		// This allows themes without a dedicated demo folder to still work.
 		if ( empty( $demos ) ) {
 			$logger->debug( 'No demos found in base path, checking theme root...' );
-			
+
 			$theme_root = get_template_directory();
-			
-			$logger->debug( 
+
+			$logger->debug(
 				'Checking theme root for demo files',
 				array(
 					'theme_root' => $theme_root,
 					'theme_root_exists' => is_dir( $theme_root ),
 				)
 			);
-			
+
 			// Check theme root for demo files.
 			if ( self::has_demo_files( $theme_root ) ) {
 				$theme_name = wp_get_theme()->get( 'Name' );
@@ -422,7 +422,7 @@ class Conjure_Demo_Helpers {
 			if ( file_exists( $preview_file ) ) {
 				// Convert to URL if possible.
 				$upload_dir = wp_upload_dir();
-				
+
 				// Check if path is in uploads directory.
 				if ( strpos( $path, $upload_dir['basedir'] ) === 0 ) {
 					$relative_path = str_replace( $upload_dir['basedir'], '', $path );
@@ -447,7 +447,7 @@ class Conjure_Demo_Helpers {
 						$config['import_preview_image_url'] = content_url( $relative_path . 'preview.' . $ext );
 					}
 				}
-				
+
 				// If we successfully set a URL, break.
 				if ( ! empty( $config['import_preview_image_url'] ) ) {
 					break;
@@ -500,7 +500,7 @@ class Conjure_Demo_Helpers {
 	public static function is_auto_register_enabled() {
 		// Allow filter to control (HIGHEST PRIORITY - theme-level control).
 		$filter_value = apply_filters( 'conjurewp_auto_register_demos', null );
-		
+
 		// If filter returns a non-null value, use it.
 		if ( null !== $filter_value ) {
 			return (bool) $filter_value;
@@ -565,4 +565,3 @@ class Conjure_Demo_Helpers {
 		return $config;
 	}
 }
-

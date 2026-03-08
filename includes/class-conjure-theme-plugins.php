@@ -7,7 +7,7 @@
  *
  * @package   ConjureWP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Inventionn LLC
  * @license   GPLv3
@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Theme Plugin Bundling Class
- * 
- * Theme developers can create a /conjurewp-plugins/ folder in their theme with:
+ *
+ * Theme developers can create a /ConjureWP-plugins/ folder in their theme with:
  * - plugins.json (configuration file)
  * - plugin ZIP files
- * 
+ *
  * ConjureWP will automatically discover and register these plugins.
  */
 class Conjure_Theme_Plugins {
@@ -34,7 +34,7 @@ class Conjure_Theme_Plugins {
 	 *
 	 * @var string
 	 */
-	const PLUGIN_DIR = 'conjurewp-plugins';
+	const PLUGIN_DIR = 'ConjureWP-plugins';
 
 	/**
 	 * Configuration file name.
@@ -64,7 +64,7 @@ class Conjure_Theme_Plugins {
 	 * Get theme plugin configuration with caching.
 	 *
 	 * Reads and validates the plugins.json configuration file from the theme's
-	 * conjurewp-plugins directory. Results are cached for 1 hour by default.
+	 * ConjureWP-plugins directory. Results are cached for 1 hour by default.
 	 *
 	 * @since 2.0.0
 	 *
@@ -146,14 +146,14 @@ class Conjure_Theme_Plugins {
 		if ( ! isset( $config['plugins'] ) ) {
 			return new WP_Error(
 				'missing_plugins_array',
-				__( 'Configuration must contain a "plugins" array.', 'conjurewp' )
+				__( 'Configuration must contain a "plugins" array.', 'ConjureWP' )
 			);
 		}
 
 		if ( ! is_array( $config['plugins'] ) ) {
 			return new WP_Error(
 				'invalid_plugins_type',
-				__( 'The "plugins" key must be an array.', 'conjurewp' )
+				__( 'The "plugins" key must be an array.', 'ConjureWP' )
 			);
 		}
 
@@ -164,7 +164,7 @@ class Conjure_Theme_Plugins {
 					'invalid_plugin_entry',
 					sprintf(
 						/* translators: %d: Plugin index */
-						__( 'Plugin at index %d must be an object/array.', 'conjurewp' ),
+						__( 'Plugin at index %d must be an object/array.', 'ConjureWP' ),
 						$index
 					)
 				);
@@ -178,7 +178,7 @@ class Conjure_Theme_Plugins {
 						'missing_required_field',
 						sprintf(
 							/* translators: 1: field name, 2: plugin index */
-							__( 'Plugin at index %2$d is missing required "%1$s" field.', 'conjurewp' ),
+							__( 'Plugin at index %2$d is missing required "%1$s" field.', 'ConjureWP' ),
 							$field,
 							$index
 						)
@@ -192,7 +192,7 @@ class Conjure_Theme_Plugins {
 					'invalid_field_type',
 					sprintf(
 						/* translators: %d: Plugin index */
-						__( 'Plugin at index %d has invalid "slug" field type (must be string).', 'conjurewp' ),
+						__( 'Plugin at index %d has invalid "slug" field type (must be string).', 'ConjureWP' ),
 						$index
 					)
 				);
@@ -204,7 +204,7 @@ class Conjure_Theme_Plugins {
 					'invalid_field_type',
 					sprintf(
 						/* translators: %d: Plugin index */
-						__( 'Plugin at index %d has invalid "required" field type (must be boolean).', 'conjurewp' ),
+						__( 'Plugin at index %d has invalid "required" field type (must be boolean).', 'ConjureWP' ),
 						$index
 					)
 				);
@@ -215,7 +215,7 @@ class Conjure_Theme_Plugins {
 					'invalid_field_type',
 					sprintf(
 						/* translators: %d: Plugin index */
-						__( 'Plugin at index %d has invalid "url" field type (must be string).', 'conjurewp' ),
+						__( 'Plugin at index %d has invalid "url" field type (must be string).', 'ConjureWP' ),
 						$index
 					)
 				);
@@ -282,45 +282,45 @@ class Conjure_Theme_Plugins {
 					);
 					continue;
 				}
-		} elseif ( ! empty( $plugin['url'] ) ) {
-			// Option 3: External URL (GitHub, GitLab, direct download).
-			// Sanitise and validate URL.
-			$url = esc_url_raw( $plugin['url'], array( 'https' ) );
-			
-			// Enforce HTTPS only - no HTTP allowed for security.
-			if ( ! $url || 'https' !== wp_parse_url( $url, PHP_URL_SCHEME ) ) {
-				Conjure_Logger::get_instance()->warning(
-					'Plugin URL must use HTTPS protocol. HTTP URLs are not permitted for security reasons.',
-					array(
-						'plugin' => $plugin['slug'],
-						'url'    => $plugin['url'],
-					)
-				);
-				continue;
-			}
-			
-			// Validate URL format.
-			if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
-				Conjure_Logger::get_instance()->warning(
-					'Invalid plugin URL format',
-					array(
-						'plugin' => $plugin['slug'],
-						'url'    => $plugin['url'],
-					)
-				);
-				continue;
-			}
-			
-			$plugin_config['source'] = $url;
-			$plugin_config['external'] = true;
-			
-			// Store additional URL info if provided.
-			if ( ! empty( $plugin['requires_auth'] ) ) {
-				$plugin_config['requires_auth'] = true;
-			}
-			if ( ! empty( $plugin['access_token'] ) ) {
-				$plugin_config['access_token'] = sanitize_text_field( $plugin['access_token'] );
-			}
+			} elseif ( ! empty( $plugin['url'] ) ) {
+				// Option 3: External URL (GitHub, GitLab, direct download).
+				// Sanitise and validate URL.
+				$url = esc_url_raw( $plugin['url'], array( 'https' ) );
+
+				// Enforce HTTPS only - no HTTP allowed for security.
+				if ( ! $url || 'https' !== wp_parse_url( $url, PHP_URL_SCHEME ) ) {
+					Conjure_Logger::get_instance()->warning(
+						'Plugin URL must use HTTPS protocol. HTTP URLs are not permitted for security reasons.',
+						array(
+							'plugin' => $plugin['slug'],
+							'url'    => $plugin['url'],
+						)
+					);
+					continue;
+				}
+
+				// Validate URL format.
+				if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
+					Conjure_Logger::get_instance()->warning(
+						'Invalid plugin URL format',
+						array(
+							'plugin' => $plugin['slug'],
+							'url'    => $plugin['url'],
+						)
+					);
+					continue;
+				}
+
+				$plugin_config['source'] = $url;
+				$plugin_config['external'] = true;
+
+				// Store additional URL info if provided.
+				if ( ! empty( $plugin['requires_auth'] ) ) {
+					$plugin_config['requires_auth'] = true;
+				}
+				if ( ! empty( $plugin['access_token'] ) ) {
+					$plugin_config['access_token'] = sanitize_text_field( $plugin['access_token'] );
+				}
 			} else {
 				// Option 2: WordPress.org plugin.
 				$plugin_config['bundled'] = false;
@@ -350,9 +350,12 @@ class Conjure_Theme_Plugins {
 	 */
 	public static function get_mandatory_plugins() {
 		$plugins = self::get_bundled_plugins();
-		return array_filter( $plugins, function( $plugin ) {
-			return ! empty( $plugin['required'] );
-		} );
+		return array_filter(
+			$plugins,
+			function ( $plugin ) {
+				return ! empty( $plugin['required'] );
+			}
+		);
 	}
 
 	/**
@@ -362,14 +365,17 @@ class Conjure_Theme_Plugins {
 	 */
 	public static function get_optional_plugins() {
 		$plugins = self::get_bundled_plugins();
-		return array_filter( $plugins, function( $plugin ) {
-			return empty( $plugin['required'] );
-		} );
+		return array_filter(
+			$plugins,
+			function ( $plugin ) {
+				return empty( $plugin['required'] );
+			}
+		);
 	}
 
 	/**
 	 * Merge theme plugins with demo-specific plugins.
-	 * 
+	 *
 	 * Theme-level plugins are added to all demos automatically.
 	 * Mandatory plugins from theme are always included.
 	 *
@@ -412,7 +418,7 @@ class Conjure_Theme_Plugins {
 	 */
 	public static function validate_config( $json_file ) {
 		if ( ! file_exists( $json_file ) ) {
-			return new WP_Error( 'file_not_found', __( 'Configuration file not found.', 'conjurewp' ) );
+			return new WP_Error( 'file_not_found', __( 'Configuration file not found.', 'ConjureWP' ) );
 		}
 
 		$content = file_get_contents( $json_file );
@@ -423,7 +429,7 @@ class Conjure_Theme_Plugins {
 				'invalid_json',
 				sprintf(
 					/* translators: %s: JSON error message */
-					__( 'Invalid JSON: %s', 'conjurewp' ),
+					__( 'Invalid JSON: %s', 'ConjureWP' ),
 					json_last_error_msg()
 				)
 			);
@@ -431,7 +437,7 @@ class Conjure_Theme_Plugins {
 
 		// Validate structure.
 		if ( empty( $config['plugins'] ) || ! is_array( $config['plugins'] ) ) {
-			return new WP_Error( 'invalid_structure', __( 'Configuration must contain a "plugins" array.', 'conjurewp' ) );
+			return new WP_Error( 'invalid_structure', __( 'Configuration must contain a "plugins" array.', 'ConjureWP' ) );
 		}
 
 		$errors = array();
@@ -440,7 +446,7 @@ class Conjure_Theme_Plugins {
 			if ( empty( $plugin['slug'] ) ) {
 				$errors[] = sprintf(
 					/* translators: %d: Plugin index */
-					__( 'Plugin at index %d is missing required "slug" field.', 'conjurewp' ),
+					__( 'Plugin at index %d is missing required "slug" field.', 'ConjureWP' ),
 					$index
 				);
 			}
@@ -448,7 +454,7 @@ class Conjure_Theme_Plugins {
 			if ( empty( $plugin['name'] ) ) {
 				$errors[] = sprintf(
 					/* translators: %d: Plugin index */
-					__( 'Plugin at index %d is missing required "name" field.', 'conjurewp' ),
+					__( 'Plugin at index %d is missing required "name" field.', 'ConjureWP' ),
 					$index
 				);
 			}
@@ -499,7 +505,7 @@ class Conjure_Theme_Plugins {
 		$plugin_dir = self::get_theme_plugin_dir();
 		if ( ! $plugin_dir ) {
 			$result['valid'] = false;
-			$result['errors'][] = __( 'Theme plugin directory not found. Create a "conjurewp-plugins" folder in your theme.', 'conjurewp' );
+			$result['errors'][] = __( 'Theme plugin directory not found. Create a "ConjureWP-plugins" folder in your theme.', 'ConjureWP' );
 			return $result;
 		}
 
@@ -507,7 +513,7 @@ class Conjure_Theme_Plugins {
 		$config_file = trailingslashit( $plugin_dir ) . self::CONFIG_FILE;
 		if ( ! file_exists( $config_file ) ) {
 			$result['valid'] = false;
-			$result['errors'][] = __( 'Configuration file (plugins.json) not found in plugin directory.', 'conjurewp' );
+			$result['errors'][] = __( 'Configuration file (plugins.json) not found in plugin directory.', 'ConjureWP' );
 			return $result;
 		}
 
@@ -529,7 +535,7 @@ class Conjure_Theme_Plugins {
 				if ( ! file_exists( $plugin['source'] ) ) {
 					$result['warnings'][] = sprintf(
 						/* translators: 1: plugin name, 2: file path */
-						__( 'Plugin "%1$s": Bundled file not found at %2$s', 'conjurewp' ),
+						__( 'Plugin "%1$s": Bundled file not found at %2$s', 'ConjureWP' ),
 						$plugin['name'],
 						$plugin['source']
 					);
@@ -542,14 +548,14 @@ class Conjure_Theme_Plugins {
 				if ( is_wp_error( $response ) ) {
 					$result['warnings'][] = sprintf(
 						/* translators: 1: plugin name, 2: error message */
-						__( 'Plugin "%1$s": URL not accessible - %2$s', 'conjurewp' ),
+						__( 'Plugin "%1$s": URL not accessible - %2$s', 'ConjureWP' ),
 						$plugin['name'],
 						$response->get_error_message()
 					);
 				} elseif ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
 					$result['warnings'][] = sprintf(
 						/* translators: 1: plugin name, 2: HTTP code */
-						__( 'Plugin "%1$s": URL returned HTTP %2$d', 'conjurewp' ),
+						__( 'Plugin "%1$s": URL returned HTTP %2$d', 'ConjureWP' ),
 						$plugin['name'],
 						wp_remote_retrieve_response_code( $response )
 					);
@@ -610,4 +616,3 @@ class Conjure_Theme_Plugins {
 		return wp_json_encode( $example, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 	}
 }
-

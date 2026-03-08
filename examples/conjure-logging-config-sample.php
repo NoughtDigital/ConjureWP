@@ -1,19 +1,23 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * ConjureWP Logging Configuration Sample
  *
  * This file shows all available logging configuration options.
- * Copy the 'logging' array to your conjurewp-config.php file and adjust values as needed.
+ * Copy the 'logging' array to your ConjureWP-config.php file and adjust values as needed.
  *
  * @package   ConjureWP
  * @version   1.0.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall, from nought.digital
  * @copyright Copyright (c) 2018, Conjure WP of Inventionn LLC
  * @license   Licensed GPLv3 for Open Source Use
  */
 
-// Example configuration - add this to your $config array in conjurewp-config.php:
+// Example configuration - add this to your $config array in ConjureWP-config.php:
 
 'logging' => array(
 	/**

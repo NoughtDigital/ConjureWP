@@ -7,7 +7,7 @@
  *
  * @package   ConjureWP
  * @version   1.1.0
- * @link      https://conjurewp.com/
+ * @link      https://ConjureWP.com/
  * @author    Jake Henshall
  * @copyright Copyright (c) 2024, ConjureWP
  * @license   GPL-3.0-or-later
@@ -122,7 +122,7 @@ class Conjure_Demo_Plugin_Manager {
 		// Cache the result.
 		$this->demo_plugins_cache[ $cache_key ] = $demo_plugins;
 
-		$this->logger->info( "Retrieved " . count( $demo_plugins ) . " plugins for demo: {$selected_demo['import_file_name']}" );
+		$this->logger->info( 'Retrieved ' . count( $demo_plugins ) . " plugins for demo: {$selected_demo['import_file_name']}" );
 
 		return $demo_plugins;
 	}
@@ -326,26 +326,26 @@ class Conjure_Demo_Plugin_Manager {
 		foreach ( $required_slugs as $slug => $plugin_config ) {
 			// Use the plugin config directly from the demo.
 			$plugin = is_array( $plugin_config ) ? $plugin_config : array( 'slug' => $slug );
-			
+
 			// Ensure slug is set.
 			if ( ! isset( $plugin['slug'] ) ) {
 				$plugin['slug'] = $slug;
 			}
-			
+
 			// Set default name if not provided.
 			if ( ! isset( $plugin['name'] ) ) {
 				$plugin['name'] = ucwords( str_replace( '-', ' ', $slug ) );
 			}
 
-		// Check plugin status and add to plugin data.
-		$is_active = $this->installer->is_plugin_active( $slug );
-		$is_installed = $this->installer->is_plugin_installed( $slug );
-		
-		$this->logger->debug( "Plugin '{$slug}': is_active={$is_active}, is_installed={$is_installed}" );
-		
-		// Add status info to plugin data.
-		$plugin['is_active'] = $is_active;
-		$plugin['is_installed'] = $is_installed;
+			// Check plugin status and add to plugin data.
+			$is_active = $this->installer->is_plugin_active( $slug );
+			$is_installed = $this->installer->is_plugin_installed( $slug );
+
+			$this->logger->debug( "Plugin '{$slug}': is_active={$is_active}, is_installed={$is_installed}" );
+
+			// Add status info to plugin data.
+			$plugin['is_active'] = $is_active;
+			$plugin['is_installed'] = $is_installed;
 
 			// Always add to 'all' array so it shows in the UI (like content options).
 			$plugins['all'][ $slug ] = $plugin;
@@ -464,26 +464,32 @@ class Conjure_Demo_Plugin_Manager {
 
 		// Check capability.
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_send_json_error( array(
-				'message' => __( 'You do not have permission to install plugins.', 'conjurewp' ),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to install plugins.', 'ConjureWP' ),
+				)
+			);
 		}
 
-		$demo_index = isset( $_POST['demo_index'] ) ? sanitize_text_field( $_POST['demo_index'] ) : '';
+		$demo_index = isset( $_POST['demo_index'] ) ? sanitize_text_field( wp_unslash( $_POST['demo_index'] ) ) : '';
 
 		if ( empty( $demo_index ) ) {
-			wp_send_json_error( array(
-				'message' => __( 'Demo index not provided.', 'conjurewp' ),
-			) );
+			wp_send_json_error(
+				array(
+					'message' => __( 'Demo index not provided.', 'ConjureWP' ),
+				)
+			);
 		}
 
 		$import_files = apply_filters( 'conjure_import_files', array() );
 		$plugins = $this->get_demo_plugins_with_status( $demo_index, $import_files );
 
-		wp_send_json_success( array(
-			'plugins' => $plugins,
-			'count'   => count( $plugins['all'] ),
-		) );
+		wp_send_json_success(
+			array(
+				'plugins' => $plugins,
+				'count'   => count( $plugins['all'] ),
+			)
+		);
 	}
 
 	/**
@@ -538,7 +544,7 @@ class Conjure_Demo_Plugin_Manager {
 				'required_plugins_inactive',
 				sprintf(
 					/* translators: %s: comma-separated list of plugin names */
-					__( 'The following required plugins must be activated before importing: %s', 'conjurewp' ),
+					__( 'The following required plugins must be activated before importing: %s', 'ConjureWP' ),
 					implode( ', ', $inactive_plugins )
 				)
 			);
@@ -549,4 +555,3 @@ class Conjure_Demo_Plugin_Manager {
 		return true;
 	}
 }
-

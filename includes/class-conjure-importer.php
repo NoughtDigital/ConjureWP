@@ -7,6 +7,10 @@ namespace ConjureWP\Importer;
 
 use XMLReader;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 class Importer extends WXRImporter {
 
 	/**
@@ -52,7 +56,7 @@ class Importer extends WXRImporter {
 		}
 
 		if ( ! class_exists( 'XMLReader' ) ) {
-			$this->logger->critical( __( 'The XMLReader class is missing! Please install the XMLReader PHP extension on your server', 'conjurewp' ) );
+			$this->logger->critical( __( 'The XMLReader class is missing! Please install the XMLReader PHP extension on your server', 'ConjureWP' ) );
 
 			return false;
 		}
@@ -65,7 +69,7 @@ class Importer extends WXRImporter {
 		}
 
 		if ( ! $status ) {
-			$this->logger->error( __( 'Could not open the XML file for parsing!', 'conjurewp' ) );
+			$this->logger->error( __( 'Could not open the XML file for parsing!', 'ConjureWP' ) );
 
 			return false;
 		}
@@ -245,7 +249,7 @@ class Importer extends WXRImporter {
 		$result = $this->import_start( $file );
 
 		if ( is_wp_error( $result ) ) {
-			$this->logger->error( __( 'Content import start error: ', 'conjurewp' ) . $result->get_error_message() );
+			$this->logger->error( __( 'Content import start error: ', 'ConjureWP' ) . $result->get_error_message() );
 
 			return false;
 		}
@@ -276,11 +280,14 @@ class Importer extends WXRImporter {
 					$this->version = $reader->readString();
 
 					if ( version_compare( $this->version, self::MAX_WXR_VERSION, '>' ) ) {
-						$this->logger->warning( sprintf(
-							__( 'This WXR file (version %s) is newer than the importer (version %s) and may not be supported. Please consider updating.', 'conjurewp' ),
-							$this->version,
-							self::MAX_WXR_VERSION
-						) );
+						$this->logger->warning(
+							sprintf(
+							/* translators: 1: WXR file version, 2: Maximum supported importer version. */
+								__( 'This WXR file (version %1$s) is newer than the importer (version %2$s) and may not be supported. Please consider updating.', 'ConjureWP' ),
+								$this->version,
+								self::MAX_WXR_VERSION
+							)
+						);
 					}
 
 					// Handled everything in this node, move on to the next
@@ -494,14 +501,17 @@ class Importer extends WXRImporter {
 
 		// We should make a new ajax call, if the time is right.
 		if ( $time > apply_filters( 'pt-importer/time_for_one_ajax_call', 20 ) ) {
-			$response = apply_filters( 'pt-importer/new_ajax_request_response_data', array(
-				'status'                => 'newAJAX',
-				'log'                   => 'Time for new AJAX request!: ' . $time,
-				'num_of_imported_posts' => count( $this->mapping['post'] ),
-			) );
+			$response = apply_filters(
+				'pt-importer/new_ajax_request_response_data',
+				array(
+					'status'                => 'newAJAX',
+					'log'                   => 'Time for new AJAX request!: ' . $time,
+					'num_of_imported_posts' => count( $this->mapping['post'] ),
+				)
+			);
 
 			// Add message to log file.
-			$this->logger->info( __( 'New AJAX call!', 'conjurewp' ) );
+			$this->logger->info( __( 'New AJAX call!', 'ConjureWP' ) );
 
 			// Set the current importer state, so it can be continued on the next AJAX call.
 			$this->set_current_importer_data();
@@ -522,15 +532,18 @@ class Importer extends WXRImporter {
 	 * Save current importer data to the DB, for later use.
 	 */
 	public function set_current_importer_data() {
-		$data = apply_filters( 'pt-importer/set_current_importer_data', array(
-			'options'            => $this->options,
-			'mapping'            => $this->mapping,
-			'requires_remapping' => $this->requires_remapping,
-			'exists'             => $this->exists,
-			'user_slug_override' => $this->user_slug_override,
-			'url_remap'          => $this->url_remap,
-			'featured_images'    => $this->featured_images,
-		) );
+		$data = apply_filters(
+			'pt-importer/set_current_importer_data',
+			array(
+				'options'            => $this->options,
+				'mapping'            => $this->mapping,
+				'requires_remapping' => $this->requires_remapping,
+				'exists'             => $this->exists,
+				'user_slug_override' => $this->user_slug_override,
+				'url_remap'          => $this->url_remap,
+				'featured_images'    => $this->featured_images,
+			)
+		);
 
 		$this->save_current_import_data_transient( $data );
 	}
@@ -602,7 +615,7 @@ class Importer extends WXRImporter {
 						'attribute_name'    => $attribute_name,
 						'attribute_type'    => 'select',
 						'attribute_orderby' => 'menu_order',
-						'attribute_public'  => 0
+						'attribute_public'  => 0,
 					);
 					$wpdb->insert( $wpdb->prefix . 'woocommerce_attribute_taxonomies', $attribute );
 					delete_transient( 'wc_attribute_taxonomies' );
@@ -612,12 +625,15 @@ class Importer extends WXRImporter {
 				register_taxonomy(
 					$data['taxonomy'],
 					apply_filters( 'woocommerce_taxonomy_objects_' . $data['taxonomy'], array( 'product' ) ),
-					apply_filters( 'woocommerce_taxonomy_args_' . $data['taxonomy'], array(
-						'hierarchical' => true,
-						'show_ui'      => false,
-						'query_var'    => true,
-						'rewrite'      => false,
-					) )
+					apply_filters(
+						'woocommerce_taxonomy_args_' . $data['taxonomy'],
+						array(
+							'hierarchical' => true,
+							'show_ui'      => false,
+							'query_var'    => true,
+							'rewrite'      => false,
+						)
+					)
 				);
 			}
 		}
@@ -625,4 +641,3 @@ class Importer extends WXRImporter {
 		return $data;
 	}
 }
-

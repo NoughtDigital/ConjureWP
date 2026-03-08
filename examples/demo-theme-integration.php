@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * Basic Demo Import
  *
@@ -27,7 +29,7 @@ function conjurewp_demo_basic_import() {
 			'local_import_file'            => WP_PLUGIN_DIR . '/ConjureWP/demo/content.xml',
 			'local_import_widget_file'     => WP_PLUGIN_DIR . '/ConjureWP/demo/widgets.json',
 			'local_import_customizer_file' => WP_PLUGIN_DIR . '/ConjureWP/demo/customizer.dat',
-			'import_notice'                => __( 'This is a basic demo import with content, widgets, and customizer settings.', 'conjurewp' ),
+			'import_notice'                => __( 'This is a basic demo import with content, widgets, and customizer settings.', 'ConjureWP' ),
 			'preview_url'                  => home_url( '/' ),
 		),
 	);
@@ -52,10 +54,10 @@ function conjurewp_demo_redux_import() {
 			'local_import_redux'           => array(
 				array(
 					'file_path'   => WP_PLUGIN_DIR . '/ConjureWP/demo/redux-options.json',
-					'option_name' => 'mytheme_redux_options', // Change this to your Redux option name.
+					'option_name' => 'conjurewp_redux_options', // Change this to your Redux option name.
 				),
 			),
-			'import_notice'                => __( 'This demo includes Redux Framework theme options.', 'conjurewp' ),
+			'import_notice'                => __( 'This demo includes Redux Framework theme options.', 'ConjureWP' ),
 			'preview_url'                  => home_url( '/' ),
 		),
 	);
@@ -77,7 +79,7 @@ function conjurewp_demo_multiple_imports() {
 			'local_import_file'            => WP_PLUGIN_DIR . '/ConjureWP/demo/content.xml',
 			'local_import_widget_file'     => WP_PLUGIN_DIR . '/ConjureWP/demo/widgets.json',
 			'local_import_customizer_file' => WP_PLUGIN_DIR . '/ConjureWP/demo/customizer.dat',
-			'import_notice'                => __( 'Professional business demo with corporate content.', 'conjurewp' ),
+			'import_notice'                => __( 'Professional business demo with corporate content.', 'ConjureWP' ),
 			'preview_url'                  => home_url( '/' ),
 		),
 		array(
@@ -92,7 +94,7 @@ function conjurewp_demo_multiple_imports() {
 					'option_name' => 'creative_theme_options',
 				),
 			),
-			'import_notice'                => __( 'Creative portfolio demo with advanced theme options.', 'conjurewp' ),
+			'import_notice'                => __( 'Creative portfolio demo with advanced theme options.', 'ConjureWP' ),
 			'preview_url'                  => home_url( '/' ),
 		),
 	);
@@ -110,58 +112,35 @@ function conjurewp_demo_multiple_imports() {
  * @param int $selected_import The index of the selected import.
  */
 function conjurewp_demo_after_import_setup( $selected_import ) {
-	error_log( 'ConjureWP Demo: After import hook fired. Selected import index: ' . $selected_import );
-
 	// Set up navigation menus.
 	$main_menu = get_term_by( 'name', 'Main Menu', 'nav_menu' );
-
 	if ( $main_menu ) {
-		error_log( 'ConjureWP Demo: Found Main Menu (ID: ' . $main_menu->term_id . ')' );
-
 		set_theme_mod(
 			'nav_menu_locations',
 			array(
 				'primary' => $main_menu->term_id,
-				'menu-1'  => $main_menu->term_id, // Some themes use menu-1.
-				'main'    => $main_menu->term_id, // Some themes use main.
+				'menu-1'  => $main_menu->term_id,
+				'main'    => $main_menu->term_id,
 			)
 		);
-	} else {
-		error_log( 'ConjureWP Demo: Main Menu not found!' );
 	}
 
-	// Set homepage and blog page.
-	$front_page = get_page_by_title( 'Home' );
-	$blog_page  = get_page_by_title( 'Blog' );
-
+	$front_page = conjurewp_example_get_page_by_title( 'Home' );
+	$blog_page  = conjurewp_example_get_page_by_title( 'Blog' );
 	if ( $front_page ) {
-		error_log( 'ConjureWP Demo: Setting homepage (ID: ' . $front_page->ID . ')' );
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $front_page->ID );
-	} else {
-		error_log( 'ConjureWP Demo: Home page not found!' );
 	}
-
 	if ( $blog_page ) {
-		error_log( 'ConjureWP Demo: Setting blog page (ID: ' . $blog_page->ID . ')' );
 		update_option( 'page_for_posts', $blog_page->ID );
-	} else {
-		error_log( 'ConjureWP Demo: Blog page not found!' );
 	}
 
-	// Different setup based on selected demo.
 	switch ( $selected_import ) {
 		case 0:
-			error_log( 'ConjureWP Demo: First demo selected - running specific setup' );
-			// Add specific setup for first demo here.
 			break;
 		case 1:
-			error_log( 'ConjureWP Demo: Second demo selected - running specific setup' );
-			// Add specific setup for second demo here.
 			break;
 	}
-
-	error_log( 'ConjureWP Demo: After import setup completed!' );
 }
 // Uncomment the line below to test after import hook.
 // add_action( 'conjure_after_all_import', 'conjurewp_demo_after_import_setup' );
@@ -174,63 +153,52 @@ function conjurewp_demo_after_import_setup( $selected_import ) {
  * about registered imports and available files.
  */
 function conjurewp_demo_debug_info() {
-	if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+	if ( ! is_admin() || ! current_user_can( 'manage_options' ) || ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ! function_exists( 'conjurewp_get_logger' ) ) {
 		return;
 	}
+	$logger = conjurewp_get_logger();
 
-	// Check if filter is registered.
 	if ( has_filter( 'conjure_import_files' ) ) {
-		error_log( 'ConjureWP Demo: conjure_import_files filter is registered' );
+		$logger->info( 'ConjureWP Demo: conjure_import_files filter is registered' );
 	} else {
-		error_log( 'ConjureWP Demo: conjure_import_files filter is NOT registered!' );
+		$logger->info( 'ConjureWP Demo: conjure_import_files filter is NOT registered!' );
 	}
 
-	// Get registered imports.
 	$imports = apply_filters( 'conjure_import_files', array() );
-	error_log( 'ConjureWP Demo: Found ' . count( $imports ) . ' registered imports' );
+	$logger->info( 'ConjureWP Demo: Found ' . count( $imports ) . ' registered imports' );
 
 	if ( ! empty( $imports ) ) {
 		foreach ( $imports as $index => $import ) {
-			error_log( "ConjureWP Demo: Import #{$index}: " . ( $import['import_file_name'] ?? 'Unnamed' ) );
-
-			// Check if content file exists.
+			$logger->info( "ConjureWP Demo: Import #{$index}: " . ( $import['import_file_name'] ?? 'Unnamed' ) );
 			if ( ! empty( $import['local_import_file'] ) ) {
 				$exists   = file_exists( $import['local_import_file'] ) ? 'YES' : 'NO';
 				$readable = is_readable( $import['local_import_file'] ) ? 'YES' : 'NO';
-				error_log( "  - Content file exists: {$exists}, readable: {$readable}" );
-				error_log( "  - Path: {$import['local_import_file']}" );
+				$logger->info( "  - Content file exists: {$exists}, readable: {$readable}" );
 			}
-
-			// Check if widget file exists.
 			if ( ! empty( $import['local_import_widget_file'] ) ) {
 				$exists   = file_exists( $import['local_import_widget_file'] ) ? 'YES' : 'NO';
 				$readable = is_readable( $import['local_import_widget_file'] ) ? 'YES' : 'NO';
-				error_log( "  - Widget file exists: {$exists}, readable: {$readable}" );
+				$logger->info( "  - Widget file exists: {$exists}, readable: {$readable}" );
 			}
-
-			// Check if customizer file exists.
 			if ( ! empty( $import['local_import_customizer_file'] ) ) {
 				$exists   = file_exists( $import['local_import_customizer_file'] ) ? 'YES' : 'NO';
 				$readable = is_readable( $import['local_import_customizer_file'] ) ? 'YES' : 'NO';
-				error_log( "  - Customizer file exists: {$exists}, readable: {$readable}" );
+				$logger->info( "  - Customizer file exists: {$exists}, readable: {$readable}" );
 			}
-
-			// Check if Redux file exists.
 			if ( ! empty( $import['local_import_redux'] ) ) {
 				foreach ( $import['local_import_redux'] as $redux_index => $redux_item ) {
 					$exists   = file_exists( $redux_item['file_path'] ) ? 'YES' : 'NO';
 					$readable = is_readable( $redux_item['file_path'] ) ? 'YES' : 'NO';
-					error_log( "  - Redux file #{$redux_index} exists: {$exists}, readable: {$readable}" );
+					$logger->info( "  - Redux file #{$redux_index} exists: {$exists}, readable: {$readable}" );
 				}
 			}
 		}
 	}
 
-	// Check if after import action is registered.
 	if ( has_action( 'conjure_after_all_import' ) ) {
-		error_log( 'ConjureWP Demo: conjure_after_all_import action is registered' );
+		$logger->info( 'ConjureWP Demo: conjure_after_all_import action is registered' );
 	} else {
-		error_log( 'ConjureWP Demo: conjure_after_all_import action is NOT registered' );
+		$logger->info( 'ConjureWP Demo: conjure_after_all_import action is NOT registered' );
 	}
 }
 // Uncomment the line below to enable debug logging.

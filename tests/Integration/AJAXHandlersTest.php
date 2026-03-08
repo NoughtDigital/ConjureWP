@@ -1,7 +1,7 @@
 <?php
 
 test('conjure class handles ajax callbacks', function () {
-    require_once getPluginPath('class-conjure.php');
+    require_once conjurewp_test_get_plugin_path('class-conjure.php');
     
     $methods = get_class_methods('Conjure');
     $hasAjaxMethods = false;
@@ -19,12 +19,12 @@ test('conjure class handles ajax callbacks', function () {
 });
 
 test('hooks class exists for ajax handlers', function () {
-    require_once getPluginPath('includes/class-conjure-hooks.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-hooks.php');
     expect(class_exists('Conjure_Hooks'))->toBeTrue();
 });
 
 test('hooks class registers ajax actions', function () {
-    require_once getPluginPath('includes/class-conjure-hooks.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-hooks.php');
     
     $methods = get_class_methods('Conjure_Hooks');
     
@@ -34,12 +34,12 @@ test('hooks class registers ajax actions', function () {
 });
 
 test('admin tools class exists for ajax operations', function () {
-    require_once getPluginPath('includes/class-conjure-admin-tools.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-admin-tools.php');
     expect(class_exists('Conjure_Admin_Tools'))->toBeTrue();
 });
 
 test('admin tools has ajax handler methods', function () {
-    require_once getPluginPath('includes/class-conjure-admin-tools.php');
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-admin-tools.php');
     
     $methods = get_class_methods('Conjure_Admin_Tools');
     
@@ -48,7 +48,7 @@ test('admin tools has ajax handler methods', function () {
 });
 
 test('ajax operations require proper nonce verification', function () {
-    $mainFile = getPluginPath('class-conjure.php');
+    $mainFile = conjurewp_test_get_plugin_path('class-conjure.php');
     $content = file_get_contents($mainFile);
     
     // Should have nonce verification for security
@@ -59,7 +59,7 @@ test('ajax operations require proper nonce verification', function () {
 });
 
 test('ajax handlers check user capabilities', function () {
-    $mainFile = getPluginPath('class-conjure.php');
+    $mainFile = conjurewp_test_get_plugin_path('class-conjure.php');
     $content = file_get_contents($mainFile);
     
     // Should check user capabilities

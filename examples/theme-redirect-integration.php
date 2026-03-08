@@ -28,82 +28,82 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Add this to your theme's functions.php file.
  */
-function yourtheme_redirect_to_welcome_on_activation( $url, $conjure_url ) {
+function conjurewp_redirect_to_welcome_on_activation( $url, $conjure_url ) {
 	// Redirect to your custom welcome page instead of ConjureWP wizard.
-	return admin_url( 'admin.php?page=yourtheme-welcome' );
+	return admin_url( 'admin.php?page=ConjureWP-welcome' );
 }
-add_filter( 'conjure_redirect_on_theme_switch_url', 'yourtheme_redirect_to_welcome_on_activation', 10, 2 );
+add_filter( 'conjure_redirect_on_theme_switch_url', 'conjurewp_redirect_to_welcome_on_activation', 10, 2 );
 
 /**
  * Register custom welcome page in WordPress admin.
  *
  * Add this to your theme's functions.php file.
  */
-function yourtheme_add_welcome_page() {
+function conjurewp_add_welcome_page() {
 	add_theme_page(
-		__( 'Welcome to Your Theme', 'yourtheme' ), // Page title
-		__( 'Welcome', 'yourtheme' ),                // Menu title
+		__( 'Welcome to Your Theme', 'ConjureWP' ), // Page title
+		__( 'Welcome', 'ConjureWP' ),                // Menu title
 		'manage_options',                             // Capability
-		'yourtheme-welcome',                          // Menu slug
-		'yourtheme_render_welcome_page'               // Callback function
+		'ConjureWP-welcome',                          // Menu slug
+		'conjurewp_render_welcome_page'               // Callback function
 	);
 }
-add_action( 'admin_menu', 'yourtheme_add_welcome_page' );
+add_action( 'admin_menu', 'conjurewp_add_welcome_page' );
 
 /**
  * Render the welcome page with link to ConjureWP wizard.
  *
  * Add this to your theme's functions.php file.
  */
-function yourtheme_render_welcome_page() {
+function conjurewp_render_welcome_page() {
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Welcome to Your Theme!', 'yourtheme' ); ?></h1>
+		<h1><?php esc_html_e( 'Welcome to Your Theme!', 'ConjureWP' ); ?></h1>
 		
 		<div class="notice notice-success" style="border-left-color: #46b450;">
 			<p style="font-size: 16px; line-height: 1.6;">
-				<strong><?php esc_html_e( 'Thank you for choosing our theme!', 'yourtheme' ); ?></strong><br>
-				<?php esc_html_e( 'Let\'s get your site set up in just a few minutes.', 'yourtheme' ); ?>
+				<strong><?php esc_html_e( 'Thank you for choosing our theme!', 'ConjureWP' ); ?></strong><br>
+				<?php esc_html_e( 'Let\'s get your site set up in just a few minutes.', 'ConjureWP' ); ?>
 			</p>
 		</div>
 		
 		<div class="card" style="max-width: 800px; margin: 20px 0;">
-			<h2><?php esc_html_e( 'What happens next?', 'yourtheme' ); ?></h2>
+			<h2><?php esc_html_e( 'What happens next?', 'ConjureWP' ); ?></h2>
 			<ol style="font-size: 15px; line-height: 1.8;">
-				<li><?php esc_html_e( 'Click "Start Setup Wizard" below', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( 'Install recommended plugins (optional)', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( 'Import demo content to see how your site will look', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( 'Customize your site and replace demo content with your own', 'yourtheme' ); ?></li>
+				<li><?php esc_html_e( 'Click "Start Setup Wizard" below', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( 'Install recommended plugins (optional)', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( 'Import demo content to see how your site will look', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( 'Customize your site and replace demo content with your own', 'ConjureWP' ); ?></li>
 			</ol>
 			
 			<hr>
 			
-			<h3><?php esc_html_e( 'Important Notes:', 'yourtheme' ); ?></h3>
+			<h3><?php esc_html_e( 'Important Notes:', 'ConjureWP' ); ?></h3>
 			<ul style="font-size: 14px; line-height: 1.6; color: #666;">
-				<li><?php esc_html_e( '✓ Demo import is completely optional', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( '✓ The process takes 5-10 minutes depending on your server', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( '✓ Demo content can be removed later if needed', 'yourtheme' ); ?></li>
-				<li><?php esc_html_e( '✓ Recommended: Create a backup before importing', 'yourtheme' ); ?></li>
+				<li><?php esc_html_e( '✓ Demo import is completely optional', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( '✓ The process takes 5-10 minutes depending on your server', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( '✓ Demo content can be removed later if needed', 'ConjureWP' ); ?></li>
+				<li><?php esc_html_e( '✓ Recommended: Create a backup before importing', 'ConjureWP' ); ?></li>
 			</ul>
 		</div>
 		
 		<p class="submit">
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=conjurewp-setup' ) ); ?>" class="button button-primary button-hero">
-				<?php esc_html_e( 'Start Setup Wizard', 'yourtheme' ); ?>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=ConjureWP-setup' ) ); ?>" class="button button-primary button-hero">
+				<?php esc_html_e( 'Start Setup Wizard', 'ConjureWP' ); ?>
 			</a>
 			
 			<a href="<?php echo esc_url( admin_url( 'customize.php' ) ); ?>" class="button button-secondary button-hero">
-				<?php esc_html_e( 'Skip & Start Customizing', 'yourtheme' ); ?>
+				<?php esc_html_e( 'Skip & Start Customizing', 'ConjureWP' ); ?>
 			</a>
 		</p>
 		
 		<p>
-			<a href="<?php echo esc_url( 'https://docs.yourtheme.com' ); ?>" target="_blank">
-				<?php esc_html_e( 'View Documentation', 'yourtheme' ); ?>
+			<a href="<?php echo esc_url( 'https://docs.ConjureWP.com' ); ?>" target="_blank">
+				<?php esc_html_e( 'View Documentation', 'ConjureWP' ); ?>
 			</a>
 			 | 
-			<a href="<?php echo esc_url( 'https://support.yourtheme.com' ); ?>" target="_blank">
-				<?php esc_html_e( 'Get Support', 'yourtheme' ); ?>
+			<a href="<?php echo esc_url( 'https://support.ConjureWP.com' ); ?>" target="_blank">
+				<?php esc_html_e( 'Get Support', 'ConjureWP' ); ?>
 			</a>
 		</p>
 	</div>
@@ -133,7 +133,7 @@ function yourtheme_render_welcome_page() {
  *
  * This checks if the site has content and skips redirect if it does.
  */
-function yourtheme_conditional_redirect( $enabled ) {
+function conjurewp_conditional_redirect( $enabled ) {
 	// Count published posts.
 	$post_count = wp_count_posts( 'post' );
 	
@@ -146,7 +146,7 @@ function yourtheme_conditional_redirect( $enabled ) {
 	return $enabled;
 }
 // Uncomment to use:
-// add_filter( 'conjure_redirect_on_theme_switch_enabled', 'yourtheme_conditional_redirect' );
+// add_filter( 'conjure_redirect_on_theme_switch_enabled', 'conjurewp_conditional_redirect' );
 
 /**
  * ========================================================================
@@ -154,7 +154,7 @@ function yourtheme_conditional_redirect( $enabled ) {
  * ========================================================================
  *
  * ✓ Copy the functions you need to your theme's functions.php
- * ✓ Replace 'yourtheme' with your actual theme text domain
+ * ✓ Replace 'ConjureWP' with your actual theme text domain
  * ✓ Customize the welcome page content to match your theme
  * ✓ Update documentation URLs to your actual docs
  * ✓ Test by switching themes in Appearance > Themes

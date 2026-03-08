@@ -23,6 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/conjurewp-example-helpers.php';
+
 /**
  * Example 1: Use Plugin's Demo Files
  *
@@ -38,7 +40,7 @@ function conjurewp_use_plugin_demos() {
 			'local_import_file'            => WP_PLUGIN_DIR . '/ConjureWP/demo/content.xml',
 			'local_import_widget_file'     => WP_PLUGIN_DIR . '/ConjureWP/demo/widgets.json',
 			'local_import_customizer_file' => WP_PLUGIN_DIR . '/ConjureWP/demo/customizer.dat',
-			'import_notice'                => __( 'Quick test using ConjureWP demo files.', 'conjurewp' ),
+			'import_notice'                => __( 'Quick test using ConjureWP demo files.', 'ConjureWP' ),
 		),
 	);
 }
@@ -60,7 +62,7 @@ function conjurewp_test_local_import() {
 			'local_import_widget_file'     => trailingslashit( get_template_directory() ) . 'demo/widgets.json',
 			'local_import_customizer_file' => trailingslashit( get_template_directory() ) . 'demo/customizer.dat',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/preview.jpg',
-			'import_notice'                => __( 'Demo files from theme directory.', 'conjurewp' ),
+			'import_notice'                => __( 'Demo files from theme directory.', 'ConjureWP' ),
 			'preview_url'                  => home_url( '/' ),
 		),
 	);
@@ -83,7 +85,7 @@ function conjurewp_test_remote_import() {
 			'import_widget_file_url'     => 'https://yoursite.com/demos/widgets.json',
 			'import_customizer_file_url' => 'https://yoursite.com/demos/customizer.dat',
 			'import_preview_image_url'   => 'https://yoursite.com/demos/preview.jpg',
-			'import_notice'              => __( 'Demo files from remote server.', 'conjurewp' ),
+			'import_notice'              => __( 'Demo files from remote server.', 'ConjureWP' ),
 			'preview_url'                => 'https://yoursite.com/demo-preview',
 		),
 	);
@@ -107,7 +109,7 @@ function conjurewp_test_multiple_imports() {
 			'local_import_widget_file'     => trailingslashit( get_template_directory() ) . 'demo/business/widgets.json',
 			'local_import_customizer_file' => trailingslashit( get_template_directory() ) . 'demo/business/customizer.dat',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/business/preview.jpg',
-			'import_notice'                => __( 'Professional business demo.', 'conjurewp' ),
+			'import_notice'                => __( 'Professional business demo.', 'ConjureWP' ),
 			'preview_url'                  => 'https://demo.yoursite.com/business',
 		),
 		array(
@@ -117,7 +119,7 @@ function conjurewp_test_multiple_imports() {
 			'local_import_widget_file'     => trailingslashit( get_template_directory() ) . 'demo/portfolio/widgets.json',
 			'local_import_customizer_file' => trailingslashit( get_template_directory() ) . 'demo/portfolio/customizer.dat',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/portfolio/preview.jpg',
-			'import_notice'                => __( 'Creative portfolio showcase.', 'conjurewp' ),
+			'import_notice'                => __( 'Creative portfolio showcase.', 'ConjureWP' ),
 			'preview_url'                  => 'https://demo.yoursite.com/portfolio',
 		),
 		array(
@@ -127,7 +129,7 @@ function conjurewp_test_multiple_imports() {
 			'local_import_widget_file'     => trailingslashit( get_template_directory() ) . 'demo/blog/widgets.json',
 			'local_import_customizer_file' => trailingslashit( get_template_directory() ) . 'demo/blog/customizer.dat',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/blog/preview.jpg',
-			'import_notice'                => __( 'Blog with multiple post formats.', 'conjurewp' ),
+			'import_notice'                => __( 'Blog with multiple post formats.', 'ConjureWP' ),
 			'preview_url'                  => 'https://demo.yoursite.com/blog',
 		),
 	);
@@ -152,11 +154,11 @@ function conjurewp_test_redux_import() {
 			'local_import_redux'           => array(
 				array(
 					'file_path'   => trailingslashit( get_template_directory() ) . 'demo/redux-options.json',
-					'option_name' => 'mytheme_options', // Replace with your Redux option name.
+					'option_name' => 'conjurewp_options', // Replace with your Redux option name.
 				),
 			),
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/preview.jpg',
-			'import_notice'                => __( 'Includes Redux Framework theme settings.', 'conjurewp' ),
+			'import_notice'                => __( 'Includes Redux Framework theme settings.', 'ConjureWP' ),
 		),
 	);
 }
@@ -177,7 +179,7 @@ function conjurewp_test_revslider_import() {
 			'local_import_file'            => trailingslashit( get_template_directory() ) . 'demo/content.xml',
 			'local_import_rev_slider_file' => trailingslashit( get_template_directory() ) . 'demo/slider.zip',
 			'import_preview_image_url'     => trailingslashit( get_template_directory_uri() ) . 'demo/preview.jpg',
-			'import_notice'                => __( 'Includes Revolution Slider.', 'conjurewp' ),
+			'import_notice'                => __( 'Includes Revolution Slider.', 'ConjureWP' ),
 		),
 	);
 }
@@ -208,8 +210,8 @@ function conjurewp_test_after_import( $selected_import ) {
 	}
 
 	// Set front page and posts page.
-	$front_page = get_page_by_title( 'Home' );
-	$blog_page  = get_page_by_title( 'Blog' );
+	$front_page = conjurewp_example_get_page_by_title( 'Home' );
+	$blog_page  = conjurewp_example_get_page_by_title( 'Blog' );
 
 	if ( $front_page ) {
 		update_option( 'show_on_front', 'page' );
@@ -244,35 +246,30 @@ function conjurewp_test_after_import( $selected_import ) {
  * Check your error log or debug.log for output.
  */
 function conjurewp_debug_import_files() {
-	if ( ! is_admin() ) {
+	if ( ! is_admin() || ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ! function_exists( 'conjurewp_get_logger' ) ) {
 		return;
 	}
+	$logger = conjurewp_get_logger();
 
-	// Check if filter is registered.
 	$has_filter = has_filter( 'conjure_import_files' );
-	error_log( 'ConjureWP: Filter registered: ' . ( $has_filter ? 'YES' : 'NO' ) );
+	$logger->info( 'ConjureWP: Filter registered: ' . ( $has_filter ? 'YES' : 'NO' ) );
 
-	// Get registered imports.
 	$import_files = apply_filters( 'conjure_import_files', array() );
-
 	if ( ! empty( $import_files ) ) {
-		error_log( 'ConjureWP: Found ' . count( $import_files ) . ' import(s)' );
+		$logger->info( 'ConjureWP: Found ' . count( $import_files ) . ' import(s)' );
 		foreach ( $import_files as $index => $import ) {
-			error_log( "Import #{$index}: " . ( $import['import_file_name'] ?? 'Unnamed' ) );
-			
-			// Check file existence.
+			$logger->info( "Import #{$index}: " . ( $import['import_file_name'] ?? 'Unnamed' ) );
 			if ( ! empty( $import['local_import_file'] ) ) {
 				$exists = file_exists( $import['local_import_file'] ) ? 'YES' : 'NO';
-				error_log( "  Content file exists: {$exists}" );
+				$logger->info( "  Content file exists: {$exists}" );
 			}
 		}
 	} else {
-		error_log( 'ConjureWP: No import files registered!' );
+		$logger->info( 'ConjureWP: No import files registered!' );
 	}
 
-	// Check after import action.
 	$has_action = has_action( 'conjure_after_all_import' );
-	error_log( 'ConjureWP: After import action registered: ' . ( $has_action ? 'YES' : 'NO' ) );
+	$logger->info( 'ConjureWP: After import action registered: ' . ( $has_action ? 'YES' : 'NO' ) );
 }
 // Uncomment to enable debug logging.
 // add_action( 'admin_init', 'conjurewp_debug_import_files', 999 );

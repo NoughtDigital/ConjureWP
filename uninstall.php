@@ -55,15 +55,18 @@ $wpdb->query(
 	)
 );
 
-// Delete all transients that start with 'ConjureWP_'.
+// Delete all transients that start with 'conjurewp_'.
 // This includes:
 // - conjurewp_theme_plugins_config
 // - conjurewp_theme_plugin_validation
 // - conjurewp_downloads_{hash}
+// Also remove legacy mixed-case keys from older builds.
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional bulk cleanup during uninstall.
 $wpdb->query(
 	$wpdb->prepare(
-		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
+		$wpdb->esc_like( '_transient_conjurewp_' ) . '%',
+		$wpdb->esc_like( '_transient_timeout_conjurewp_' ) . '%',
 		$wpdb->esc_like( '_transient_ConjureWP_' ) . '%',
 		$wpdb->esc_like( '_transient_timeout_ConjureWP_' ) . '%'
 	)

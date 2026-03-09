@@ -49,12 +49,31 @@ class Conjure_Theme_Plugins {
 	 * @return string|false Theme plugin directory path or false if not exists.
 	 */
 	public static function get_theme_plugin_dir() {
-		$theme_dir = get_template_directory();
 		$plugin_dir_name = apply_filters( 'conjurewp_theme_plugin_dir', self::PLUGIN_DIR );
-		$plugin_dir = trailingslashit( $theme_dir ) . $plugin_dir_name;
+		$theme_dirs = array( get_template_directory() );
 
-		if ( file_exists( $plugin_dir ) && is_dir( $plugin_dir ) ) {
-			return apply_filters( 'conjurewp_theme_plugin_dir_path', $plugin_dir );
+		if ( function_exists( 'conjurewp_is_plugin_runtime' ) && ! conjurewp_is_plugin_runtime() && function_exists( 'conjurewp_get_theme_embed_root' ) && function_exists( 'conjurewp_get_theme_embed_roots' ) ) {
+			$resolved_root = conjurewp_get_theme_embed_root();
+			$theme_dirs    = array();
+
+			if ( ! empty( $resolved_root['path'] ) ) {
+				$theme_dirs[] = rtrim( $resolved_root['path'], '/\\' );
+			}
+
+			foreach ( conjurewp_get_theme_embed_roots() as $theme_root ) {
+				$theme_dir = rtrim( $theme_root['path'], '/\\' );
+				if ( ! in_array( $theme_dir, $theme_dirs, true ) ) {
+					$theme_dirs[] = $theme_dir;
+				}
+			}
+		}
+
+		foreach ( $theme_dirs as $theme_dir ) {
+			$plugin_dir = trailingslashit( $theme_dir ) . $plugin_dir_name;
+
+			if ( file_exists( $plugin_dir ) && is_dir( $plugin_dir ) ) {
+				return apply_filters( 'conjurewp_theme_plugin_dir_path', $plugin_dir );
+			}
 		}
 
 		return false;

@@ -17,9 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @license   Licensed GPLv3 for Open Source Use
  */
 
-// Example configuration - add this to your $config array in ConjureWP-config.php:
-
-'logging' => array(
+// Example configuration - copy this array into the `logging` key in ConjureWP-config.php.
+$logging = array(
 	/**
 	 * Enable Log Rotation
 	 * 
@@ -73,7 +72,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	 * Default: 'INFO'
 	 */
 	'min_log_level' => 'INFO',
-),
+);
 
 /*
  * EXAMPLE CONFIGURATIONS

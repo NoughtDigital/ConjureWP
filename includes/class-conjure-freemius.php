@@ -418,8 +418,10 @@ if ( ! function_exists( 'con_fs' ) ) {
 
 			// Include Freemius SDK if not already loaded via Composer.
 			if ( ! function_exists( 'fs_dynamic_init' ) ) {
-				$plugin_dir = defined( 'CONJUREWP_PLUGIN_DIR' ) ? CONJUREWP_PLUGIN_DIR : dirname( __DIR__, 1 ) . '/';
-				$sdk_path   = $plugin_dir . 'vendor/freemius/wordpress-sdk/start.php';
+				$runtime_dir = function_exists( 'conjurewp_get_runtime_path' )
+					? conjurewp_get_runtime_path()
+					: ( defined( 'CONJUREWP_PLUGIN_DIR' ) ? CONJUREWP_PLUGIN_DIR : dirname( __DIR__, 1 ) . '/' );
+				$sdk_path    = $runtime_dir . 'vendor/freemius/wordpress-sdk/start.php';
 				if ( file_exists( $sdk_path ) ) {
 					require_once $sdk_path;
 				}

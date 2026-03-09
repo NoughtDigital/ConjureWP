@@ -21,16 +21,19 @@ if ( ! class_exists( 'Conjure' ) ) {
 /**
  * Set directory locations, text strings, and settings.
  */
+$runtime_mode      = function_exists( 'conjurewp_get_runtime_mode' ) ? conjurewp_get_runtime_mode() : 'plugin';
+$is_plugin_runtime = 'plugin' === $runtime_mode;
+
 $config = array(
-	'base_path'            => CONJUREWP_PLUGIN_DIR, // Base path of the plugin.
-	'base_url'             => CONJUREWP_PLUGIN_URL, // Base URL of the plugin.
+	'base_path'            => function_exists( 'conjurewp_get_runtime_path' ) ? conjurewp_get_runtime_path() : CONJUREWP_PLUGIN_DIR, // Base path of the active runtime.
+	'base_url'             => function_exists( 'conjurewp_get_runtime_url' ) ? conjurewp_get_runtime_url() : CONJUREWP_PLUGIN_URL, // Base URL of the active runtime.
 	'directory'            => '', // Location / directory where Conjure WP is placed (empty since files are in root).
-	'conjure_url'          => 'ConjureWP-setup', // The wp-admin page slug where Conjure WP loads.
-	'parent_slug'          => 'admin.php', // The wp-admin parent page slug for the admin menu item.
+	'conjure_url'          => $is_plugin_runtime ? 'ConjureWP-setup' : 'conjure', // The wp-admin page slug where Conjure WP loads.
+	'parent_slug'          => $is_plugin_runtime ? 'admin.php' : 'themes.php', // The wp-admin parent page slug for the admin menu item.
 	'capability'           => 'manage_options', // The capability required for this menu to be displayed to the user.
 	'child_action_btn_url' => 'https://developer.wordpress.org/themes/advanced-topics/child-themes/', // URL for the 'child-action-link'.
 	'dev_mode'             => false, // Enable development mode for testing (disabled by default for production builds).
-	'license_step'         => true, // EDD licence activation step for ConjureWP premium features.
+	'license_step'         => $is_plugin_runtime, // Plugin mode shows ConjureWP licence flow by default, theme embeds default to hidden.
 	'license_required'     => false, // Require the licence activation step (set false to allow users to skip).
 	'license_help_url'     => '', // URL for the 'license-tooltip'. Will be set to Freemius account URL if available.
 
@@ -75,7 +78,7 @@ $config = array(
 );
 
 $strings = array(
-	'admin-menu'               => esc_html__( 'Theme Setup Wizard', 'ConjureWP' ),
+	'admin-menu'               => $is_plugin_runtime ? esc_html__( 'Theme Setup Wizard', 'ConjureWP' ) : esc_html__( 'Theme Setup', 'ConjureWP' ),
 
 	/* translators: 1: Title Tag 2: Theme Name 3: Closing Title Tag */
 	'title%s%s%s%s'            => esc_html__( '%1$s%2$s Themes &lsaquo; Theme Setup: %3$s%4$s', 'ConjureWP' ),

@@ -46,13 +46,60 @@ composer install
 npm install && npm run build
 ```
 
-Activate via WordPress admin, then configure imports using filters.
+ConjureWP supports two integration modes:
+
+### Use as a Plugin
+
+Install or copy ConjureWP into `wp-content/plugins/ConjureWP/`, then activate it in WordPress. The plugin entry point is `conjurewp.php`.
+
+In plugin mode:
+
+1. Activate the plugin in WordPress admin
+2. Open the wizard from `ConjureWP-setup` in the admin area
+3. Register demos, plugin requirements, and post-import actions from your theme with the normal ConjureWP hooks and filters
+
+This mode is best when you want ConjureWP managed like a normal plugin, including plugin activation, plugin action links, and plugin-based updates.
+
+### Use as a Theme Embed
+
+Copy the ConjureWP package into your theme, for example:
+
+```text
+wp-content/themes/your-theme/inc/conjurewp/
+```
+
+Then load the embedded bootstrap file from your theme:
+
+```php
+require_once get_template_directory() . '/inc/conjurewp/conjurewp-embed.php';
+```
+
+The theme-embed entry point is `conjurewp-embed.php`. It boots the shared runtime in theme mode and resolves paths/URLs from the theme that owns the embedded package.
+
+In theme-embed mode:
+
+1. Bundle the ConjureWP files inside your theme
+2. Include `conjurewp-embed.php` from your theme, usually in `functions.php`
+3. Keep your demo definitions, import hooks, and theme customisations in your theme code
+
+This mode is best when you want ConjureWP shipped directly with your theme and do not want to require a separately installed plugin.
 
 ## Quick Start
 
-1. Enable demo in `examples/demo-theme-integration.php`
-2. Run wizard from theme setup page
-3. See `examples/theme-integration.php` for integration
+### Plugin Mode
+
+1. Install and activate `ConjureWP`
+2. Add your demo definitions in the theme with `add_filter( 'conjure_import_files', ... )`
+3. Open the wizard from `admin.php?page=ConjureWP-setup`
+
+### Theme-Embed Mode
+
+1. Copy ConjureWP into your theme, such as `your-theme/inc/conjurewp/`
+2. Include `conjurewp-embed.php` from your theme `functions.php`
+3. Add your demo definitions in the theme with `add_filter( 'conjure_import_files', ... )`
+4. Open the wizard from the Appearance area
+
+See `examples/theme-integration.php` for theme-side import configuration, `examples/theme-auto-install-conjurewp.php` for plugin-required themes, and `conjurewp-embed.php` for embedded bootstrap usage.
 
 ## Configuration
 

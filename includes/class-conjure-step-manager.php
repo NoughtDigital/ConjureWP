@@ -124,7 +124,7 @@ class Conjure_Step_Manager {
 			array(
 				'id'    => 'conjure-rerun',
 				'title' => '<span class="ab-icon dashicons-update"></span><span class="ab-label">' . esc_html__( 'Conjure WP', 'ConjureWP' ) . '</span>',
-				'href'  => admin_url( 'themes.php?page=' . $this->conjure->conjure_url ),
+				'href'  => $this->conjure->get_wizard_url(),
 				'meta'  => array(
 					'title' => esc_html__( 'Rerun Conjure WP steps', 'ConjureWP' ),
 				),
@@ -211,7 +211,7 @@ class Conjure_Step_Manager {
 				'parent' => 'conjure-rerun',
 				'id'     => 'conjure-open-wizard',
 				'title'  => '→ ' . esc_html__( 'Open Wizard', 'ConjureWP' ),
-				'href'   => admin_url( 'themes.php?page=' . $this->conjure->conjure_url ),
+				'href'   => $this->conjure->get_wizard_url(),
 				'meta'   => array(
 					'title' => esc_html__( 'Open Conjure WP setup wizard', 'ConjureWP' ),
 				),
@@ -244,11 +244,11 @@ class Conjure_Step_Manager {
 		// Handle reset.
 		if ( 'all' === $step ) {
 			$this->reset_all_steps();
-			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure->conjure_url );
+			$redirect_url = $this->conjure->get_wizard_url();
 			$message = __( 'All steps have been reset. You can now rerun the complete onboarding.', 'ConjureWP' );
 		} else {
 			$this->reset_step( $step );
-			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure->conjure_url . '&step=' . $step );
+			$redirect_url = $this->conjure->get_wizard_url( array( 'step' => $step ) );
 			$message = sprintf(
 				/* translators: %s: step name */
 				__( 'Step "%s" has been reset. You can now rerun this step.', 'ConjureWP' ),

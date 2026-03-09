@@ -129,18 +129,39 @@ if (!function_exists('wp_get_theme')) {
         return new class() {
             public function get_stylesheet() { return 'test-theme'; }
             public function get($key) { return $key === 'Name' ? 'Test Theme' : ''; }
-            public function get_stylesheet_directory() { return '/tmp/wordpress/wp-content/themes/test-theme'; }
+            public function get_stylesheet_directory() { return get_stylesheet_directory(); }
         };
     }
 }
 if (!function_exists('get_stylesheet_directory')) {
-    function get_stylesheet_directory() { return '/tmp/wordpress/wp-content/themes/test-theme'; }
+    function get_stylesheet_directory() { return $GLOBALS['conjurewp_test_stylesheet_directory'] ?? '/tmp/wordpress/wp-content/themes/test-theme'; }
+}
+if (!function_exists('get_stylesheet_directory_uri')) {
+    function get_stylesheet_directory_uri() { return $GLOBALS['conjurewp_test_stylesheet_directory_uri'] ?? 'http://example.com/wp-content/themes/test-theme'; }
 }
 if (!function_exists('get_theme_root')) {
     function get_theme_root() { return '/tmp/wordpress/wp-content/themes'; }
 }
 if (!function_exists('get_template_directory')) {
-    function get_template_directory() { return '/tmp/wordpress/wp-content/themes/test-theme'; }
+    function get_template_directory() { return $GLOBALS['conjurewp_test_template_directory'] ?? '/tmp/wordpress/wp-content/themes/test-theme'; }
+}
+if (!function_exists('get_template_directory_uri')) {
+    function get_template_directory_uri() { return $GLOBALS['conjurewp_test_template_directory_uri'] ?? 'http://example.com/wp-content/themes/test-theme'; }
+}
+if (!function_exists('get_parent_theme_file_path')) {
+    function get_parent_theme_file_path($file = '') {
+        $path = get_template_directory();
+        return $file ? $path . '/' . ltrim($file, '/') : $path;
+    }
+}
+if (!function_exists('get_parent_theme_file_uri')) {
+    function get_parent_theme_file_uri($file = '') {
+        $uri = get_template_directory_uri();
+        return $file ? $uri . '/' . ltrim($file, '/') : $uri;
+    }
+}
+if (!function_exists('is_child_theme')) {
+    function is_child_theme() { return get_stylesheet_directory() !== get_template_directory(); }
 }
 if (!function_exists('trailingslashit')) {
     function trailingslashit($value) { return rtrim($value, '/\\') . '/'; }

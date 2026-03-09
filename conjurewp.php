@@ -35,115 +35,16 @@ if ( function_exists( 'con_fs' ) ) {
 	define( 'CONJUREWP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 	define( 'CONJUREWP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	define( 'CONJUREWP_PLUGIN_FILE', __FILE__ );
+	require_once CONJUREWP_PLUGIN_DIR . 'includes/conjurewp-loader.php';
 
-	/**
-	 * Load Composer dependencies.
-	 *
-	 * FREEMIUS NOTE: The vendor/freemius/ directory is automatically stripped from the
-	 * WordPress.org free version by Freemius. All code gracefully handles its absence.
-	 */
-	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
-		require_once CONJUREWP_PLUGIN_DIR . 'vendor/autoload.php';
-	}
-
-	/**
-	 * Load Freemius integration.
-	 *
-	 * DEPLOYMENT: This file contains code wrapped in @freemius:premium-start/@freemius:premium-end
-	 * tags. When deployed to WordPress.org via Freemius, the premium code is stripped out, leaving
-	 * only free-version stubs that grant full access to all features.
-	 *
-	 * FREE VERSION: Conjure_Freemius methods return values that grant full access (no restrictions).
-	 * PREMIUM VERSION: Includes Freemius SDK for license management (optional feature gating).
-	 */
-	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
-		require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
-	}
-
-	/**
-	 * Load premium features helper.
-	 *
-	 * Works with or without Freemius SDK. In free version, all methods return
-	 * non-premium values (is_free() returns true, is_premium() returns false, etc.).
-	 */
-	if ( file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php' ) ) {
-		require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-premium-features.php';
-	}
-
-	/**
-	 * Load Conjure WP class.
-	 */
-	require_once CONJUREWP_PLUGIN_DIR . 'class-conjure.php';
-
-	/**
-	 * Load the logger class.
-	 */
-	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-logger.php';
-
-	/**
-	 * Load demo helpers class.
-	 */
-	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-demo-helpers.php';
-
-	/**
-	 * Load theme plugin bundling class.
-	 */
-	require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-theme-plugins.php';
-
-	/**
-	 * Auto-merge theme-bundled plugins with demo-specific plugins.
-	 *
-	 * Allows theme developers to bundle plugins in /ConjureWP-plugins/ folder
-	 * with a plugins.json configuration file.
-	 *
-	 * @param array $demo_plugins  Demo-specific plugins.
-	 * @param int   $demo_index    Demo index.
-	 * @param array $selected_demo Demo configuration.
-	 * @return array Merged plugin list.
-	 */
-	function conjurewp_merge_theme_bundled_plugins( $demo_plugins, $demo_index, $selected_demo ) {
-		return Conjure_Theme_Plugins::merge_with_demo_plugins( $demo_plugins );
-	}
-	add_filter( 'conjure_demo_required_plugins', 'conjurewp_merge_theme_bundled_plugins', 5, 3 );
-
-	/**
-	 * Load the configuration.
-	 */
-	require_once CONJUREWP_PLUGIN_DIR . 'conjurewp-config.php';
-
-	/**
-	 * Load admin tools for viewing logs.
-	 */
-	if ( is_admin() ) {
-		require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-admin-tools.php';
-	}
-
-	/**
-	 * Auto-register demo imports from custom directory.
-	 *
-	 * This function automatically discovers and registers demo content
-	 * if CONJUREWP_AUTO_REGISTER_DEMOS is enabled in wp-config.php
-	 *
-	 * @param array $import_files Existing import files.
-	 * @return array Modified import files with auto-discovered demos.
-	 */
-	function conjurewp_auto_register_demos( $import_files ) {
-		// Check if auto-registration is enabled.
-		if ( ! Conjure_Demo_Helpers::is_auto_register_enabled() ) {
-			return $import_files;
-		}
-
-		// Auto-discover demos from custom directory.
-		$auto_demos = Conjure_Demo_Helpers::auto_discover_demos();
-
-		// Merge with existing demos (auto-discovered demos come first).
-		if ( ! empty( $auto_demos ) ) {
-			$import_files = array_merge( $auto_demos, $import_files );
-		}
-
-		return $import_files;
-	}
-	add_filter( 'conjure_import_files', 'conjurewp_auto_register_demos', 5 );
+	conjurewp_bootstrap(
+		array(
+			'mode'      => 'plugin',
+			'base_path' => CONJUREWP_PLUGIN_DIR,
+			'base_url'  => CONJUREWP_PLUGIN_URL,
+			'file'      => CONJUREWP_PLUGIN_FILE,
+		)
+	);
 
 	/**
 	 * Add settings link to plugins page.

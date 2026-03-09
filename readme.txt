@@ -67,13 +67,36 @@ Visit [ConjureWP.com](https://ConjureWP.com/) for complete documentation, exampl
 3. Navigate to the setup wizard from the admin menu or dashboard notice
 4. Follow the step-by-step wizard to configure your site
 
-For theme developers: see the included examples folder and documentation for integration instructions.
+For theme developers, ConjureWP can be used in two ways:
+
+* **Plugin mode** - install and activate ConjureWP as a normal plugin. The plugin entry point is `conjurewp.php`.
+* **Theme embed mode** - copy the ConjureWP package into your theme and include `conjurewp-embed.php` from your theme code.
+
+Example theme embed setup:
+
+1. Copy ConjureWP into your theme, for example `/wp-content/themes/your-theme/inc/conjurewp/`
+2. Add this to your theme's `functions.php`:
+
+`require_once get_template_directory() . '/inc/conjurewp/conjurewp-embed.php';`
+
+3. Register demos and post-import hooks from your theme as normal
+4. Open the wizard from Appearance in WordPress admin
+
+See the included examples folder and root README for developer integration instructions.
 
 == Frequently Asked Questions ==
 
 = Do I need to configure anything before running the wizard? =
 
 No, the wizard works out of the box for end users. However, theme developers should configure demo content using the provided filters. See the `/examples/` folder for integration code and `docs/` for comprehensive guides.
+
+= Should I use this as a plugin or as a theme embed? =
+
+Use **plugin mode** if you want ConjureWP managed like a normal WordPress plugin with its own activation flow and plugin screen links.
+
+Use **theme embed mode** if you want to ship ConjureWP directly inside your theme without asking users to install a separate plugin.
+
+Both modes use the same shared runtime, so your demo registration, import hooks, and theme-side configuration can stay in your theme code.
 
 = Where can I store demo content? =
 

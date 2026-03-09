@@ -71,12 +71,33 @@ The `/demo/` directory contains sample demo files for testing:
 
 All files in this directory are for reference only and are not loaded by the plugin. Copy and adapt them for your specific needs.
 
+### Choose an Integration Mode
+
+**Plugin mode**
+
+Install and activate ConjureWP as a normal plugin, then keep your demo registration and import hooks in your theme. Useful examples:
+
+-   `theme-integration.php` - register demos and post-import setup in your theme
+-   `theme-auto-install-conjurewp.php` - automatically install/activate the plugin for the user
+-   `theme-require-conjurewp.php` - require or recommend the plugin from your theme
+
+**Theme embed mode**
+
+Copy the ConjureWP package into your theme, then include `conjurewp-embed.php` from your theme code, for example:
+
+`require_once get_template_directory() . '/inc/conjurewp/conjurewp-embed.php';`
+
+In this mode, keep using the same theme-side demo filters and post-import hooks. Start with:
+
+-   `theme-integration.php` - import configuration still lives in the theme
+-   `theme-config-options.php` - theme-level configuration overrides
+
 ### Getting Started
 
-1. **For basic theme integration**: Start with `theme-integration.php`
-2. **For quick testing**: Use `demo-theme-integration.php` with the included `/demo/` files
-3. **For all theme-level config options**: See `theme-config-options.php` (RECOMMENDED)
-4. **For lifetime integration**: See `/docs/LIFETIME-INTEGRATION.md` (if you purchased lifetime access)
+1. **For plugin mode with theme configuration**: Start with `theme-integration.php`
+2. **For plugin-required themes**: Use `theme-auto-install-conjurewp.php` or `theme-require-conjurewp.php`
+3. **For theme-embed mode**: Include `conjurewp-embed.php` from your theme, then use `theme-integration.php`
+4. **For all theme-level config options**: See `theme-config-options.php` (RECOMMENDED)
 5. **For custom redirect/welcome pages**: See `theme-redirect-integration.php`
 6. **For custom demo paths**: See `wp-config-demo-example.php` in the root (server-level)
 7. **For all available hooks**: Reference `conjure-filters-sample.php`

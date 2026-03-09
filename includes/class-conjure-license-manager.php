@@ -82,8 +82,12 @@ class Conjure_License_Manager {
 		$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ) );
 
 		// Ensure Freemius integration file is loaded.
-		if ( ! function_exists( 'con_fs' ) && file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
-			require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+		$freemius_file = function_exists( 'conjurewp_get_runtime_path' )
+			? conjurewp_get_runtime_path( 'includes/class-conjure-freemius.php' )
+			: '';
+
+		if ( ! function_exists( 'con_fs' ) && ! empty( $freemius_file ) && file_exists( $freemius_file ) ) {
+			require_once $freemius_file;
 		}
 
 		// Check if custom filter exists (for theme developers to override).
@@ -116,7 +120,11 @@ class Conjure_License_Manager {
 			$step_keys   = array_keys( $this->conjure->steps );
 			$current_idx = array_search( 'license', $step_keys, true );
 			if ( false !== $current_idx && isset( $step_keys[ $current_idx + 1 ] ) ) {
-				$result['redirect_url'] = add_query_arg( 'step', $step_keys[ $current_idx + 1 ] );
+				$result['redirect_url'] = $this->conjure->get_wizard_url(
+					array(
+						'step' => $step_keys[ $current_idx + 1 ],
+					)
+				);
 			}
 		}
 

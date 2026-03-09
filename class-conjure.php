@@ -316,6 +316,13 @@ class Conjure {
 				'capability'           => 'manage_options',
 				'child_action_btn_url' => '',
 				'dev_mode'             => '',
+				'license_step'         => false,
+				'license_help_url'     => '',
+				'license_required'     => false,
+				'edd_item_name'        => '',
+				'edd_theme_slug'       => '',
+				'edd_remote_api_url'   => '',
+				'logging'              => array(),
 				'ready_big_button_url' => home_url( '/' ),
 			)
 		);
@@ -495,7 +502,7 @@ class Conjure {
 		delete_transient( $this->theme->template . '_conjure_redirect' );
 
 		// Get default wizard URL.
-		$redirect_url = menu_page_url( $this->conjure_url, false );
+		$redirect_url = $this->get_wizard_url();
 
 		// Allow themes to customize redirect URL via filter.
 		$redirect_url = apply_filters( 'conjure_redirect_on_theme_switch_url', $redirect_url, $this->conjure_url );
@@ -503,6 +510,27 @@ class Conjure {
 		wp_safe_redirect( $redirect_url );
 
 		exit;
+	}
+
+	/**
+	 * Get the wizard URL for the active runtime.
+	 *
+	 * @param array $args Optional query arguments to append.
+	 * @return string
+	 */
+	public function get_wizard_url( $args = array() ) {
+		$wizard_url = menu_page_url( $this->conjure_url, false );
+
+		if ( empty( $wizard_url ) ) {
+			$admin_file = 'admin.php' === $this->parent_slug ? 'admin.php' : $this->parent_slug;
+			$wizard_url = add_query_arg( 'page', $this->conjure_url, admin_url( $admin_file ) );
+		}
+
+		if ( empty( $args ) ) {
+			return $wizard_url;
+		}
+
+		return add_query_arg( $args, $wizard_url );
 	}
 
 	/**
@@ -1982,8 +2010,12 @@ class Conjure {
 		$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ) );
 
 		// Ensure Freemius integration file is loaded.
-		if ( ! function_exists( 'con_fs' ) && file_exists( CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php' ) ) {
-			require_once CONJUREWP_PLUGIN_DIR . 'includes/class-conjure-freemius.php';
+		$freemius_file = function_exists( 'conjurewp_get_runtime_path' )
+			? conjurewp_get_runtime_path( 'includes/class-conjure-freemius.php' )
+			: trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-freemius.php';
+
+		if ( ! function_exists( 'con_fs' ) && file_exists( $freemius_file ) ) {
+			require_once $freemius_file;
 		}
 
 		// Check if custom filter exists (for theme developers to override).
@@ -4449,7 +4481,7 @@ class Conjure {
 			array(
 				'id'    => 'conjure-rerun',
 				'title' => '<span class="ab-icon dashicons-update"></span><span class="ab-label">' . esc_html__( 'Conjure WP', 'ConjureWP' ) . '</span>',
-				'href'  => admin_url( 'themes.php?page=' . $this->conjure_url ),
+				'href'  => $this->get_wizard_url(),
 				'meta'  => array(
 					'title' => esc_html__( 'Rerun Conjure WP steps', 'ConjureWP' ),
 				),
@@ -4537,7 +4569,7 @@ class Conjure {
 				'parent' => 'conjure-rerun',
 				'id'     => 'conjure-open-wizard',
 				'title'  => '→ ' . esc_html__( 'Open Wizard', 'ConjureWP' ),
-				'href'   => admin_url( 'themes.php?page=' . $this->conjure_url ),
+				'href'   => $this->get_wizard_url(),
 				'meta'   => array(
 					'title' => esc_html__( 'Open Conjure WP setup wizard', 'ConjureWP' ),
 				),
@@ -4570,11 +4602,11 @@ class Conjure {
 		// Handle reset.
 		if ( 'all' === $step ) {
 			$this->reset_all_steps();
-			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure_url );
+			$redirect_url = $this->get_wizard_url();
 			$message = __( 'All steps have been reset. You can now rerun the complete onboarding.', 'ConjureWP' );
 		} else {
 			$this->reset_step( $step );
-			$redirect_url = admin_url( 'themes.php?page=' . $this->conjure_url . '&step=' . $step );
+			$redirect_url = $this->get_wizard_url( array( 'step' => $step ) );
 			$message = sprintf(
 				/* translators: %s: step name */
 				__( 'Step "%s" has been reset. You can now rerun this step.', 'ConjureWP' ),

@@ -25,6 +25,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Conjure_Demo_Helpers {
 
 	/**
+	 * Get the theme directories that should be checked for bundled content.
+	 *
+	 * Theme embeds prefer the theme that owns the embedded package, then fall
+	 * back to any other active theme roots. Plugin runtime keeps the existing
+	 * parent-theme behaviour.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function get_theme_directory_candidates() {
+		$theme_dirs = array( get_template_directory() );
+
+		if ( function_exists( 'conjurewp_is_plugin_runtime' ) && ! conjurewp_is_plugin_runtime() && function_exists( 'conjurewp_get_theme_embed_root' ) && function_exists( 'conjurewp_get_theme_embed_roots' ) ) {
+			$resolved_root = conjurewp_get_theme_embed_root();
+			$theme_dirs    = array();
+
+			if ( ! empty( $resolved_root['path'] ) ) {
+				$theme_dirs[] = rtrim( $resolved_root['path'], '/\\' );
+			}
+
+			foreach ( conjurewp_get_theme_embed_roots() as $theme_root ) {
+				$theme_dir = rtrim( $theme_root['path'], '/\\' );
+				if ( ! in_array( $theme_dir, $theme_dirs, true ) ) {
+					$theme_dirs[] = $theme_dir;
+				}
+			}
+		}
+
+		return $theme_dirs;
+	}
+
+	/**
 	 * Get the custom demo content directory path.
 	 *
 	 * Priority order (theme-first approach):
@@ -68,8 +99,8 @@ class Conjure_Demo_Helpers {
 			return $path;
 		}
 
-		// Fallback to plugin directory (NOT update-safe - for examples only).
-		return trailingslashit( CONJUREWP_PLUGIN_DIR . 'demo' );
+		// Fallback to the active runtime package directory (NOT update-safe - for examples only).
+		return trailingslashit( conjurewp_get_runtime_path( 'demo' ) );
 	}
 
 	/**
@@ -79,14 +110,28 @@ class Conjure_Demo_Helpers {
 	 * @return string Path to theme demo directory.
 	 */
 	public static function get_theme_demo_directory( $theme_slug = '' ) {
-		$theme = wp_get_theme();
-		$theme_dir = get_template_directory();
+		$theme_dirs = self::get_theme_directory_candidates();
 
-		if ( ! empty( $theme_slug ) ) {
-			return trailingslashit( $theme_dir . '/ConjureWP-demos/' . $theme_slug );
+		foreach ( $theme_dirs as $theme_dir ) {
+			$demo_dir = trailingslashit( $theme_dir ) . 'ConjureWP-demos';
+
+			if ( ! empty( $theme_slug ) ) {
+				$demo_dir = trailingslashit( $demo_dir ) . $theme_slug;
+			}
+
+			if ( is_dir( $demo_dir ) ) {
+				return trailingslashit( $demo_dir );
+			}
 		}
 
-		return trailingslashit( $theme_dir . '/ConjureWP-demos' );
+		$theme_dir = ! empty( $theme_dirs ) ? $theme_dirs[0] : get_template_directory();
+		$demo_dir  = trailingslashit( $theme_dir ) . 'ConjureWP-demos';
+
+		if ( ! empty( $theme_slug ) ) {
+			$demo_dir = trailingslashit( $demo_dir ) . $theme_slug;
+		}
+
+		return trailingslashit( $demo_dir );
 	}
 
 	/**
@@ -255,15 +300,17 @@ class Conjure_Demo_Helpers {
 			'description' => __( 'Uploads directory (survives plugin AND theme updates)', 'ConjureWP' ),
 		);
 
-		// Plugin directory.
-		$plugin_path = trailingslashit( CONJUREWP_PLUGIN_DIR . 'demo' );
-		$locations['plugin'] = array(
-			'path'        => $plugin_path,
-			'exists'      => is_dir( $plugin_path ),
-			'has_demos'   => is_dir( $plugin_path ) && self::has_demo_files( $plugin_path ),
+		// Runtime package directory.
+		$package_path                  = trailingslashit( conjurewp_get_runtime_path( 'demo' ) );
+		$locations['package_default'] = array(
+			'path'        => $package_path,
+			'exists'      => is_dir( $package_path ),
+			'has_demos'   => is_dir( $package_path ) && self::has_demo_files( $package_path ),
 			'update_safe' => false,
 			'priority'    => 3,
-			'description' => __( 'Plugin directory (NOT update-safe, for examples only)', 'ConjureWP' ),
+			'description' => conjurewp_is_plugin_runtime()
+				? __( 'Plugin directory (NOT update-safe, for examples only)', 'ConjureWP' )
+				: __( 'Embedded package directory (NOT update-safe, for examples only)', 'ConjureWP' ),
 		);
 
 		return apply_filters( 'conjurewp_demo_locations_status', $locations, $theme_slug );
@@ -346,21 +393,22 @@ class Conjure_Demo_Helpers {
 		if ( empty( $demos ) ) {
 			$logger->debug( 'No demos found in base path, checking theme root...' );
 
-			$theme_root = get_template_directory();
+			foreach ( self::get_theme_directory_candidates() as $theme_root ) {
+				$logger->debug(
+					'Checking theme root for demo files',
+					array(
+						'theme_root' => $theme_root,
+						'theme_root_exists' => is_dir( $theme_root ),
+					)
+				);
 
-			$logger->debug(
-				'Checking theme root for demo files',
-				array(
-					'theme_root' => $theme_root,
-					'theme_root_exists' => is_dir( $theme_root ),
-				)
-			);
-
-			// Check theme root for demo files.
-			if ( self::has_demo_files( $theme_root ) ) {
-				$theme_name = wp_get_theme()->get( 'Name' );
-				$logger->info( 'Found demo files in theme root: ' . $theme_name );
-				$demos[] = self::create_import_config_from_path( $theme_root, $theme_name );
+				// Check theme root for demo files.
+				if ( self::has_demo_files( $theme_root ) ) {
+					$theme_name = wp_get_theme()->get( 'Name' );
+					$logger->info( 'Found demo files in theme root: ' . $theme_name );
+					$demos[] = self::create_import_config_from_path( $theme_root, $theme_name );
+					break;
+				}
 			}
 		}
 

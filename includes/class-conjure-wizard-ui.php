@@ -170,7 +170,7 @@ class Conjure_Wizard_UI {
 	 * @return string
 	 */
 	public function step_link( $step ) {
-		return add_query_arg( 'step', $step );
+		return $this->conjure->get_wizard_url( array( 'step' => $step ) );
 	}
 
 	/**
@@ -182,7 +182,7 @@ class Conjure_Wizard_UI {
 		$keys = array_keys( $this->conjure->steps );
 		$step = array_search( $this->conjure->step, $keys, true ) + 1;
 
-		return add_query_arg( 'step', $keys[ $step ] );
+		return $this->conjure->get_wizard_url( array( 'step' => $keys[ $step ] ) );
 	}
 
 	/**

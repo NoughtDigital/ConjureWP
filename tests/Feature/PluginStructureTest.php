@@ -13,6 +13,7 @@ test('plugin has required directories', function () {
         'assets/images',
         'languages',
         'examples',
+        'steps',
     ];
     
     foreach ($requiredDirs as $dir) {
@@ -26,6 +27,8 @@ test('plugin has required asset files', function () {
         'assets/css/conjure.css',
         'assets/js/conjure.js',
         'assets/images/sprite.svg',
+        'assets/js/conjure-admin.js',
+        'assets/css/conjure-admin.css',
     ];
     
     foreach ($requiredAssets as $asset) {
@@ -38,6 +41,8 @@ test('plugin has minified assets', function () {
     $minifiedAssets = [
         'assets/css/conjure.min.css',
         'assets/js/conjure.min.js',
+        'assets/css/conjure-admin.min.css',
+        'assets/js/conjure-admin.min.js',
     ];
     
     foreach ($minifiedAssets as $asset) {
@@ -81,6 +86,9 @@ test('all include classes exist', function () {
         'class-conjure-redux-importer.php',
         'class-conjure-rest-api.php',
         'class-conjure-server-health.php',
+        'class-conjure-step-connector-base.php',
+        'class-conjure-step-connector-manager.php',
+        'class-conjure-step-connectors-admin.php',
         'class-conjure-theme-plugins.php',
         'class-conjure-widget-importer.php',
         'class-conjure-wxr-importer.php',
@@ -89,6 +97,18 @@ test('all include classes exist', function () {
     foreach ($includeClasses as $class) {
         $path = conjurewp_test_get_plugin_path('includes/' . $class);
         expect(file_exists($path))->toBeTrue("Class {$class} should exist");
+    }
+});
+
+test('steps directory has WooCommerce connector files', function () {
+    $connectorFiles = [
+        'steps/woocommerce/connector.php',
+        'steps/woocommerce/class-conjure-step-connector-woocommerce.php',
+    ];
+
+    foreach ($connectorFiles as $file) {
+        $path = conjurewp_test_get_plugin_path($file);
+        expect(file_exists($path))->toBeTrue("Connector file {$file} should exist");
     }
 });
 

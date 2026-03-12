@@ -133,13 +133,13 @@ $strings = array(
 
 	'ready-header'             => esc_html__( 'All done. Have fun!', 'ConjureWP' ),
 
-	/* translators: Theme Author */
-	'ready%s'                  => esc_html__( 'Your theme has been all set up. Enjoy your new theme by %s.', 'ConjureWP' ),
+	/* translators: Theme Author link */
+	'ready%s'                  => sprintf( 'Your website is all set up. Built with care by <a href="%1$s" target="_blank">%2$s</a>.', 'https://nought.digital', esc_html__( 'Nought Digital Team', 'ConjureWP' ) ),
 	'ready-action-link'        => esc_html__( 'Extras', 'ConjureWP' ),
 	'ready-big-button'         => esc_html__( 'View your website', 'ConjureWP' ),
 	'ready-link-1'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://wordpress.org/support/', esc_html__( 'Explore WordPress', 'ConjureWP' ) ),
 	'ready-link-2'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://github.com/NoughtDigital/ConjureWP', esc_html__( 'Get Help', 'ConjureWP' ) ),
-	'ready-link-3'             => sprintf( '<a href="%1$s">%2$s</a>', admin_url( 'customize.php' ), esc_html__( 'Start Customizing', 'ConjureWP' ) ),
+	'ready-link-3'             => sprintf( '<a href="%1$s">%2$s</a>', admin_url( 'customize.php' ), esc_html__( 'Start Customising', 'ConjureWP' ) ),
 );
 
 /**

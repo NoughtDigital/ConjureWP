@@ -70,7 +70,7 @@ class Conjure {
 	 *
 	 * @var array
 	 */
-	public $import_files;
+	public $import_files = array();
 
 	/**
 	 * The base import file name.
@@ -283,6 +283,20 @@ class Conjure {
 	protected $ajax_handler;
 
 	/**
+	 * Step connector manager instance.
+	 *
+	 * @var Conjure_Step_Connector_Manager
+	 */
+	protected $step_connector_manager;
+
+	/**
+	 * Step connectors admin instance.
+	 *
+	 * @var Conjure_Step_Connectors_Admin
+	 */
+	protected $step_connectors_admin;
+
+	/**
 	 * Setup plugin version.
 	 *
 	 * @access private
@@ -368,6 +382,10 @@ class Conjure {
 		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-wizard-ui.php';
 		$this->wizard_ui = new Conjure_Wizard_UI( $this, $this->step_manager );
 
+		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-step-connector-base.php';
+		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-step-connector-manager.php';
+		$this->step_connector_manager = new Conjure_Step_Connector_Manager( $this );
+
 		require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-child-theme-generator.php';
 		$this->child_theme_generator = new Conjure_Child_Theme_Generator( $this );
 
@@ -404,6 +422,11 @@ class Conjure {
 		add_action( 'admin_menu', array( $this, 'hide_admin_menu' ), 999 );
 		add_action( 'admin_init', array( $this, 'steps' ), 30, 0 );
 		add_action( 'admin_init', array( $this, 'admin_page' ), 30, 0 );
+
+		if ( function_exists( 'is_admin' ) && is_admin() ) {
+			require_once trailingslashit( $this->base_path ) . $this->directory . '/includes/class-conjure-step-connectors-admin.php';
+			$this->step_connectors_admin = new Conjure_Step_Connectors_Admin( $this, $this->step_connector_manager );
+		}
 
 		if ( true !== $this->dev_mode && $already_setup ) {
 			// Return if Conjure has already completed its setup (admin bar hooks are already registered above if enabled).
@@ -526,11 +549,28 @@ class Conjure {
 			$wizard_url = add_query_arg( 'page', $this->conjure_url, admin_url( $admin_file ) );
 		}
 
+		if (
+			$this->step_connector_manager instanceof Conjure_Step_Connector_Manager &&
+			$this->step_connector_manager->is_preview_active()
+		) {
+			$args[ Conjure_Step_Connector_Manager::PREVIEW_QUERY_ARG ] = $this->step_connector_manager->get_active_preview_token();
+		}
+
 		if ( empty( $args ) ) {
 			return $wizard_url;
 		}
 
 		return add_query_arg( $args, $wizard_url );
+	}
+
+	/**
+	 * Determine whether the wizard is showing a temporary step preview.
+	 *
+	 * @return bool
+	 */
+	public function is_step_preview_active() {
+		return $this->step_connector_manager instanceof Conjure_Step_Connector_Manager
+			&& $this->step_connector_manager->is_preview_active();
 	}
 
 	/**
@@ -745,9 +785,9 @@ class Conjure {
 
 			</div>
 
-			<?php echo sprintf( '<span class="return-to-dashboard" title="%s">%s</span>', esc_attr( $strings['return-to-dashboard'] ), esc_html( $strings['return-to-dashboard'] ) ); ?>
+		<?php echo sprintf( '<a class="return-to-dashboard" href="%s" title="%s">%s</a>', esc_url( admin_url( 'tools.php?page=ConjureWP-steps' ) ), esc_attr( $strings['return-to-dashboard'] ), esc_html( $strings['return-to-dashboard'] ) ); ?>
 
-			<?php $ignore_url = wp_nonce_url( admin_url( '?' . $this->ignore . '=true' ), 'ConjureWP-ignore-nonce' ); ?>
+		<?php $ignore_url = wp_nonce_url( admin_url( '?' . $this->ignore . '=true' ), 'ConjureWP-ignore-nonce' ); ?>
 
 			<?php echo sprintf( '<a class="return-to-dashboard ignore" href="%s">%s</a>', esc_url( $ignore_url ), esc_html( $strings['ignore'] ) ); ?>
 
@@ -826,7 +866,7 @@ class Conjure {
 				</div>
 			</div>
 
-			<?php echo sprintf( '<span class="return-to-dashboard" title="%s">%s</span>', esc_attr( $strings['return-to-dashboard'] ), esc_html( $strings['return-to-dashboard'] ) ); ?>
+			<?php echo sprintf( '<a class="return-to-dashboard" href="%s" title="%s">%s</a>', esc_url( admin_url( 'tools.php?page=ConjureWP-steps' ) ), esc_attr( $strings['return-to-dashboard'] ), esc_html( $strings['return-to-dashboard'] ) ); ?>
 		</div>
 
 		<?php
@@ -1560,8 +1600,6 @@ class Conjure {
 		
 		<?php
 		// @freemius:premium-start
-		// PREMIUM ONLY: Show upgrade notice for automatic plugin installation.
-		// In free version (WordPress.org), this entire block is removed.
 		$can_auto_install = class_exists( 'Conjure_Freemius' ) ? Conjure_Freemius::can_auto_install_plugins() : false;
 
 		if ( ! $can_auto_install && function_exists( 'con_fs' ) && con_fs() ) :
@@ -1779,7 +1817,7 @@ class Conjure {
 
 			<h1><?php echo esc_html( sprintf( $header, $theme ) ); ?></h1>
 
-			<p><?php echo wp_kses( sprintf( $paragraph, esc_html( $author ) ), $allowed_html_array ); ?></p>
+			<p><?php echo wp_kses( sprintf( $paragraph, $author ), $allowed_html_array ); ?></p>
 
 		</div>
 

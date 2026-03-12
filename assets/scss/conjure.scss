@@ -55,12 +55,14 @@ p {
 }
 
 .conjure__input {
-	border-radius: 3px;
-	padding: 4px 8px;
-	font-size: 12px;
-	width: 70%;
+	border: 1px solid #d0d5dd;
+	border-radius: 6px;
+	box-sizing: border-box;
 	display: block;
-	margin: 14px auto 0;
+	font-size: 14px;
+	margin: 0;
+	padding: 8px;
+	width: 100%;
 }
 
 .lead + .conjure__button--knockout {

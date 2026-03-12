@@ -7,10 +7,12 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import banner from "vite-plugin-banner";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(
 	{
 		plugins: [
+		tailwindcss(),
 		banner(
 			{
 				content: `/**
@@ -33,6 +35,7 @@ export default defineConfig(
 			input: {
 				conjure: resolve( __dirname, "assets/scss/conjure.scss" ),
 				"conjure.min": resolve( __dirname, "assets/js/conjure.js" ),
+				"conjure-admin.min": resolve( __dirname, "assets/js/conjure-admin.js" ),
 			},
 			output: {
 				entryFileNames: "js/[name].js",
@@ -42,6 +45,9 @@ export default defineConfig(
 					const extType = info[info.length - 1];
 					if (/\.(css)$/.test( assetInfo.name )) {
 						if (assetInfo.name.includes( "conjure" )) {
+							if (assetInfo.name.includes( "conjure-admin" )) {
+								return "css/conjure-admin.min.css";
+							}
 							return "css/conjure.min.css";
 						}
 						return `css / [name].min.[ext]`;

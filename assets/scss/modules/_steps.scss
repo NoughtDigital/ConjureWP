@@ -3,15 +3,16 @@
 
 .dots {
 	cursor: default;
-	display: block;
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 4px;
 	line-height: 1;
 	list-style: none;
-	margin: 0 auto;
-	max-width: 140px;
+	margin: -20px auto 25px;
 	padding: 0;
 	position: relative;
-	top: 10px;
-	z-index: 0;
+	z-index: 1;
 
 	.conjure__content--ready & {
 		display: none;
@@ -30,12 +31,11 @@
 	height: 7px;
 	width: 7px;
 	padding: 0;
-	display: inline-block;
+	display: block;
 	background: $dotsBackground;
 	border-radius: 999px;
-	margin: 0 .01em;
+	margin: 0;
 	position: relative;
-	top: -.15em;
 	z-index: 9999;
 	transition: background 300ms cubic-bezier(.694, 0, .335, 1);
 }

@@ -35,5 +35,14 @@ if (existsSync(buildJsPath)) {
 	});
 }
 
-copyItem(join(buildDir, "css", "conjure.min.css"), join(assetsDir, "css", "conjure.min.css"));
+const buildCssPath = join(buildDir, "css");
+const assetsCssPath = join(assetsDir, "css");
+
+if (existsSync(buildCssPath)) {
+	readdirSync(buildCssPath).forEach((item) => {
+		const src = join(buildCssPath, item);
+		const dest = join(assetsCssPath, item);
+		copyItem(src, dest);
+	});
+}
 

@@ -131,16 +131,22 @@ class Conjure_Step_Manager {
 			)
 		);
 
+		if ( empty( $this->conjure->steps ) ) {
+			$this->conjure->steps();
+		}
+
 		// Get step completion states.
 		$step_states = get_option( 'conjure_' . $this->conjure->slug . '_step_completion', array() );
 
-		// Define available steps for rerunning.
-		$rerun_steps = array(
-			'child'   => esc_html__( 'Child Theme', 'ConjureWP' ),
-			'license' => esc_html__( 'License Activation', 'ConjureWP' ),
-			'plugins' => esc_html__( 'Plugins', 'ConjureWP' ),
-			'content' => esc_html__( 'Content Import', 'ConjureWP' ),
-		);
+		// Define available steps for rerunning from the active wizard steps.
+		$rerun_steps = array();
+		foreach ( $this->conjure->steps as $step_key => $step ) {
+			if ( in_array( $step_key, array( 'welcome', 'ready' ), true ) ) {
+				continue;
+			}
+
+			$rerun_steps[ $step_key ] = isset( $step['name'] ) ? $step['name'] : ucfirst( str_replace( '_', ' ', $step_key ) );
+		}
 
 		$rerun_steps = apply_filters( $this->conjure->theme->template . '_conjure_rerun_steps', $rerun_steps, $this->conjure->steps );
 

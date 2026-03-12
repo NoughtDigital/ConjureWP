@@ -85,6 +85,14 @@ class Conjure_Wizard_UI {
 			<?php do_action( 'admin_head' ); ?>
 		</head>
 		<body class="conjure__body conjure__body--<?php echo esc_attr( $current_step ); ?>">
+		<?php if ( $this->conjure->is_step_preview_active() ) : ?>
+			<div class="notice notice-warning inline" style="max-width: 1080px; margin: 16px auto 0; padding-right: 12px;">
+				<p>
+					<strong><?php esc_html_e( 'Preview mode:', 'ConjureWP' ); ?></strong>
+					<?php esc_html_e( 'You are viewing unsaved connector and step order changes. You can move around the wizard, but setup actions are disabled until you save.', 'ConjureWP' ); ?>
+				</p>
+			</div>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -118,6 +126,29 @@ class Conjure_Wizard_UI {
 	 */
 	public function footer() {
 		?>
+		<?php if ( $this->conjure->is_step_preview_active() ) : ?>
+			<script>
+				document.addEventListener("DOMContentLoaded", function () {
+					var previewMessage = <?php echo wp_json_encode( __( 'Preview mode is read-only. Save your connector changes to run the wizard.', 'ConjureWP' ) ); ?>;
+
+					document.addEventListener("click", function (event) {
+						var actionLink = event.target.closest("a[data-callback]");
+
+						if (!actionLink) {
+							return;
+						}
+
+						event.preventDefault();
+						window.alert(previewMessage);
+					}, true);
+
+					document.addEventListener("submit", function (event) {
+						event.preventDefault();
+						window.alert(previewMessage);
+					}, true);
+				});
+			</script>
+		<?php endif; ?>
 		</body>
 		<?php do_action( 'admin_footer' ); ?>
 		<?php do_action( 'admin_print_footer_scripts' ); ?>
@@ -181,6 +212,10 @@ class Conjure_Wizard_UI {
 	public function step_next_link() {
 		$keys = array_keys( $this->conjure->steps );
 		$step = array_search( $this->conjure->step, $keys, true ) + 1;
+
+		if ( $step >= count( $keys ) ) {
+			$step = count( $keys ) - 1;
+		}
 
 		return $this->conjure->get_wizard_url( array( 'step' => $keys[ $step ] ) );
 	}

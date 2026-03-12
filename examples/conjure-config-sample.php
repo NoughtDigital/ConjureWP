@@ -93,8 +93,8 @@ $strings = array(
 
 	'ready-header'             => esc_html__( 'All done. Have fun!', 'ConjureWP' ),
 
-	/* translators: Theme Author */
-	'ready%s'                  => esc_html__( 'Your theme has been all set up. Enjoy your new theme by %s.', 'ConjureWP' ),
+	/* translators: Theme Author link */
+	'ready%s'                  => '%s',
 	'ready-action-link'        => esc_html__( 'Extras', 'ConjureWP' ),
 	'ready-big-button'         => esc_html__( 'View your website', 'ConjureWP' ),
 	'ready-link-1'             => sprintf( '<a href="%1$s" target="_blank">%2$s</a>', 'https://wordpress.org/support/', esc_html__( 'Explore WordPress', 'ConjureWP' ) ),

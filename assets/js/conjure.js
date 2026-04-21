@@ -57,7 +57,9 @@ var Conjure = (function ($) {
 		// Initialize health telemetry live checks
 		init_health_telemetry_live_checks();
 
-		// Allow clicking anywhere on the content list item (outside of the upload zone) to toggle the checkbox.
+		// Allow clicking anywhere on the content list item (outside of the upload zone)
+		// to either toggle the checkbox (non-manual uploads) or expand the accordion
+		// (manual uploads - the drag & drop dropdown).
 		document.addEventListener(
 			"click",
 			function (event) {
@@ -69,30 +71,78 @@ var Conjure = (function ($) {
 					return;
 				}
 
-				// Ignore clicks that originate inside the upload zone UI.
+				// Ignore clicks that originate inside the upload zone UI itself.
 				if (event.target.closest( ".conjure__upload-zone" )) {
 					return;
 				}
 
-				// Let native behaviour handle label and checkbox clicks.
+				// Ignore clicks on the tooltip help icon so it doesn't toggle the row.
+				if (event.target.closest( ".hint--top" )) {
+					return;
+				}
+
+				// Ignore direct interactions with form controls (native label/input).
 				if (
-				event.target.closest( "label" ) ||
-				event.target.tagName === "INPUT"
+				event.target.tagName === "INPUT" ||
+				event.target.tagName === "LABEL"
 				) {
 					return;
 				}
 
-				var checkbox = listItem.querySelector(
+				// Detect "manual upload" rows by the presence of an upload zone inside
+				// the list item. This is more reliable than looking at a checkbox
+				// because sanitisers (e.g. wp_kses_post) can strip <input> elements.
+				var zone = listItem.querySelector( ".conjure__upload-zone" );
+
+				if (zone) {
+					// Don't collapse/expand when the zone already holds a file.
+					if (zone.classList.contains( "has-file" )) {
+						return;
+					}
+
+					event.preventDefault();
+					listItem.classList.toggle(
+						"conjure__drawer--upload__item--expanded"
+					);
+
+					var toggle = listItem.querySelector( ".conjure__upload-toggle" );
+					if (toggle) {
+						toggle.setAttribute(
+							"aria-expanded",
+							listItem.classList.contains(
+								"conjure__drawer--upload__item--expanded"
+							) ? "true" : "false"
+						);
+					}
+
+					// Keep the (optional) hidden checkbox in sync so form submissions
+					// still carry the "this section should be imported" flag.
+					var checkbox = listItem.querySelector( ".js-conjure-upload-checkbox" );
+					if (checkbox) {
+						checkbox.checked = listItem.classList.contains(
+							"conjure__drawer--upload__item--expanded"
+						);
+						checkbox.dispatchEvent(
+							new Event( "change", { bubbles: true } )
+						);
+					}
+					return;
+				}
+
+				// Non-manual items: toggle the associated checkbox as before.
+				var nonManualCheckbox = listItem.querySelector(
 					".js-conjure-upload-checkbox"
 				);
 
-				if ( ! checkbox) {
+				if ( ! nonManualCheckbox) {
 					return;
 				}
 
 				event.preventDefault();
-				checkbox.checked = ! checkbox.checked;
-				checkbox.dispatchEvent( new Event( "change", { bubbles: true } ) );
+				nonManualCheckbox.checked = ! nonManualCheckbox.checked;
+				nonManualCheckbox.dispatchEvent(
+					new Event( "change", { bubbles: true } )
+				);
 			}
 		);
 
@@ -1130,14 +1180,39 @@ var Conjure = (function ($) {
 			return;
 		}
 
-		var shouldExpand =
-			typeof forcedState === "boolean" ? forcedState : checkbox.checked;
+		function sync_upload_toggle_state() {
+			var toggle = item.querySelector( ".conjure__upload-toggle" );
+			if (toggle) {
+				toggle.setAttribute(
+					"aria-expanded",
+					item.classList.contains(
+						"conjure__drawer--upload__item--expanded"
+					) ? "true" : "false"
+				);
+			}
+		}
+
+		var isManual = checkbox.dataset.manualUpload === "1";
+
+		var shouldExpand;
+		if (typeof forcedState === "boolean") {
+			shouldExpand = forcedState;
+		} else if (isManual) {
+			// In manual upload mode, the label click toggles the drawer manually.
+			// Don't let the checkbox state force expansion here.
+			sync_upload_toggle_state();
+			return;
+		} else {
+			shouldExpand = checkbox.checked;
+		}
 
 		if (shouldExpand) {
 			item.classList.add( "conjure__drawer--upload__item--expanded" );
 		} else {
 			item.classList.remove( "conjure__drawer--upload__item--expanded" );
 		}
+
+		sync_upload_toggle_state();
 	}
 
 	function init_file_uploads() {
@@ -1163,26 +1238,9 @@ var Conjure = (function ($) {
 			}
 		);
 
-		// Handle label click to toggle upload zone when checkbox is disabled
-		var labels = document.querySelectorAll( ".conjure__upload-label" );
-		labels.forEach(
-			function (label) {
-				label.addEventListener(
-					"click",
-					function (e) {
-						var checkboxId = label.getAttribute( "for" );
-						var checkbox = document.getElementById( checkboxId );
-						var item = label.closest( ".conjure__drawer--upload__item" );
-
-						// If checkbox is disabled, manually toggle the upload zone
-						if (checkbox.disabled) {
-							e.preventDefault();
-							item.classList.toggle( "conjure__drawer--upload__item--expanded" );
-						}
-					}
-				);
-			}
-		);
+		// Manual upload accordion toggling is handled by the document-level click
+		// listener in window_loaded(), so any click on the <li> (outside the
+		// upload zone and help tooltip) will expand/collapse the drop zone.
 
 		// Handle click to open WordPress media uploader
 		uploadZones.forEach(
@@ -1337,6 +1395,17 @@ var Conjure = (function ($) {
 		);
 	}
 
+	function set_hidden(el, hidden) {
+		if ( ! el) {
+			return;
+		}
+		if (hidden) {
+			el.classList.add( "is-hidden" );
+		} else {
+			el.classList.remove( "is-hidden" );
+		}
+	}
+
 	function fetch_and_upload_attachment(attachment, fileType) {
 		var zone = document.querySelector(
 			'.conjure__upload-zone[data-type="' + fileType + '"]'
@@ -1345,10 +1414,9 @@ var Conjure = (function ($) {
 		var prompt = zone.querySelector( ".conjure__upload-prompt" );
 		var success = zone.querySelector( ".conjure__upload-success" );
 
-		// Show progress
-		prompt.style.display = "none";
-		success.style.display = "none";
-		progress.style.display = "block";
+		set_hidden( prompt, true );
+		set_hidden( success, true );
+		set_hidden( progress, false );
 
 		// Send attachment ID to server to process
 		var formData = new URLSearchParams();
@@ -1375,24 +1443,19 @@ var Conjure = (function ($) {
 			.then(
 				function (response) {
 					if (response.success) {
-						// Update UI to show success
 						zone.classList.add( "has-file" );
-						progress.style.display = "none";
+						set_hidden( progress, true );
 
-						// Update file info
 						zone.querySelector( ".conjure__file-name" ).textContent =
 						response.data.filename;
 						zone.querySelector( ".conjure__file-size" ).textContent =
 						response.data.size;
-						success.style.display = "flex";
+						set_hidden( success, false );
 						var removeButton = zone.querySelector(
 							".conjure__remove-file"
 						);
-						if (removeButton) {
-							removeButton.style.display = "inline-flex";
-						}
+						set_hidden( removeButton, false );
 
-						// Enable checkbox
 						var checkbox = document.getElementById(
 							"default_content_" + fileType
 						);
@@ -1400,9 +1463,8 @@ var Conjure = (function ($) {
 						checkbox.checked = true;
 						set_upload_item_expanded( checkbox, true );
 					} else {
-						// Show error
-						progress.style.display = "none";
-						prompt.style.display = "flex";
+						set_hidden( progress, true );
+						set_hidden( prompt, false );
 						show_error_message(
 							fileType,
 							response.data.message ||
@@ -1413,8 +1475,8 @@ var Conjure = (function ($) {
 			)
 			.catch(
 				function (error) {
-					progress.style.display = "none";
-					prompt.style.display = "flex";
+					set_hidden( progress, true );
+					set_hidden( prompt, false );
 					show_error_message(
 						fileType,
 						"Upload failed: " +
@@ -1432,10 +1494,9 @@ var Conjure = (function ($) {
 		var prompt = zone.querySelector( ".conjure__upload-prompt" );
 		var success = zone.querySelector( ".conjure__upload-success" );
 
-		// Show progress
-		prompt.style.display = "none";
-		success.style.display = "none";
-		progress.style.display = "block";
+		set_hidden( prompt, true );
+		set_hidden( success, true );
+		set_hidden( progress, false );
 
 		// Create form data
 		var formData = new FormData();
@@ -1460,24 +1521,19 @@ var Conjure = (function ($) {
 			.then(
 				function (response) {
 					if (response.success) {
-						// Update UI to show success
 						zone.classList.add( "has-file" );
-						progress.style.display = "none";
+						set_hidden( progress, true );
 
-						// Update file info
 						zone.querySelector( ".conjure__file-name" ).textContent =
 						response.data.filename;
 						zone.querySelector( ".conjure__file-size" ).textContent =
 						response.data.size;
-						success.style.display = "flex";
+						set_hidden( success, false );
 						var removeButton = zone.querySelector(
 							".conjure__remove-file"
 						);
-						if (removeButton) {
-							removeButton.style.display = "inline-flex";
-						}
+						set_hidden( removeButton, false );
 
-						// Enable checkbox
 						var checkbox = document.getElementById(
 							"default_content_" + fileType
 						);
@@ -1485,15 +1541,13 @@ var Conjure = (function ($) {
 						checkbox.checked = true;
 						set_upload_item_expanded( checkbox, true );
 
-						// Clear file input
 						var fileInput = zone.querySelector( ".conjure__file-input" );
 						if (fileInput) {
 							fileInput.value = "";
 						}
 					} else {
-						// Show error
-						progress.style.display = "none";
-						prompt.style.display = "flex";
+						set_hidden( progress, true );
+						set_hidden( prompt, false );
 						show_error_message(
 							fileType,
 							response.data.message ||
@@ -1504,8 +1558,8 @@ var Conjure = (function ($) {
 			)
 			.catch(
 				function (error) {
-					progress.style.display = "none";
-					prompt.style.display = "flex";
+					set_hidden( progress, true );
+					set_hidden( prompt, false );
 					show_error_message(
 						fileType,
 						"Upload failed: " +
@@ -1545,16 +1599,13 @@ var Conjure = (function ($) {
 			.then(
 				function (response) {
 					if (response.success) {
-						// Update UI
 						zone.classList.remove( "has-file" );
-						success.style.display = "none";
-						prompt.style.display = "flex";
+						set_hidden( success, true );
+						set_hidden( prompt, false );
 						var removeButton = zone.querySelector(
 							".conjure__remove-file"
 						);
-						if (removeButton) {
-							removeButton.style.display = "none";
-						}
+						set_hidden( removeButton, true );
 						var fileName = zone.querySelector( ".conjure__file-name" );
 						if (fileName) {
 							fileName.textContent = "";
@@ -1564,7 +1615,6 @@ var Conjure = (function ($) {
 							fileSize.textContent = "";
 						}
 
-						// Disable and uncheck checkbox
 						var checkbox = document.getElementById(
 							"default_content_" + fileType
 						);
@@ -1573,9 +1623,9 @@ var Conjure = (function ($) {
 						}
 
 						if (checkbox.dataset.manualUpload === "1") {
-							checkbox.disabled = true;
 							checkbox.checked = false;
-							set_upload_item_expanded( checkbox, false );
+							// Keep the zone expanded so the user can upload again.
+							set_upload_item_expanded( checkbox, true );
 						} else {
 							set_upload_item_expanded( checkbox, checkbox.checked );
 						}

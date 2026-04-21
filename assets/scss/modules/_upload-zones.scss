@@ -2,6 +2,16 @@
 // Manual file upload drag-and-drop interface
 @use "../variables" as *;
 
+// Utility: hide elements. We use a class (rather than inline style) because
+// wp_kses_post() strips `display` from inline style attributes by default.
+.conjure__upload-zone .is-hidden,
+.conjure__upload-prompt.is-hidden,
+.conjure__upload-success.is-hidden,
+.conjure__upload-progress.is-hidden,
+.conjure__remove-file.is-hidden {
+	display: none !important;
+}
+
 .conjure__drawer--upload {
     overflow-y: auto;
     padding-right: 8px;
@@ -35,6 +45,7 @@
 		margin-bottom: 0;
 		padding: 2px 0;
 		border: none;
+		cursor: pointer;
 
 		&:last-child {
 			margin-bottom: 0;
@@ -104,15 +115,28 @@
 
 	.conjure__upload-label {
 		cursor: pointer !important;
-		display: inline-block;
-		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
 		width: 100%;
 
 		.conjure__upload-label-content {
 			display: flex;
+			flex: 1;
 			flex-direction: column;
 			gap: 1px; // Tighter spacing between title and description
-			padding-right: 25px; // Make room for the checkbox
+			padding-right: 0;
+		}
+
+		.conjure__upload-toggle {
+			appearance: none;
+			background: transparent;
+			border: 0;
+			cursor: pointer;
+			flex-shrink: 0;
+			line-height: 1;
+			margin: 3px 0 0;
+			padding: 0;
 		}
 
 		.conjure__upload-title {
@@ -172,15 +196,18 @@
 			margin-top: 2px; // Small margin for breathing room
 		}
 
-		// Use the same circle checkbox style as regular import
-		i {
+		// Use the same circle checkbox style as regular import.
+		// Pin font-size to 14px (matching body text) so the em-based tick
+		// coordinates below render identically to the non-upload list items,
+		// regardless of the containing <button>'s own font-size.
+		.conjure__upload-toggle i {
 			background-color: transparent;
 			border-radius: 50%;
 			border: 2px solid #b2b7ba;
 			display: inline-block;
-			float: right;
+			font-size: 14px;
 			height: 13px;
-			margin-top: 3px;
+			margin-top: 0;
 			position: relative;
 			text-align: left;
 			transform-origin: center;
@@ -217,7 +244,7 @@
 		}
 
 		&:hover {
-			i {
+			.conjure__upload-toggle i {
 				border-color: $blue;
 			}
 
@@ -231,7 +258,7 @@
 		display: none !important;
 
 		&:checked + .conjure__upload-label {
-			i {
+			.conjure__upload-toggle i {
 				background-color: $blue;
 				border-color: $blue;
 				transform: scale(1.2);
@@ -254,7 +281,7 @@
 			cursor: pointer !important;
 
 			&:hover {
-				i {
+				.conjure__upload-toggle i {
 					border-color: $blue;
 				}
 

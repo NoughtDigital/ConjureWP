@@ -453,26 +453,40 @@ class Conjure_File_Upload_Handler {
 
 		<?php foreach ( $upload_options as $type => $option ) : ?>
 			<?php
-			$has_file = ! empty( $uploaded_files[ $type ] );
+			$has_file  = ! empty( $uploaded_files[ $type ] );
 			$file_info = $has_file ? $uploaded_files[ $type ] : null;
+			$item_classes = array(
+				'conjure__drawer--import-content__list-item',
+				'conjure__drawer--upload__item',
+				'has-inline-upload',
+				'status',
+				'status--Pending',
+			);
 			?>
 
-			<li class="conjure__drawer--upload__item" data-upload-type="<?php echo esc_attr( $type ); ?>">
+			<li class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>" data-content="<?php echo esc_attr( $type ); ?>" data-upload-type="<?php echo esc_attr( $type ); ?>">
 				<div class="conjure__upload-zone-wrapper">
-					
-						<input 
-							type="checkbox" 
-							name="default_content[<?php echo esc_attr( $type ); ?>]" 
-							class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox" 
-							id="default_content_<?php echo esc_attr( $type ); ?>" 
+
+						<input
+							type="checkbox"
+							name="default_content[<?php echo esc_attr( $type ); ?>]"
+							class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox"
+							id="default_content_<?php echo esc_attr( $type ); ?>"
 							value="1"
 							data-manual-upload="1"
 							<?php checked( $has_file ); ?>
-							<?php disabled( ! $has_file ); ?>
 						>
 					
-					<label for="default_content_<?php echo esc_attr( $type ); ?>" class="conjure__upload-label">
-						<i></i>
+					<div class="conjure__upload-label">
+						<button
+							type="button"
+							class="conjure__upload-toggle"
+							aria-expanded="false"
+							aria-controls="conjure_upload_zone_<?php echo esc_attr( $type ); ?>"
+							aria-label="<?php echo esc_attr( sprintf( __( 'Toggle upload area for %s', 'ConjureWP' ), $option['title'] ) ); ?>"
+						>
+							<i aria-hidden="true"></i>
+						</button>
 						<span class="conjure__upload-label-content">
 							<span class="conjure__upload-title">
 								<?php echo esc_html( $option['title'] ); ?>
@@ -484,7 +498,7 @@ class Conjure_File_Upload_Handler {
 							</span>
 							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
 						</span>
-					</label>
+					</div>
 
 					<?php echo wp_kses_post( $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ) ); ?>
 
@@ -561,11 +575,11 @@ class Conjure_File_Upload_Handler {
 
 		ob_start();
 		?>
-		<div class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>"
+		<div id="conjure_upload_zone_<?php echo esc_attr( $type ); ?>" class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>"
 			data-type="<?php echo esc_attr( $type ); ?>"
 			data-accept="<?php echo esc_attr( $option['accept'] ); ?>">
 
-			<div class="conjure__upload-prompt" <?php echo $has_file ? 'style="display:none;"' : ''; ?>>
+			<div class="conjure__upload-prompt <?php echo $has_file ? 'is-hidden' : ''; ?>">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
 					<polyline points="17 8 12 3 7 8"></polyline>
@@ -577,7 +591,7 @@ class Conjure_File_Upload_Handler {
 				</p>
 			</div>
 
-			<div class="conjure__upload-success" style="display: <?php echo $has_file ? 'flex' : 'none'; ?>;" role="status" aria-live="polite">
+			<div class="conjure__upload-success <?php echo $has_file ? '' : 'is-hidden'; ?>" role="status" aria-live="polite">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<polyline points="20 6 9 17 4 12"></polyline>
 				</svg>
@@ -585,7 +599,7 @@ class Conjure_File_Upload_Handler {
 					<strong class="conjure__file-name"><?php echo esc_html( $file_name ); ?></strong>
 					<span class="conjure__file-size"><?php echo esc_html( $file_size ); ?></span>
 				</div>
-				<button type="button" class="conjure__remove-file" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'ConjureWP' ); ?>" aria-label="<?php esc_attr_e( 'Remove uploaded file', 'ConjureWP' ); ?>" <?php echo $has_file ? '' : 'style="display:none;"'; ?>>
+				<button type="button" class="conjure__remove-file <?php echo $has_file ? '' : 'is-hidden'; ?>" data-type="<?php echo esc_attr( $type ); ?>" title="<?php esc_attr_e( 'Remove file', 'ConjureWP' ); ?>" aria-label="<?php esc_attr_e( 'Remove uploaded file', 'ConjureWP' ); ?>">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 						<line x1="18" y1="6" x2="6" y2="18"></line>
 						<line x1="6" y1="6" x2="18" y2="18"></line>
@@ -593,7 +607,7 @@ class Conjure_File_Upload_Handler {
 				</button>
 			</div>
 
-			<div class="conjure__upload-progress" style="display:none;" role="status" aria-live="polite">
+			<div class="conjure__upload-progress is-hidden" role="status" aria-live="polite">
 				<div class="conjure__progress-bar-small" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="<?php esc_attr_e( 'Upload progress', 'ConjureWP' ); ?>">
 					<div class="conjure__progress-fill"></div>
 				</div>

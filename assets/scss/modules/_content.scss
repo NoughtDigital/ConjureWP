@@ -107,7 +107,8 @@
 			right: 3px;
 			height: 27px;
 			width: 27px;
-			top: 4px;
+			top: 50%;
+			transform: translateY(-50%);
 
 			&::after {
 				/* gradient on the right - to indicate it's possible to scroll */
@@ -150,9 +151,37 @@
 	&--content {
 		min-height: 580px;
 		overflow: visible;
-		
+
+		#conjure__drawer-trigger {
+			display: inline-block;
+			margin-bottom: 1em;
+		}
+
 		form {
 			position: relative;
+		}
+
+		// Footer buttons are position:absolute globally; that pins them to the
+		// card bottom and lets the drawer scroll underneath (see debug logs).
+		.conjure__content__footer {
+			align-items: center;
+			box-sizing: border-box;
+			display: flex;
+			justify-content: space-between;
+			margin-top: 1.5em;
+			min-height: 44px;
+			padding: 8px 12px 4px;
+			position: relative;
+			width: 100%;
+
+			.conjure__button--skip,
+			.conjure__button--next {
+				bottom: auto;
+				flex-shrink: 0;
+				left: auto;
+				position: static;
+				right: auto;
+			}
 		}
 	}
 

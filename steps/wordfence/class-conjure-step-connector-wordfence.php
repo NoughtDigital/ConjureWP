@@ -436,9 +436,7 @@ class Conjure_Step_Connector_Wordfence extends Conjure_Step_Connector_Base {
 			update_option( 'conjure_wf_immediately_block_invalid_users', ! empty( $_POST['conjure_wf_immediately_block_invalid_users'] ) );
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

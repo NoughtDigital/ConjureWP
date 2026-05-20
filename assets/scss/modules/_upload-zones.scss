@@ -13,13 +13,18 @@
 }
 
 .conjure__drawer--upload {
-    overflow-y: auto;
-    padding-right: 8px;
-    padding-bottom: 40px;
-    
+    overflow-x: hidden;
+    overflow-y: hidden;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-bottom: 0;
+
     .conjure__drawer--open & {
         max-height: min(360px, 55vh);
+        overflow-x: hidden;
         overflow-y: auto;
+        padding-bottom: 16px;
+        scrollbar-gutter: stable;
     }
 
 	// Custom scrollbar styling
@@ -43,9 +48,10 @@
 
 	.conjure__drawer--upload__item {
 		margin-bottom: 0;
-		padding: 2px 0;
+		padding: 2px 0 2px 2px;
 		border: none;
 		cursor: pointer;
+		overflow: visible;
 
 		&:last-child {
 			margin-bottom: 0;
@@ -67,8 +73,7 @@
 		// Show upload zone when checkbox is checked or item is expanded
 		.conjure__upload-zone-wrapper input[type="checkbox"]:checked ~ .conjure__upload-zone,
 		&.conjure__drawer--upload__item--expanded .conjure__upload-zone {
-			max-height: 1000px;
-			max-height: max-content;
+			max-height: 200px;
 			height: auto;
 			min-height: 60px;
 			opacity: 1;
@@ -76,7 +81,7 @@
 			margin-bottom: 8px;
 			padding: 10px 12px;
 			border-width: 1px;
-			overflow: visible;
+			overflow: hidden;
 		}
 
 		// Visual state when checkbox is checked (file uploaded)
@@ -85,7 +90,7 @@
 			i {
 				background-color: $blue;
 				border-color: $blue;
-				transform: scale(1.2);
+				transform: scale(1.15);
 
 				&:after {
 					width: 9px;
@@ -105,7 +110,8 @@
 	.conjure__upload-zone-wrapper {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: 6px;
+		width: 100%;
 	}
 
 	.conjure__drawer--import-content__list-item:not(.has-inline-upload) & {
@@ -115,17 +121,20 @@
 
 	.conjure__upload-label {
 		cursor: pointer !important;
-		display: flex;
-		align-items: flex-start;
-		gap: 10px;
+		display: grid;
+		grid-template-columns: 22px minmax(0, 1fr);
+		column-gap: 10px;
+		align-items: center;
 		width: 100%;
+		box-sizing: border-box;
 
 		.conjure__upload-label-content {
 			display: flex;
-			flex: 1;
 			flex-direction: column;
-			gap: 1px; // Tighter spacing between title and description
-			padding-right: 0;
+			gap: 2px;
+			grid-column: 2;
+			justify-content: center;
+			min-width: 0;
 		}
 
 		.conjure__upload-toggle {
@@ -133,18 +142,24 @@
 			background: transparent;
 			border: 0;
 			cursor: pointer;
-			flex-shrink: 0;
+			grid-column: 1;
+			grid-row: 1;
+			justify-self: center;
 			line-height: 1;
-			margin: 3px 0 0;
+			margin: 0;
+			min-width: 0;
 			padding: 0;
+			width: 22px;
 		}
 
 		.conjure__upload-title {
 			display: flex;
 			align-items: center;
-			gap: 4px; // Closer to text
+			flex-wrap: wrap;
+			gap: 4px;
 			font-size: 14px;
 			font-weight: 500;
+			line-height: 1.35;
 			color: $gray;
 			transition: color 100ms;
 
@@ -193,7 +208,7 @@
 			color: #718096;
 			line-height: 1.4;
 			display: block;
-			margin-top: 2px; // Small margin for breathing room
+			margin: 0;
 		}
 
 		// Use the same circle checkbox style as regular import.
@@ -204,13 +219,14 @@
 			background-color: transparent;
 			border-radius: 50%;
 			border: 2px solid #b2b7ba;
+			box-sizing: content-box;
 			display: inline-block;
 			font-size: 14px;
 			height: 13px;
 			margin-top: 0;
 			position: relative;
 			text-align: left;
-			transform-origin: center;
+			transform-origin: center center;
 			transition: border-color 100ms, background-color 100ms, transform 350ms cubic-bezier(.78,-1.22,.17,1.89);
 			width: 13px;
 
@@ -261,7 +277,7 @@
 			.conjure__upload-toggle i {
 				background-color: $blue;
 				border-color: $blue;
-				transform: scale(1.2);
+				transform: scale(1.15);
 
 				&:after {
 					width: 9px;
@@ -297,6 +313,7 @@
 	border: 1px dashed #cbd5e0;
 	border-radius: 4px;
 	padding: 10px 12px;
+	margin-top: 2px;
 	text-align: center;
 	transition: all 0.3s ease;
 	cursor: pointer;
@@ -306,6 +323,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-shrink: 0;
 
 	&:hover {
 		border-color: #4299e1;
@@ -523,10 +541,124 @@
 	}
 }
 
-// Manual upload mode adjustments
+// Toggle-only rows (e.g. Images & Media) — no file upload zone.
+.conjure__drawer--upload__item--toggle {
+	cursor: pointer;
+
+	.conjure__upload-zone-wrapper {
+		gap: 0;
+	}
+
+	.conjure__upload-label--toggle {
+		align-items: center;
+		cursor: pointer;
+		display: grid;
+		grid-template-columns: 22px minmax(0, 1fr);
+		column-gap: 10px;
+		margin: 0;
+		padding: 4px 0;
+		width: 100%;
+		box-sizing: border-box;
+
+		.conjure__upload-label-content {
+			grid-column: 2;
+		}
+
+		i {
+			grid-column: 1;
+			justify-self: center;
+			background-color: transparent;
+			border-radius: 50%;
+			border: 2px solid #b2b7ba;
+			box-sizing: content-box;
+			flex-shrink: 0;
+			font-size: 14px;
+			height: 13px;
+			margin-top: 0;
+			position: relative;
+			transform-origin: center center;
+			transition: border-color 100ms, background-color 100ms, transform 350ms cubic-bezier(.78,-1.22,.17,1.89);
+			width: 13px;
+
+			&:before {
+				background: $blue;
+				border-radius: 2px;
+				content: "";
+				height: 2px;
+				left: 0.2em;
+				position: absolute;
+				top: 0.4em;
+				transform-origin: 0% 0%;
+				transform: rotate(45deg);
+				transition: width 50ms ease 50ms;
+				width: 0;
+			}
+
+			&:after {
+				background: $blue;
+				border-radius: 2px;
+				content: "";
+				height: 2px;
+				left: 4px;
+				position: absolute;
+				top: 0.67em;
+				transform-origin: 0% 0%;
+				transform: rotate(310deg);
+				transition: width 50ms ease;
+				width: 0;
+			}
+		}
+	}
+
+	input[type="checkbox"]:checked + .conjure__upload-label--toggle i {
+		background-color: $blue;
+		border-color: $blue;
+		transform: scale(1.15);
+
+		&:after {
+			width: 9px;
+			background: $white;
+			transition: width 50ms ease 100ms;
+		}
+
+		&:before {
+			width: 5px;
+			background: $white;
+			transition: width 50ms ease 100ms;
+		}
+	}
+}
+
+// Manual upload: same Advanced drawer as other steps; scroll list only when open.
 .conjure-manual-upload-mode {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+
 	.conjure__drawer--import-content {
 		padding-top: 3px;
+	}
+
+	.conjure__drawer--open & {
+		overflow: hidden;
+
+		.conjure__drawer.conjure__drawer--upload {
+			flex: 1 1 auto;
+			margin-bottom: 0;
+			max-height: min(360px, 55vh);
+			min-height: 0;
+			overflow-x: hidden;
+			overflow-y: auto;
+			scrollbar-gutter: stable;
+		}
+	}
+
+	.conjure__content__footer {
+		background: #fff;
+		flex-shrink: 0;
+		margin-top: 1.5em;
+		position: relative;
+		z-index: 5;
 	}
 }
 

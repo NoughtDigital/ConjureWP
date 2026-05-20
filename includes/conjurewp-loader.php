@@ -135,6 +135,17 @@ if ( ! function_exists( 'conjurewp_bootstrap' ) ) {
 		add_filter( 'conjure_demo_required_plugins', 'conjurewp_merge_theme_bundled_plugins', 5, 3 );
 		add_filter( 'conjure_import_files', 'conjurewp_auto_register_demos', 5 );
 
+		add_action(
+			'conjurewp_register_import_files',
+			static function () {
+				$conjure = function_exists( 'conjurewp_get_conjure' ) ? conjurewp_get_conjure() : null;
+				if ( $conjure instanceof Conjure ) {
+					$conjure->register_import_files();
+				}
+			},
+			10
+		);
+
 		require_once conjurewp_get_runtime_path( 'conjurewp-config.php' );
 
 		if ( function_exists( 'is_admin' ) && is_admin() ) {

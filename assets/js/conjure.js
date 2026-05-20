@@ -28,6 +28,72 @@ var Conjure = (function ($) {
 		},
 	};
 
+	// #region agent log
+	function logWizardFooterLayout( state ) {
+		var content = document.querySelector( ".conjure__content--content" );
+		if ( ! content ) {
+			return;
+		}
+
+		var trigger = document.getElementById( "conjure__drawer-trigger" );
+		var form = content.querySelector( "form" );
+		var footer = content.querySelector( ".conjure__content__footer" );
+		var drawer = content.querySelector( ".conjure__drawer--import-content, .conjure__drawer--upload" );
+		var skip = content.querySelector( "#skip, #close" );
+		var nextBtn = content.querySelector( ".conjure__button--next" );
+		var rect = function ( el ) {
+			if ( ! el ) {
+				return null;
+			}
+			var r = el.getBoundingClientRect();
+			return {
+				top: Math.round( r.top ),
+				bottom: Math.round( r.bottom ),
+				left: Math.round( r.left ),
+				right: Math.round( r.right ),
+				height: Math.round( r.height ),
+			};
+		};
+		var cs = function ( el, prop ) {
+			return el ? window.getComputedStyle( el ).getPropertyValue( prop ) : null;
+		};
+
+		fetch( "http://127.0.0.1:7376/ingest/170c274a-071f-4a10-90bd-d6fcbdfadd10", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"X-Debug-Session-Id": "a24e98",
+			},
+			body: JSON.stringify( {
+				sessionId: "a24e98",
+				runId: "post-fix",
+				hypothesisId: "layout",
+				location: "conjure.js:logWizardFooterLayout",
+				message: "Wizard footer layout snapshot",
+				data: {
+					state: state,
+					drawerOpen: document.body.classList.contains( "conjure__drawer--open" ),
+					content: rect( content ),
+					trigger: rect( trigger ),
+					form: rect( form ),
+					footer: rect( footer ),
+					drawer: rect( drawer ),
+					skip: rect( skip ),
+					next: rect( nextBtn ),
+					triggerFooterGap: trigger && footer ? Math.round( footer.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom ) : null,
+					drawerFooterOverlap: drawer && nextBtn ? Math.round( drawer.getBoundingClientRect().bottom - nextBtn.getBoundingClientRect().top ) : null,
+					formPaddingBottom: cs( form, "padding-bottom" ),
+					skipPosition: cs( skip, "position" ),
+					skipBottom: cs( skip, "bottom" ),
+					skipOffsetParent: skip && skip.offsetParent ? skip.offsetParent.className : null,
+					formOffsetParent: form && form.offsetParent ? form.offsetParent.className : null,
+				},
+				timestamp: Date.now(),
+			} ),
+		} ).catch( function () {} );
+	}
+	// #endregion
+
 	function window_loaded() {
 		var body = $( ".conjure__body" ),
 			body_loading = $( ".conjure__body--loading" ),
@@ -40,6 +106,11 @@ var Conjure = (function ($) {
 		setTimeout(
 			function () {
 				body.addClass( "loaded" );
+				// #region agent log
+				setTimeout( function () {
+					logWizardFooterLayout( "loaded" );
+				}, 400 );
+				// #endregion
 			},
 			100
 		);
@@ -48,6 +119,11 @@ var Conjure = (function ($) {
 			"click",
 			function () {
 				body.toggleClass( drawer_opened );
+				// #region agent log
+				setTimeout( function () {
+					logWizardFooterLayout( "drawer-toggle" );
+				}, 700 );
+				// #endregion
 			}
 		);
 
@@ -78,6 +154,21 @@ var Conjure = (function ($) {
 
 				// Ignore clicks on the tooltip help icon so it doesn't toggle the row.
 				if (event.target.closest( ".hint--top" )) {
+					return;
+				}
+
+				// Rows without a file upload (e.g. fetch images from content.xml).
+				if (listItem.hasAttribute( "data-import-toggle" )) {
+					var toggleCheckbox = listItem.querySelector(
+						".js-conjure-upload-checkbox"
+					);
+					if (toggleCheckbox && event.target !== toggleCheckbox) {
+						event.preventDefault();
+						toggleCheckbox.checked = ! toggleCheckbox.checked;
+						toggleCheckbox.dispatchEvent(
+							new Event( "change", { bubbles: true } )
+						);
+					}
 					return;
 				}
 
@@ -732,6 +823,26 @@ var Conjure = (function ($) {
 			}
 		}
 
+		function is_fetch_only_import_item(item) {
+			if (!item || !item.hasAttribute("data-import-fetch-fallback")) {
+				return false;
+			}
+
+			var zone = item.querySelector(".conjure__upload-zone");
+			return !zone || !zone.classList.contains("has-file");
+		}
+
+		function get_import_list_items() {
+			return $( ".conjure__drawer--import-content__list-item" ).filter(
+				function () {
+					return (
+						!this.hasAttribute("data-import-toggle") &&
+						!is_fetch_only_import_item(this)
+					);
+				}
+			);
+		}
+
 		function process_current() {
 			if (current_item) {
 				var $check = $current_node.find( "input:checkbox" );
@@ -741,17 +852,31 @@ var Conjure = (function ($) {
 							? selectedCard.data( "demo-index" ) || 0
 							: $( ".js-conjure-demo-card-import" ).first().data( "demo-index" ) || 0;
 
+						var postData = {
+							action: "conjure_content",
+							wpnonce: conjure_params.wpnonce,
+							content: current_item,
+							selected_index: selectedIndex,
+						};
+
+						var imagesToggle = document.getElementById(
+							"default_content_images"
+						);
+						var imagesZone = document.getElementById(
+							"conjure_upload_zone_images"
+						);
+						var hasImagesZip =
+							imagesZone &&
+							imagesZone.classList.contains("has-file");
+
+						if (imagesToggle && !hasImagesZip) {
+							postData.fetch_attachments = imagesToggle.checked
+								? 1
+								: 0;
+						}
+
 						jQuery
-							.post(
-								conjure_params.ajaxurl,
-								{
-									action: "conjure_content",
-									wpnonce: conjure_params.wpnonce,
-									content: current_item,
-									selected_index: selectedIndex,
-								},
-								ajax_callback
-							)
+							.post( conjure_params.ajaxurl, postData, ajax_callback )
 							.fail( ajax_callback );
 				} else {
 					$current_node.addClass( "skipping" );
@@ -769,10 +894,8 @@ var Conjure = (function ($) {
 				}
 				$current_node.find( ".spinner" ).css( "visibility", "hidden" );
 			}
-			var $items = $( ".conjure__drawer--import-content__list-item" );
-			var $enabled_items = $(
-				".conjure__drawer--import-content__list-item input:checked"
-			);
+			var $items = get_import_list_items();
+			var $enabled_items = $items.find( "input:checked" );
 			$items.each(
 				function () {
 					if (current_item === "" || do_next) {

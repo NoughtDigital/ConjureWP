@@ -270,7 +270,12 @@ class Conjure_Step_Connector_ACF extends Conjure_Step_Connector_Base {
 			true
 		);
 
-		$save_path = get_option( 'conjure_acf_json_save_path', 'acf-json' );
+		$save_path = get_option( 'conjure_acf_json_save_path', '' );
+		if ( '' === $save_path && function_exists( 'conjurewp_get_acf_json_save_path_config_default' ) ) {
+			$save_path = conjurewp_get_acf_json_save_path_config_default();
+		} elseif ( '' === $save_path ) {
+			$save_path = 'acf-json';
+		}
 		?>
 		<div class="conjure__field-group">
 			<label for="conjure_acf_json_save_path" class="conjure__field-label">
@@ -444,8 +449,10 @@ class Conjure_Step_Connector_ACF extends Conjure_Step_Connector_Base {
 		if ( in_array( 'json_sync', $enabled_keys, true ) ) {
 			update_option( 'conjure_acf_enable_local_json', ! empty( $_POST['conjure_acf_enable_local_json'] ) );
 
-			$save_path = isset( $_POST['conjure_acf_json_save_path'] ) ? sanitize_text_field( wp_unslash( $_POST['conjure_acf_json_save_path'] ) ) : 'acf-json';
-			if ( empty( $save_path ) ) {
+			$save_path = isset( $_POST['conjure_acf_json_save_path'] ) ? sanitize_text_field( wp_unslash( $_POST['conjure_acf_json_save_path'] ) ) : '';
+			if ( function_exists( 'conjurewp_sanitize_acf_json_save_path' ) ) {
+				$save_path = conjurewp_sanitize_acf_json_save_path( $save_path );
+			} elseif ( empty( $save_path ) ) {
 				$save_path = 'acf-json';
 			}
 			update_option( 'conjure_acf_json_save_path', $save_path );
@@ -479,9 +486,7 @@ class Conjure_Step_Connector_ACF extends Conjure_Step_Connector_Base {
 			update_option( 'conjure_acf_label_placement', $label_placement );
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

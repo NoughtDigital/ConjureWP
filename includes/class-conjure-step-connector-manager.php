@@ -71,6 +71,9 @@ class Conjure_Step_Connector_Manager {
 	public function __construct( $conjure ) {
 		$this->conjure = $conjure;
 
+		require_once trailingslashit( $this->conjure->base_path ) . $this->conjure->directory . '/includes/class-conjure-connector-catalog.php';
+		require_once trailingslashit( $this->conjure->base_path ) . $this->conjure->directory . '/includes/class-conjure-connector-native-sync.php';
+
 		add_filter( 'conjure_steps', array( $this, 'inject_steps' ), 5 );
 		add_filter( 'conjure_steps', array( $this, 'apply_saved_step_order' ), 200 );
 	}
@@ -303,6 +306,10 @@ class Conjure_Step_Connector_Manager {
 			$definition['class_file'] = trailingslashit( $connector_dir ) . ltrim( $definition['class_file'], '/\\' );
 		}
 
+		if ( class_exists( 'Conjure_Connector_Catalog' ) ) {
+			$definition = Conjure_Connector_Catalog::enrich_definition( $definition );
+		}
+
 		return $definition;
 	}
 
@@ -351,6 +358,7 @@ class Conjure_Step_Connector_Manager {
 
 		foreach ( $this->get_connectors() as $connector_id => $connector ) {
 			$settings = isset( $submitted_settings[ $connector_id ] ) && is_array( $submitted_settings[ $connector_id ] ) ? $submitted_settings[ $connector_id ] : array();
+
 			$normalised_settings[ $connector_id ] = $this->normalise_connector_settings( $connector, $settings );
 		}
 
@@ -433,8 +441,18 @@ class Conjure_Step_Connector_Manager {
 			$features[ $feature_id ] = isset( $settings['features'][ $feature_id ] ) ? (bool) $settings['features'][ $feature_id ] : (bool) $default_enabled;
 		}
 
+		$enabled = ! empty( $settings['enabled'] );
+
+		if ( $enabled && ! in_array( true, $features, true ) ) {
+			foreach ( $defaults['features'] as $feature_id => $default_enabled ) {
+				if ( ! empty( $default_enabled ) ) {
+					$features[ $feature_id ] = true;
+				}
+			}
+		}
+
 		return array(
-			'enabled'  => ! empty( $settings['enabled'] ),
+			'enabled'  => $enabled,
 			'features' => $features,
 		);
 	}
@@ -446,7 +464,54 @@ class Conjure_Step_Connector_Manager {
 	 * @return array
 	 */
 	public function inject_steps( $steps ) {
+		return $this->inject_connector_steps(
+			$steps,
+			static function ( $connector, $settings ) {
+				return $connector->get_step_definition( $settings );
+			}
+		);
+	}
+
+	/**
+	 * Inject enabled connector steps for the admin wizard order screen.
+	 *
+	 * @param array $steps Existing steps array.
+	 * @return array
+	 */
+	public function inject_admin_order_steps( $steps ) {
+		return $this->inject_connector_steps(
+			$steps,
+			static function ( $connector, $settings ) {
+				return $connector->get_admin_order_step_definition( $settings );
+			}
+		);
+	}
+
+	/**
+	 * Build the step list used by the admin wizard order UI.
+	 *
+	 * @param array $steps Base wizard steps.
+	 * @return array
+	 */
+	public function build_admin_wizard_order_steps( $steps ) {
 		if ( ! is_array( $steps ) ) {
+			return array();
+		}
+
+		$steps = $this->inject_admin_order_steps( $steps );
+
+		return $this->apply_saved_step_order( $steps );
+	}
+
+	/**
+	 * Inject connector steps using a definition resolver.
+	 *
+	 * @param array    $steps    Existing steps array.
+	 * @param callable $resolver Callable( Conjure_Step_Connector_Base $connector, array $settings ): array.
+	 * @return array
+	 */
+	protected function inject_connector_steps( $steps, $resolver ) {
+		if ( ! is_array( $steps ) || ! is_callable( $resolver ) ) {
 			return $steps;
 		}
 
@@ -464,7 +529,7 @@ class Conjure_Step_Connector_Manager {
 
 		foreach ( $this->get_connectors() as $connector_id => $connector ) {
 			$settings        = $this->get_connector_settings( $connector_id );
-			$step_definition = $connector->get_step_definition( $settings );
+			$step_definition = call_user_func( $resolver, $connector, $settings );
 
 			if ( empty( $step_definition ) ) {
 				continue;
@@ -478,7 +543,7 @@ class Conjure_Step_Connector_Manager {
 			$steps['ready'] = $ready_step;
 		}
 
-		return $steps;
+		return $this->position_connector_steps_after_license( $steps );
 	}
 
 	/**
@@ -495,11 +560,13 @@ class Conjure_Step_Connector_Manager {
 		$saved_order = $this->get_saved_step_order();
 
 		if ( empty( $saved_order ) ) {
-			return $steps;
+			return $this->position_connector_steps_after_license( $steps );
 		}
 
 		$ordered_steps = array();
-		$has_new_steps = false;
+		$has_new_steps   = false;
+		$new_connector_steps = array();
+		$new_other_steps     = array();
 
 		foreach ( $saved_order as $step_key ) {
 			if ( isset( $steps[ $step_key ] ) ) {
@@ -512,17 +579,180 @@ class Conjure_Step_Connector_Manager {
 			$has_new_steps = true;
 
 			foreach ( $steps as $step_key => $step ) {
-				$ordered_steps[ $step_key ] = $step;
+				if ( $this->is_connector_step_key( $step_key ) ) {
+					$new_connector_steps[ $step_key ] = $step;
+					continue;
+				}
+
+				$new_other_steps[ $step_key ] = $step;
 			}
 		}
 
-		if ( $has_new_steps && isset( $ordered_steps['ready'] ) ) {
+		if ( ! empty( $new_connector_steps ) ) {
+			$ordered_steps = array_merge( $ordered_steps, $new_connector_steps );
+			$ordered_steps = $this->position_connector_steps_after_license( $ordered_steps );
+		}
+
+		if ( ! empty( $new_other_steps ) ) {
+			$ready_step = null;
+
+			if ( isset( $ordered_steps['ready'] ) ) {
+				$ready_step = $ordered_steps['ready'];
+				unset( $ordered_steps['ready'] );
+			}
+
+			foreach ( $new_other_steps as $step_key => $step ) {
+				$ordered_steps[ $step_key ] = $step;
+			}
+
+			if ( null !== $ready_step ) {
+				$ordered_steps['ready'] = $ready_step;
+			}
+		} elseif ( $has_new_steps && isset( $ordered_steps['ready'] ) ) {
 			$ready_step = $ordered_steps['ready'];
 			unset( $ordered_steps['ready'] );
 			$ordered_steps['ready'] = $ready_step;
 		}
 
 		return $ordered_steps;
+	}
+
+	/**
+	 * Place connector steps immediately after the licence step.
+	 *
+	 * @param array $steps Current steps.
+	 * @return array
+	 */
+	protected function position_connector_steps_after_license( $steps ) {
+		if ( ! is_array( $steps ) || empty( $steps ) ) {
+			return $steps;
+		}
+
+		$connector_steps = array();
+
+		foreach ( $this->get_connectors() as $connector ) {
+			$step_key = $connector->get_step_key();
+
+			if ( ! isset( $steps[ $step_key ] ) ) {
+				continue;
+			}
+
+			$connector_steps[ $step_key ] = $steps[ $step_key ];
+			unset( $steps[ $step_key ] );
+		}
+
+		if ( empty( $connector_steps ) ) {
+			return $steps;
+		}
+
+		$anchor = $this->get_connector_insert_anchor_key( $steps );
+
+		if ( empty( $anchor ) ) {
+			return array_merge( $steps, $connector_steps );
+		}
+
+		$ordered = array();
+
+		foreach ( $steps as $step_key => $step ) {
+			$ordered[ $step_key ] = $step;
+
+			if ( $step_key === $anchor ) {
+				foreach ( $connector_steps as $connector_key => $connector_step ) {
+					$ordered[ $connector_key ] = $connector_step;
+				}
+
+				$connector_steps = array();
+			}
+		}
+
+		if ( ! empty( $connector_steps ) ) {
+			$ordered = array_merge( $ordered, $connector_steps );
+		}
+
+		return $ordered;
+	}
+
+	/**
+	 * Get the step key after which connector steps should be inserted.
+	 *
+	 * @param array $steps Current steps.
+	 * @return string
+	 */
+	protected function get_connector_insert_anchor_key( $steps ) {
+		foreach ( array( 'license', 'plugins', 'child', 'welcome' ) as $anchor ) {
+			if ( isset( $steps[ $anchor ] ) ) {
+				return $anchor;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Determine whether a step key belongs to a connector.
+	 *
+	 * @param string $step_key Step key.
+	 * @return bool
+	 */
+	protected function is_connector_step_key( $step_key ) {
+		if ( isset( $this->step_connector_map[ $step_key ] ) ) {
+			return true;
+		}
+
+		foreach ( $this->get_connectors() as $connector ) {
+			if ( $connector->get_step_key() === $step_key ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Determine whether a connector step is active in the wizard.
+	 *
+	 * @param string $step_key Step key.
+	 * @return bool
+	 */
+	public function is_connector_step_active( $step_key ) {
+		$connector_id = $this->get_step_connector_id( $step_key );
+
+		if ( empty( $connector_id ) ) {
+			return false;
+		}
+
+		$connectors = $this->get_connectors();
+
+		if ( empty( $connectors[ $connector_id ] ) ) {
+			return false;
+		}
+
+		return $connectors[ $connector_id ]->should_show_in_wizard( $this->get_connector_settings( $connector_id ) );
+	}
+
+	/**
+	 * Determine whether a connector step is enabled but not yet in the live wizard.
+	 *
+	 * @param string $step_key Step key.
+	 * @return bool
+	 */
+	public function is_connector_step_planned( $step_key ) {
+		$connector_id = $this->get_step_connector_id( $step_key );
+
+		if ( empty( $connector_id ) ) {
+			return false;
+		}
+
+		$connectors = $this->get_connectors();
+
+		if ( empty( $connectors[ $connector_id ] ) ) {
+			return false;
+		}
+
+		$settings = $this->get_connector_settings( $connector_id );
+
+		return $connectors[ $connector_id ]->should_show_in_admin_wizard_order( $settings )
+			&& ! $connectors[ $connector_id ]->should_show_in_wizard( $settings );
 	}
 
 	/**
@@ -549,6 +779,24 @@ class Conjure_Step_Connector_Manager {
 		}
 
 		return 'custom';
+	}
+
+	/**
+	 * Get a human-readable source label for a step.
+	 *
+	 * @param string $step_key Step key.
+	 * @return string
+	 */
+	public function get_step_source_label( $step_key ) {
+		$labels = array(
+			'core'      => __( 'Core', 'ConjureWP' ),
+			'steps_dir' => __( 'Connector', 'ConjureWP' ),
+			'custom'    => __( 'Custom', 'ConjureWP' ),
+		);
+
+		$source = $this->get_step_source( $step_key );
+
+		return isset( $labels[ $source ] ) ? $labels[ $source ] : $source;
 	}
 
 	/**
@@ -584,22 +832,40 @@ class Conjure_Step_Connector_Manager {
 			$features = $connector->get_resolved_features( $settings );
 
 			$data[ $connector_id ] = array(
-				'id'            => $connector_id,
-				'name'          => $connector->get_name(),
-				'description'   => $connector->get_description(),
-				'step_key'      => $connector->get_step_key(),
-				'step_name'     => $connector->get_step_name(),
-				'source'        => $connector->get_source(),
-				'path'          => $connector->get_path(),
-				'plugin'        => $connector->get_plugin(),
-				'plugin_status' => $connector->get_plugin_status(),
-				'settings'      => $settings,
-				'features'      => $features,
-				'shows_in_wizard' => $connector->should_show_in_wizard( $settings ),
+				'id'              => $connector_id,
+				'name'            => $connector->get_name(),
+				'description'     => $connector->get_description(),
+				'step_key'        => $connector->get_step_key(),
+				'step_name'       => $connector->get_step_name(),
+				'source'          => $connector->get_source(),
+				'path'            => $connector->get_path(),
+				'plugin'          => $connector->get_plugin(),
+				'plugin_status'   => $connector->get_plugin_status(),
+				'settings'        => $settings,
+				'features'        => $features,
+				'shows_in_wizard'  => $connector->should_show_in_wizard( $settings ),
+				'shows_in_admin_order' => $connector->should_show_in_admin_wizard_order( $settings ),
+				'integration_tier' => $connector->get_integration_tier(),
+				'readiness'       => $connector->get_readiness_status(),
+				'can_configure'   => class_exists( 'Conjure_Connector_Catalog' ) ? Conjure_Connector_Catalog::can_configure_connector( $connector_id ) : true,
+				'wizard_available' => class_exists( 'Conjure_Connector_Catalog' ) ? Conjure_Connector_Catalog::can_show_connector_in_wizard( $connector_id ) : true,
 			);
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Reconcile connectors on disk with the catalogue.
+	 *
+	 * @return array
+	 */
+	public function get_connector_reconciliation() {
+		if ( ! class_exists( 'Conjure_Connector_Catalog' ) ) {
+			return array();
+		}
+
+		return Conjure_Connector_Catalog::reconcile( $this->get_connectors() );
 	}
 
 	/**

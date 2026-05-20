@@ -112,9 +112,11 @@ class Conjure_Theme_Plugins {
 		}
 
 		$config_content = file_get_contents( $config_file );
-		$config = json_decode( $config_content, true );
+		$config         = function_exists( 'conjurewp_json_decode' )
+			? conjurewp_json_decode( $config_content, true )
+			: json_decode( $config_content, true );
 
-		if ( json_last_error() !== JSON_ERROR_NONE ) {
+		if ( null === $config || ( ! function_exists( 'conjurewp_json_decode' ) && JSON_ERROR_NONE !== json_last_error() ) ) {
 			Conjure_Logger::get_instance()->error(
 				'Failed to parse theme plugin configuration',
 				array(
@@ -441,15 +443,17 @@ class Conjure_Theme_Plugins {
 		}
 
 		$content = file_get_contents( $json_file );
-		$config = json_decode( $content, true );
+		$config  = function_exists( 'conjurewp_json_decode' )
+			? conjurewp_json_decode( $content, true )
+			: json_decode( $content, true );
 
-		if ( json_last_error() !== JSON_ERROR_NONE ) {
+		if ( null === $config || ( ! function_exists( 'conjurewp_json_decode' ) && JSON_ERROR_NONE !== json_last_error() ) ) {
 			return new WP_Error(
 				'invalid_json',
 				sprintf(
 					/* translators: %s: JSON error message */
 					__( 'Invalid JSON: %s', 'ConjureWP' ),
-					json_last_error_msg()
+					function_exists( 'conjurewp_json_decode' ) ? __( 'JSON is invalid or too deeply nested.', 'ConjureWP' ) : json_last_error_msg()
 				)
 			);
 		}

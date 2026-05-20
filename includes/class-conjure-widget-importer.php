@@ -91,6 +91,19 @@ class Conjure_Widget_Importer {
 			);
 		}
 
+		if ( function_exists( 'conjurewp_json_decode' ) ) {
+			$decoded = conjurewp_json_decode( $data, false );
+
+			if ( null === $decoded ) {
+				return new \WP_Error(
+					'corrupted_widget_import_data',
+					__( 'Error: Widget import data exceeds maximum nesting depth or is invalid.', 'ConjureWP' )
+				);
+			}
+
+			return $decoded;
+		}
+
 		return json_decode( $data );
 	}
 
@@ -181,7 +194,7 @@ class Conjure_Widget_Importer {
 				// Without this, they are imported as objects and cause fatal error on Widgets page.
 				// If this creates problems for plugins that do actually intend settings in objects then may need to consider other approach: https://wordpress.org/support/topic/problem-with-array-of-arrays.
 				// It is probably much more likely that arrays are used than objects, however.
-				$widget = json_decode( json_encode( $widget ), true );
+				$widget = json_decode( wp_json_encode( $widget ), true );
 
 				// Filter to modify settings array.
 				// This is preferred over the older wie_widget_settings filter above.

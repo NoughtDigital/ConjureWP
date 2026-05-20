@@ -9,6 +9,9 @@
 	"author_uri": "https://ConjureWP.com",
 	"author_shop": "Conjure WP",
 	"license": "GPLv3",
+	"engines": {
+		"node": ">=20.19.0"
+	},
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

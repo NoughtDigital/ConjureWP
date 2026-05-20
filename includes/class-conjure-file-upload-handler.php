@@ -159,14 +159,21 @@ class Conjure_File_Upload_Handler {
 
 		// Validate file type.
 		$allowed_types = array(
-			'content' => array( 'xml' ),
-			'widgets' => array( 'json', 'wie' ),
-			'options' => array( 'dat', 'json' ),
-			'redux' => array( 'json' ),
-			'sliders' => array( 'zip' ),
-			'images' => array( 'xml' ),
-			'menus' => array( 'json' ),
+			'content'   => array( 'xml' ),
+			'widgets'   => array( 'json', 'wie' ),
+			'options'   => array( 'dat', 'json' ),
+			'redux'     => array( 'json' ),
+			'sliders'   => array( 'zip' ),
+			'images'    => array( 'zip' ),
+			'menus'     => array( 'json' ),
+			'acf_json'   => array( 'json', 'zip' ),
+			'gf_forms'   => array( 'json', 'xml', 'zip' ),
+			'gf_entries' => array( 'json', 'csv', 'zip' ),
 		);
+
+		if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+			$allowed_types = array_merge( $allowed_types, Conjure_Connector_Upload_Registry::get_allowed_extensions() );
+		}
 
 		if ( ! isset( $allowed_types[ $file_type ] ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'ConjureWP' ) ) );
@@ -270,7 +277,11 @@ class Conjure_File_Upload_Handler {
 		$file_type = isset( $_POST['file_type'] ) ? sanitize_key( $_POST['file_type'] ) : '';
 
 		// Validate file type.
-		$allowed_types = array( 'content', 'widgets', 'options', 'redux', 'sliders', 'images', 'menus' );
+		$allowed_types = array( 'content', 'widgets', 'options', 'redux', 'sliders', 'images', 'menus', 'acf_json', 'gf_forms', 'gf_entries' );
+
+		if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+			$allowed_types = array_merge( $allowed_types, array_keys( Conjure_Connector_Upload_Registry::get_allowed_extensions() ) );
+		}
 
 		if ( ! in_array( $file_type, $allowed_types, true ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid file type specified.', 'ConjureWP' ) ) );
@@ -291,9 +302,16 @@ class Conjure_File_Upload_Handler {
 			'options' => array( 'dat', 'json' ),
 			'redux' => array( 'json' ),
 			'sliders' => array( 'zip' ),
-			'images' => array( 'xml' ),
-			'menus' => array( 'json' ),
+			'images' => array( 'zip' ),
+			'menus'    => array( 'json' ),
+			'acf_json'   => array( 'json', 'zip' ),
+			'gf_forms'   => array( 'json', 'xml', 'zip' ),
+			'gf_entries' => array( 'json', 'csv', 'zip' ),
 		);
+
+		if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+			$allowed_extensions = array_merge( $allowed_extensions, Conjure_Connector_Upload_Registry::get_allowed_extensions() );
+		}
 
 		if ( ! isset( $allowed_extensions[ $file_type ] ) || ! in_array( $file_extension, $allowed_extensions[ $file_type ], true ) ) {
 			wp_send_json_error(
@@ -446,61 +464,90 @@ class Conjure_File_Upload_Handler {
 	public function get_manual_upload_html() {
 		$uploaded_files = get_transient( 'conjure_uploaded_files' );
 
-		$upload_options = $this->get_upload_options( is_array( $uploaded_files ) ? $uploaded_files : array() );
+		$upload_options = $this->get_manual_upload_sections( is_array( $uploaded_files ) ? $uploaded_files : array() );
 
 		ob_start();
 		?>
 
 		<?php foreach ( $upload_options as $type => $option ) : ?>
 			<?php
-			$has_file  = ! empty( $uploaded_files[ $type ] );
-			$file_info = $has_file ? $uploaded_files[ $type ] : null;
-			$item_classes = array(
+			$is_toggle         = ! empty( $option['type'] ) && 'toggle' === $option['type'];
+			$is_fetch_fallback = ! empty( $option['fetch_fallback'] );
+			$has_file          = ! $is_toggle && ! empty( $uploaded_files[ $type ] );
+			$file_info         = $has_file ? $uploaded_files[ $type ] : null;
+			$default_checked   = ! empty( $option['default_checked'] );
+			$item_classes      = array(
 				'conjure__drawer--import-content__list-item',
 				'conjure__drawer--upload__item',
-				'has-inline-upload',
 				'status',
 				'status--Pending',
 			);
+
+			if ( $is_toggle ) {
+				$item_classes[] = 'conjure__drawer--upload__item--toggle';
+			} else {
+				$item_classes[] = 'has-inline-upload';
+			}
 			?>
 
-			<li class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>" data-content="<?php echo esc_attr( $type ); ?>" data-upload-type="<?php echo esc_attr( $type ); ?>">
+			<li class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>"
+				data-content="<?php echo esc_attr( $type ); ?>"
+				data-upload-type="<?php echo esc_attr( $type ); ?>"
+				<?php echo $is_toggle ? ' data-import-toggle="1"' : ''; ?>
+				<?php echo $is_fetch_fallback ? ' data-import-fetch-fallback="1"' : ''; ?>>
 				<div class="conjure__upload-zone-wrapper">
 
-						<input
-							type="checkbox"
-							name="default_content[<?php echo esc_attr( $type ); ?>]"
-							class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox"
-							id="default_content_<?php echo esc_attr( $type ); ?>"
-							value="1"
-							data-manual-upload="1"
-							<?php checked( $has_file ); ?>
-						>
-					
-					<div class="conjure__upload-label">
-						<button
-							type="button"
-							class="conjure__upload-toggle"
-							aria-expanded="false"
-							aria-controls="conjure_upload_zone_<?php echo esc_attr( $type ); ?>"
-							aria-label="<?php echo esc_attr( sprintf( __( 'Toggle upload area for %s', 'ConjureWP' ), $option['title'] ) ); ?>"
-						>
-							<i aria-hidden="true"></i>
-						</button>
-						<span class="conjure__upload-label-content">
-							<span class="conjure__upload-title">
-								<?php echo esc_html( $option['title'] ); ?>
-								<?php if ( ! empty( $option['tooltip'] ) ) : ?>
-									<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
-										<?php echo wp_kses( $this->wizard_ui->svg( array( 'icon' => 'help' ) ), $this->wizard_ui->svg_allowed_html() ); ?>
-									</span>
-								<?php endif; ?>
-							</span>
-							<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
-						</span>
-					</div>
+					<input
+						type="checkbox"
+						name="default_content[<?php echo esc_attr( $type ); ?>]"
+						class="checkbox checkbox-<?php echo esc_attr( $type ); ?> js-conjure-upload-checkbox"
+						id="default_content_<?php echo esc_attr( $type ); ?>"
+						value="1"
+						data-manual-upload="1"
+						<?php checked( $has_file || $is_toggle || ( $is_fetch_fallback && $default_checked ) ); ?>
+					>
 
-					<?php echo wp_kses_post( $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ) ); ?>
+					<?php if ( $is_toggle ) : ?>
+						<label class="conjure__upload-label conjure__upload-label--toggle" for="default_content_<?php echo esc_attr( $type ); ?>">
+							<i aria-hidden="true"></i>
+							<span class="conjure__upload-label-content">
+								<span class="conjure__upload-title">
+									<?php echo esc_html( $option['title'] ); ?>
+									<?php if ( ! empty( $option['tooltip'] ) ) : ?>
+										<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
+											<?php echo wp_kses( $this->wizard_ui->svg( array( 'icon' => 'help' ) ), $this->wizard_ui->svg_allowed_html() ); ?>
+										</span>
+									<?php endif; ?>
+								</span>
+								<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+							</span>
+						</label>
+					<?php else : ?>
+						<div class="conjure__upload-label">
+							<button
+								type="button"
+								class="conjure__upload-toggle"
+								aria-expanded="false"
+								aria-controls="conjure_upload_zone_<?php echo esc_attr( $type ); ?>"
+								aria-label="<?php echo esc_attr( sprintf( __( 'Toggle upload area for %s', 'ConjureWP' ), $option['title'] ) ); ?>"
+							>
+								<i aria-hidden="true"></i>
+							</button>
+							<span class="conjure__upload-label-content">
+								<span class="conjure__upload-title">
+									<?php echo esc_html( $option['title'] ); ?>
+									<?php if ( ! empty( $option['tooltip'] ) ) : ?>
+										<span class="hint--top hint--rounded" aria-label="<?php echo esc_attr( $option['tooltip'] ); ?>">
+											<?php echo wp_kses( $this->wizard_ui->svg( array( 'icon' => 'help' ) ), $this->wizard_ui->svg_allowed_html() ); ?>
+										</span>
+									<?php endif; ?>
+								</span>
+								<span class="conjure__upload-description"><?php echo esc_html( $option['description'] ); ?></span>
+							</span>
+						</div>
+
+						<?php echo wp_kses_post( $this->render_upload_zone_markup( $type, $option, $has_file, $file_info ) ); ?>
+					<?php endif; ?>
 
 				</div>
 			</li>
@@ -509,6 +556,29 @@ class Conjure_File_Upload_Handler {
 
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Retrieve manual upload section configuration.
+	 *
+	 * @param array $uploaded_files Files stored in transient storage.
+	 * @return array
+	 */
+	public function get_manual_upload_sections( $uploaded_files = array() ) {
+		return $this->get_upload_options( $uploaded_files );
+	}
+
+	/**
+	 * Render upload zone markup for a section (used by import step refresh).
+	 *
+	 * @param string     $type      Upload type key.
+	 * @param array      $option    Upload option configuration.
+	 * @param bool       $has_file  Whether a file is already stored.
+	 * @param array|null $file_info Information about the stored file.
+	 * @return string
+	 */
+	public function render_upload_zone_markup( $type, $option, $has_file, $file_info ) {
+		return $this->render_upload_zone_markup_internal( $type, $option, $has_file, $file_info );
 	}
 
 	/**
@@ -525,10 +595,11 @@ class Conjure_File_Upload_Handler {
 				'accept'      => '.xml',
 			),
 			'images' => array(
-				'title'       => esc_html__( 'Images & Media', 'ConjureWP' ),
-				'description' => esc_html__( 'Import media library attachments', 'ConjureWP' ),
-				'tooltip'     => esc_html__( 'Uncheck if replacing images or on shared hosting to speed up import', 'ConjureWP' ),
-				'accept'      => '.xml',
+				'title'            => esc_html__( 'Images & Media', 'ConjureWP' ),
+				'description'      => esc_html__( 'Upload a .zip of media files, or leave empty to download images from content.xml', 'ConjureWP' ),
+				'tooltip'          => esc_html__( 'Upload a local media .zip, or leave empty to fetch attachments from your content export. Uncheck to skip images.', 'ConjureWP' ),
+				'accept'           => '.zip',
+				'fetch_fallback'   => true,
 			),
 			'widgets' => array(
 				'title'       => esc_html__( 'Widgets', 'ConjureWP' ),
@@ -557,6 +628,34 @@ class Conjure_File_Upload_Handler {
 			),
 		);
 
+		if ( class_exists( 'ACF' ) || function_exists( 'acf' ) ) {
+			$upload_options['acf_json'] = array(
+				'title'       => esc_html__( 'ACF JSON', 'ConjureWP' ),
+				'description' => esc_html__( 'Upload ACF field group .json files or a .zip containing an acf-json folder', 'ConjureWP' ),
+				'tooltip'     => esc_html__( 'Files are placed in your theme\'s ACF local JSON folder so field groups can sync from the filesystem.', 'ConjureWP' ),
+				'accept'      => '.json,.zip',
+			);
+		}
+
+		if ( class_exists( 'GFAPI' ) || class_exists( 'GFForms' ) ) {
+			$upload_options['gf_forms'] = array(
+				'title'       => esc_html__( 'Gravity Forms', 'ConjureWP' ),
+				'description' => esc_html__( 'Import exported Gravity Forms (.json or .xml from Forms → Import/Export)', 'ConjureWP' ),
+				'tooltip'     => esc_html__( 'Upload a form export file or a .zip of multiple exports. Forms are created in Gravity Forms on this site.', 'ConjureWP' ),
+				'accept'      => '.json,.xml,.zip',
+			);
+			$upload_options['gf_entries'] = array(
+				'title'       => esc_html__( 'Gravity Forms Entries', 'ConjureWP' ),
+				'description' => esc_html__( 'Import form entries (.json recommended, or .csv from the entries export)', 'ConjureWP' ),
+				'tooltip'     => esc_html__( 'Import forms first. JSON should include form_id per entry (or use WP-CLI json export). CSV maps columns to field labels on an existing form.', 'ConjureWP' ),
+				'accept'      => '.json,.csv,.zip',
+			);
+		}
+
+		if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+			$upload_options = array_merge( $upload_options, Conjure_Connector_Upload_Registry::get_upload_sections() );
+		}
+
 		return apply_filters( 'conjure_manual_upload_sections', $upload_options, $uploaded_files );
 	}
 
@@ -569,7 +668,7 @@ class Conjure_File_Upload_Handler {
 	 * @param array|null $file_info Information about the stored file.
 	 * @return string
 	 */
-	private function render_upload_zone_markup( $type, $option, $has_file, $file_info ) {
+	private function render_upload_zone_markup_internal( $type, $option, $has_file, $file_info ) {
 		$file_name = $has_file && ! empty( $file_info['name'] ) ? $file_info['name'] : '';
 		$file_size = $has_file && ! empty( $file_info['size'] ) ? size_format( $file_info['size'] ) : '';
 
@@ -577,7 +676,7 @@ class Conjure_File_Upload_Handler {
 		?>
 		<div id="conjure_upload_zone_<?php echo esc_attr( $type ); ?>" class="conjure__upload-zone <?php echo $has_file ? 'has-file' : ''; ?>"
 			data-type="<?php echo esc_attr( $type ); ?>"
-			data-accept="<?php echo esc_attr( $option['accept'] ); ?>">
+			data-accept="<?php echo esc_attr( isset( $option['accept'] ) ? $option['accept'] : '' ); ?>">
 
 			<div class="conjure__upload-prompt <?php echo $has_file ? 'is-hidden' : ''; ?>">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

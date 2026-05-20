@@ -18,14 +18,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Load WordPress upgrader classes if not already loaded.
-if ( ! class_exists( 'Plugin_Upgrader' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-}
-if ( ! class_exists( 'Plugin_Installer_Skin' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/class-plugin-installer-skin.php';
-}
-
 /**
  * Conjure_Plugin_Installer class.
  *
@@ -46,6 +38,13 @@ class Conjure_Plugin_Installer {
 	 * @var array
 	 */
 	private $plugins = array();
+
+	/**
+	 * Cached WordPress.org plugin list for this request.
+	 *
+	 * @var array|null
+	 */
+	private $installed_plugins_cache = null;
 
 	/**
 	 * Constructor.
@@ -149,26 +148,42 @@ class Conjure_Plugin_Installer {
 		$plugin_file = $this->get_plugin_file( $slug );
 
 		if ( empty( $plugin_file ) ) {
-			$this->logger->info( "is_plugin_active('{$slug}'): plugin file not found" );
 			return false;
 		}
 
-		$is_active = is_plugin_active( $plugin_file );
-		$this->logger->info( "is_plugin_active('{$slug}'): file='{$plugin_file}', active=" . ( $is_active ? 'yes' : 'no' ) );
-
-		return $is_active;
+		return is_plugin_active( $plugin_file );
 	}
 
 	/**
-	 * Get the plugin file path (relative to plugins directory).
+	 * Resolve install/active status for multiple plugin slugs in one pass.
 	 *
-	 * @param string $slug Plugin slug.
-	 * @return string|false Plugin file or false if not found.
+	 * @param array $slugs Plugin slugs.
+	 * @return array<string, array{file:string|false, installed:bool, active:bool}>
 	 */
-	public function get_plugin_file( $slug ) {
-		$all_plugins = get_plugins();
+	public function get_slug_status_map( array $slugs ) {
+		$all_plugins = $this->get_installed_plugins();
+		$status_map  = array();
 
-		// Check common plugin file patterns.
+		foreach ( $slugs as $slug ) {
+			$plugin_file = $this->find_plugin_file_in_list( $slug, $all_plugins );
+			$status_map[ $slug ] = array(
+				'file'      => $plugin_file,
+				'installed' => ! empty( $plugin_file ),
+				'active'    => ! empty( $plugin_file ) && is_plugin_active( $plugin_file ),
+			);
+		}
+
+		return $status_map;
+	}
+
+	/**
+	 * Find plugin file within a preloaded plugin list.
+	 *
+	 * @param string $slug        Plugin slug.
+	 * @param array  $all_plugins Plugins from get_plugins().
+	 * @return string|false
+	 */
+	private function find_plugin_file_in_list( $slug, $all_plugins ) {
 		$possible_files = array(
 			$slug . '/' . $slug . '.php',
 			$slug . '/index.php',
@@ -181,7 +196,6 @@ class Conjure_Plugin_Installer {
 			}
 		}
 
-		// Search all plugins for matching slug.
 		foreach ( $all_plugins as $file => $plugin_data ) {
 			if ( strpos( $file, $slug . '/' ) === 0 ) {
 				return $file;
@@ -189,6 +203,41 @@ class Conjure_Plugin_Installer {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get plugin file path.
+	 *
+	 * @param string $slug Plugin slug.
+	 * @return string|false
+	 */
+	public function get_plugin_file( $slug ) {
+		return $this->find_plugin_file_in_list( $slug, $this->get_installed_plugins() );
+	}
+
+	/**
+	 * Get installed plugins (cached per request).
+	 *
+	 * @return array
+	 */
+	private function get_installed_plugins() {
+		if ( null === $this->installed_plugins_cache ) {
+			if ( ! function_exists( 'get_plugins' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+
+			$this->installed_plugins_cache = get_plugins();
+		}
+
+		return $this->installed_plugins_cache;
+	}
+
+	/**
+	 * Clear the installed-plugins cache (after install/activate).
+	 */
+	private function flush_installed_plugins_cache() {
+		$this->installed_plugins_cache = null;
+		wp_clean_plugins_cache();
 	}
 
 	/**
@@ -258,9 +307,7 @@ class Conjure_Plugin_Installer {
 		}
 
 		$this->logger->info( "Successfully installed plugin: {$slug}" );
-
-		// Refresh plugin cache.
-		wp_clean_plugins_cache();
+		$this->flush_installed_plugins_cache();
 
 		return true;
 	}
@@ -273,20 +320,17 @@ class Conjure_Plugin_Installer {
 	 * @return bool|WP_Error
 	 */
 	private function install_from_source( $slug, $source ) {
-		$this->logger->info( "Installing plugin '{$slug}' from custom source: {$source}" );
+		$this->logger->info( "Installing plugin '{$slug}' from custom source" );
 
-		// Check if source is a URL or local file.
-		$is_url = filter_var( $source, FILTER_VALIDATE_URL );
+		$validated_source = $this->validate_plugin_source( $source );
 
-		if ( ! $is_url && ! file_exists( $source ) ) {
-			$error = new WP_Error( 'source_not_found', "Plugin source not found: {$source}" );
-			$this->logger->error( $error->get_error_message() );
-			return $error;
+		if ( is_wp_error( $validated_source ) ) {
+			$this->logger->error( $validated_source->get_error_message() );
+			return $validated_source;
 		}
 
-		// Use Plugin_Upgrader to install from ZIP.
 		$upgrader = new Plugin_Upgrader( new Conjure_Plugin_Installer_Skin() );
-		$result   = $upgrader->install( $source );
+		$result   = $upgrader->install( $validated_source );
 
 		if ( is_wp_error( $result ) ) {
 			$this->logger->error( "Failed to install plugin '{$slug}' from source: " . $result->get_error_message() );
@@ -300,9 +344,7 @@ class Conjure_Plugin_Installer {
 		}
 
 		$this->logger->info( "Successfully installed plugin '{$slug}' from custom source" );
-
-		// Refresh plugin cache.
-		wp_clean_plugins_cache();
+		$this->flush_installed_plugins_cache();
 
 		return true;
 	}
@@ -358,14 +400,63 @@ class Conjure_Plugin_Installer {
 
 			return true;
 		} catch ( \Exception $e ) {
-			$error_message = "Exception during plugin activation for '{$slug}': " . $e->getMessage();
-			$this->logger->error( $error_message );
-			return new WP_Error( 'activation_exception', $error_message );
+			$this->logger->error(
+				"Exception during plugin activation for '{$slug}': " . $e->getMessage(),
+				array( 'trace' => $e->getTraceAsString() )
+			);
+			return new WP_Error(
+				'activation_exception',
+				conjurewp_safe_error_message( $e, __( 'Plugin activation failed.', 'ConjureWP' ) )
+			);
 		} catch ( \Error $e ) {
-			$error_message = "Fatal error during plugin activation for '{$slug}': " . $e->getMessage();
-			$this->logger->error( $error_message );
-			return new WP_Error( 'activation_fatal_error', $error_message );
+			$this->logger->error(
+				"Fatal error during plugin activation for '{$slug}': " . $e->getMessage(),
+				array( 'trace' => $e->getTraceAsString() )
+			);
+			return new WP_Error(
+				'activation_fatal_error',
+				conjurewp_safe_error_message( $e, __( 'Plugin activation failed.', 'ConjureWP' ) )
+			);
 		}
+	}
+
+	/**
+	 * Validate a custom plugin source (local path or HTTPS URL).
+	 *
+	 * @param string $source Path or URL to plugin ZIP.
+	 * @return string|WP_Error Sanitised source or error.
+	 */
+	private function validate_plugin_source( $source ) {
+		$is_url = filter_var( $source, FILTER_VALIDATE_URL );
+
+		if ( $is_url ) {
+			$url = esc_url_raw( $source, array( 'https' ) );
+
+			if ( ! $url || 'https' !== wp_parse_url( $url, PHP_URL_SCHEME ) ) {
+				return new WP_Error(
+					'invalid_plugin_source',
+					__( 'Plugin download URLs must use HTTPS.', 'ConjureWP' )
+				);
+			}
+
+			if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
+				return new WP_Error(
+					'invalid_plugin_source',
+					__( 'Plugin download URL is not valid.', 'ConjureWP' )
+				);
+			}
+
+			return $url;
+		}
+
+		if ( ! file_exists( $source ) ) {
+			return new WP_Error(
+				'source_not_found',
+				__( 'Plugin source file was not found.', 'ConjureWP' )
+			);
+		}
+
+		return $source;
 	}
 
 	/**
@@ -481,37 +572,43 @@ class Conjure_Plugin_Installer {
 /**
  * Custom upgrader skin to suppress output during plugin installation.
  */
-class Conjure_Plugin_Installer_Skin extends WP_Upgrader_Skin {
-
-	/**
-	 * Suppress header output.
-	 */
-	public function header() {
-		// Silent installation.
+if ( ! class_exists( 'Conjure_Plugin_Installer_Skin', false ) ) {
+	if ( ! class_exists( 'WP_Upgrader_Skin' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 	}
 
-	/**
-	 * Suppress footer output.
-	 */
-	public function footer() {
-		// Silent installation.
-	}
+	class Conjure_Plugin_Installer_Skin extends WP_Upgrader_Skin {
 
-	/**
-	 * Suppress feedback messages.
-	 *
-	 * @param string $string Message to display.
-	 */
-	public function feedback( $string, ...$args ) {
-		// Silent installation.
-	}
+		/**
+		 * Suppress header output.
+		 */
+		public function header() {
+			// Silent installation.
+		}
 
-	/**
-	 * Suppress error output.
-	 *
-	 * @param string|WP_Error $errors Errors to display.
-	 */
-	public function error( $errors ) {
-		// Errors are handled by the installer class.
+		/**
+		 * Suppress footer output.
+		 */
+		public function footer() {
+			// Silent installation.
+		}
+
+		/**
+		 * Suppress feedback messages.
+		 *
+		 * @param string $string Message to display.
+		 */
+		public function feedback( $string, ...$args ) {
+			// Silent installation.
+		}
+
+		/**
+		 * Suppress error output.
+		 *
+		 * @param string|WP_Error $errors Errors to display.
+		 */
+		public function error( $errors ) {
+			// Errors are handled by the installer class.
+		}
 	}
 }

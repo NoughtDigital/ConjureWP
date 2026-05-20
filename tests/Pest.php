@@ -59,14 +59,44 @@ function conjurewp_test_get_plugin_path( string $file = '' ): string {
 if ( ! function_exists( 'add_action' ) ) {
     function add_action() {}
 }
-if (!function_exists('add_filter')) {
-    function add_filter() {}
-}
 if (!function_exists('do_action')) {
     function do_action() {}
 }
+if (!function_exists('add_filter')) {
+    function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
+        $GLOBALS['conjurewp_test_filters'][ $tag ][ $priority ][] = $callback;
+        return true;
+    }
+}
+if (!function_exists('remove_filter')) {
+    function remove_filter( $tag, $callback, $priority = 10 ) {
+        if ( empty( $GLOBALS['conjurewp_test_filters'][ $tag ][ $priority ] ) ) {
+            return false;
+        }
+        $GLOBALS['conjurewp_test_filters'][ $tag ][ $priority ] = array_values(
+            array_filter(
+                $GLOBALS['conjurewp_test_filters'][ $tag ][ $priority ],
+                static function ( $fn ) use ( $callback ) {
+                    return $fn !== $callback;
+                }
+            )
+        );
+        return true;
+    }
+}
 if (!function_exists('apply_filters')) {
-    function apply_filters($tag, $value) { return $value; }
+    function apply_filters( $tag, $value, ...$args ) {
+        if ( empty( $GLOBALS['conjurewp_test_filters'][ $tag ] ) ) {
+            return $value;
+        }
+        ksort( $GLOBALS['conjurewp_test_filters'][ $tag ] );
+        foreach ( $GLOBALS['conjurewp_test_filters'][ $tag ] as $callbacks ) {
+            foreach ( $callbacks as $callback ) {
+                $value = $callback( $value, ...$args );
+            }
+        }
+        return $value;
+    }
 }
 if (!function_exists('esc_html__')) {
     function esc_html__($text, $domain = 'default') { return $text; }
@@ -93,6 +123,23 @@ if (!function_exists('plugin_dir_url')) {
 // Mock additional WordPress helper functions
 if (!function_exists('absint')) {
     function absint($maybeint) { return abs(intval($maybeint)); }
+}
+if (!function_exists('sanitize_key')) {
+    function sanitize_key($key) {
+        $key = strtolower((string) $key);
+        return preg_replace('/[^a-z0-9_\-]/', '', $key);
+    }
+}
+if (!function_exists('get_option')) {
+    function get_option($option, $default = false) {
+        return $GLOBALS['conjurewp_test_options'][ $option ] ?? $default;
+    }
+}
+if (!function_exists('update_option')) {
+    function update_option($option, $value) {
+        $GLOBALS['conjurewp_test_options'][ $option ] = $value;
+        return true;
+    }
 }
 if (!function_exists('wp_parse_args')) {
     function wp_parse_args($args, $defaults = array()) {

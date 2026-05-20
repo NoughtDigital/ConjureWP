@@ -23,6 +23,8 @@ test('conjure file upload handler class has required methods', function () {
         'is_manual_upload_mode',
         'allow_import_file_types',
         'get_manual_upload_html',
+        'get_manual_upload_sections',
+        'render_upload_zone_markup',
     ];
     
     foreach ($requiredMethods as $method) {

@@ -463,6 +463,33 @@ class Conjure_Demo_Helpers {
 			$config['local_import_rev_slider_file'] = $path . 'slider.zip';
 		}
 
+		// ACF local JSON (directory or zip archive).
+		if ( is_dir( $path . 'acf-json' ) ) {
+			$config['local_import_acf_json'] = $path . 'acf-json';
+		} elseif ( file_exists( $path . 'acf-json.zip' ) ) {
+			$config['local_import_acf_json'] = $path . 'acf-json.zip';
+		}
+
+		// Gravity Forms.
+		if ( file_exists( $path . 'gravity-forms.json' ) ) {
+			$config['local_import_gf_forms'] = $path . 'gravity-forms.json';
+		} elseif ( file_exists( $path . 'gravityforms.json' ) ) {
+			$config['local_import_gf_forms'] = $path . 'gravityforms.json';
+		}
+
+		if ( file_exists( $path . 'gravity-forms-entries.json' ) ) {
+			$config['local_import_gf_entries'] = array(
+				'file_path' => $path . 'gravity-forms-entries.json',
+				'form_id'   => 0,
+			);
+		} elseif ( is_dir( $path . 'gravity-forms-entries' ) ) {
+			$config['local_import_gf_entries'] = $path . 'gravity-forms-entries';
+		}
+
+		if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+			$config = Conjure_Connector_Upload_Registry::discover_demo_files( $config, $path );
+		}
+
 		// Preview image.
 		$preview_extensions = array( 'jpg', 'jpeg', 'png', 'gif', 'webp' );
 		foreach ( $preview_extensions as $ext ) {
@@ -513,8 +540,11 @@ class Conjure_Demo_Helpers {
 		// Check for meta.json for additional demo metadata.
 		if ( file_exists( $path . 'meta.json' ) ) {
 			$meta_content = file_get_contents( $path . 'meta.json' );
-			$meta_data = json_decode( $meta_content, true );
-			if ( is_array( $meta_data ) && json_last_error() === JSON_ERROR_NONE ) {
+			$meta_data    = function_exists( 'conjurewp_json_decode' )
+				? conjurewp_json_decode( $meta_content, true )
+				: json_decode( $meta_content, true );
+
+			if ( is_array( $meta_data ) ) {
 				// Extract author, estimated import size, and tags from meta.json.
 				if ( ! empty( $meta_data['author'] ) ) {
 					$config['demo_author'] = sanitize_text_field( $meta_data['author'] );

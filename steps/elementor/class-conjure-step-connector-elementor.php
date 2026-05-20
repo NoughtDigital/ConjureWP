@@ -446,9 +446,7 @@ class Conjure_Step_Connector_Elementor extends Conjure_Step_Connector_Base {
 			update_option( 'conjure_elementor_disable_dashboard_widget', ! empty( $_POST['conjure_elementor_disable_dashboard_widget'] ) );
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

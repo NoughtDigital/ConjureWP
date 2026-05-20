@@ -84,16 +84,18 @@ class Conjure_Ajax_Handler {
 		// License activation.
 		add_action( 'wp_ajax_conjure_activate_license', array( $this->license_manager, 'ajax_activate_license' ) );
 
+		$import_ajax = $this->conjure->import_ajax_handler;
+
 		// Plugin installation.
-		add_action( 'wp_ajax_conjure_install_plugin', array( $this->conjure, '_ajax_install_plugin' ) );
+		add_action( 'wp_ajax_conjure_install_plugin', array( $import_ajax, '_ajax_install_plugin' ) );
 
 		// Content import.
-		add_action( 'wp_ajax_conjure_content', array( $this->conjure, '_ajax_content' ) );
-		add_action( 'wp_ajax_conjure_get_total_content_import_items', array( $this->conjure, '_ajax_get_total_content_import_items' ) );
-		add_action( 'wp_ajax_conjure_import_finished', array( $this->conjure, 'import_finished' ) );
+		add_action( 'wp_ajax_conjure_content', array( $import_ajax, '_ajax_content' ) );
+		add_action( 'wp_ajax_conjure_get_total_content_import_items', array( $import_ajax, '_ajax_get_total_content_import_items' ) );
+		add_action( 'wp_ajax_conjure_import_finished', array( $import_ajax, 'import_finished' ) );
 
 		// Server health check.
-		add_action( 'wp_ajax_conjure_get_health_metrics', array( $this->conjure, '_ajax_get_health_metrics' ) );
+		add_action( 'wp_ajax_conjure_get_health_metrics', array( $import_ajax, '_ajax_get_health_metrics' ) );
 
 		// File uploads.
 		add_action( 'wp_ajax_conjure_upload_file', array( $this->file_upload_handler, 'ajax_upload_file' ) );
@@ -101,6 +103,6 @@ class Conjure_Ajax_Handler {
 		add_action( 'wp_ajax_conjure_delete_uploaded_file', array( $this->file_upload_handler, 'ajax_delete_uploaded_file' ) );
 
 		// Demo selection.
-		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $this->conjure, 'update_selected_import_data_info' ) );
+		add_action( 'wp_ajax_conjure_update_selected_import_data_info', array( $import_ajax, 'update_selected_import_data_info' ) );
 	}
 }

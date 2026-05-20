@@ -12,17 +12,17 @@ test('rest api has correct namespace', function () {
     require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     $reflection = new ReflectionClass('Conjure_REST_API');
-    $namespaceProperty = $reflection->getProperty('namespace');
+    $namespaceProperty = $reflection->getProperty('namespaces');
     $namespaceProperty->setAccessible(true);
-    
-    // Create a mock Conjure instance
+
     $mockConjure = new stdClass();
     $mockConjure->logger = new stdClass();
-    
+
     $api = new Conjure_REST_API($mockConjure);
-    $namespace = $namespaceProperty->getValue($api);
-    
-    expect($namespace)->toBe('ConjureWP/v1');
+    $namespaces = $namespaceProperty->getValue($api);
+
+    expect($namespaces)->toContain('conjurewp/v1');
+    expect($namespaces)->toContain('ConjureWP/v1');
 });
 
 test('rest api has register_routes method', function () {
@@ -47,6 +47,12 @@ test('rest api has import_demo endpoint callback', function () {
     require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
     
     expect(method_exists('Conjure_REST_API', 'import_demo'))->toBeTrue();
+});
+
+test('rest api has import status endpoint callback', function () {
+    require_once conjurewp_test_get_plugin_path('includes/class-conjure-rest-api.php');
+
+    expect( method_exists( 'Conjure_REST_API', 'import_status' ) )->toBeTrue();
 });
 
 test('rest api class requires conjure instance', function () {

@@ -86,7 +86,12 @@ class Conjure_License_Manager {
 			? conjurewp_get_runtime_path( 'includes/class-conjure-freemius.php' )
 			: '';
 
-		if ( ! function_exists( 'con_fs' ) && ! empty( $freemius_file ) && file_exists( $freemius_file ) ) {
+		if (
+			! function_exists( 'con_fs' )
+			&& ! defined( 'CONJUREWP_FREEMIUS_LOADED' )
+			&& ! empty( $freemius_file )
+			&& file_exists( $freemius_file )
+		) {
 			require_once $freemius_file;
 		}
 
@@ -347,10 +352,7 @@ class Conjure_License_Manager {
 		$strings = $this->conjure->strings;
 
 		// Theme Name.
-		$theme = ucfirst( $this->conjure->theme );
-
-		// Remove "Child" from the current theme name, if it's installed.
-		$theme = str_replace( ' Child', '', $theme );
+		$theme = str_replace( ' Child', '', ucfirst( $this->conjure->theme->name ) );
 
 		// Text strings.
 		$success_message = $strings['license-json-success%s'];
@@ -402,7 +404,10 @@ class Conjure_License_Manager {
 			}
 		} else {
 
-			$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+			$body         = wp_remote_retrieve_body( $response );
+			$license_data = function_exists( 'conjurewp_json_decode' )
+				? conjurewp_json_decode( $body, false )
+				: json_decode( $body );
 
 			if ( false === $license_data->success ) {
 
@@ -521,5 +526,99 @@ class Conjure_License_Manager {
 
 		$is_registered = get_option( $this->conjure->edd_theme_slug . '_license_key_status', false ) === 'valid';
 		return apply_filters( 'conjure_is_theme_registered', $is_registered );
+	}
+
+	/**
+	 * Resolve the licence step help link URL.
+	 *
+	 * @return string
+	 */
+	public function get_license_help_url() {
+		$url = $this->conjure->theme_license_help_url;
+
+		if ( ! empty( $url ) ) {
+			return apply_filters( 'conjure_license_help_url', $url );
+		}
+
+		if ( function_exists( 'con_fs' ) ) {
+			$fs = con_fs();
+			if ( $fs && is_object( $fs ) && method_exists( $fs, 'is_registered' ) && $fs->is_registered() && method_exists( $fs, 'get_account_url' ) ) {
+				$account_url = $fs->get_account_url();
+				if ( ! empty( $account_url ) ) {
+					return apply_filters( 'conjure_license_help_url', $account_url );
+				}
+			}
+		}
+
+		return apply_filters( 'conjure_license_help_url', 'https://ConjureWP.com/' );
+	}
+
+	/**
+	 * Render the license activation step.
+	 */
+	public function render_license_step() {
+		$this->logger->debug( __( 'License step view method called', 'ConjureWP' ) );
+
+		$is_theme_registered       = $this->is_theme_registered();
+		$action_url                = $this->get_license_help_url();
+		$required                  = $this->conjure->license_required;
+		$is_theme_registered_class = $is_theme_registered ? ' is-registered' : null;
+		$theme                     = str_replace( ' Child', '', ucfirst( $this->conjure->theme->name ) );
+		$strings                   = $this->conjure->strings;
+		$header                    = ! $is_theme_registered ? $strings['license-header%s'] : $strings['license-header-success%s'];
+		$action                    = $strings['license-tooltip'];
+		$label                     = $strings['license-label'];
+		$skip                      = $strings['btn-license-skip'];
+		$next                      = $strings['btn-next'];
+		$paragraph                 = ! $is_theme_registered ? $strings['license%s'] : $strings['license-success%s'];
+		$install                   = $strings['btn-license-activate'];
+		?>
+
+		<div class="conjure__content--transition">
+
+			<?php echo wp_kses( $this->conjure->svg( array( 'icon' => 'license' ) ), $this->conjure->svg_allowed_html() ); ?>
+
+			<svg class="icon icon--checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+				<circle class="icon--checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="icon--checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+			</svg>
+
+			<h1><?php echo esc_html( sprintf( $header, $theme ) ); ?></h1>
+
+			<p id="license-text"><?php echo esc_html( sprintf( $paragraph, $theme ) ); ?></p>
+
+			<?php if ( ! $is_theme_registered ) : ?>
+				<div class="conjure__content--license-key">
+					<label for="license-key"><?php echo esc_html( $label ); ?></label>
+					<div class="conjure__content--license-key-wrapper">
+						<input type="text" id="license-key" class="js-license-key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="<?php echo esc_attr( __( 'Enter your license key', 'ConjureWP' ) ); ?>">
+						<?php if ( ! empty( $action_url ) ) : ?>
+							<a href="<?php echo esc_url( $action_url ); ?>" alt="<?php echo esc_attr( $action ); ?>" target="_blank">
+								<span class="hint--top" aria-label="<?php echo esc_attr( $action ); ?>">
+									<?php echo wp_kses( $this->conjure->svg( array( 'icon' => 'help' ) ), $this->conjure->svg_allowed_html() ); ?>
+								</span>
+							</a>
+						<?php endif ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+		</div>
+
+		<footer class="conjure__content__footer <?php echo esc_attr( $is_theme_registered_class ); ?>">
+			<?php if ( ! $is_theme_registered ) : ?>
+				<?php if ( ! $required && ! $this->conjure->license_gate_active ) : ?>
+					<a href="<?php echo esc_url( $this->conjure->step_next_link() ); ?>" class="conjure__button conjure__button--skip conjure__button--proceed"><?php echo esc_html( $skip ); ?></a>
+				<?php endif ?>
+				<a href="<?php echo esc_url( $this->conjure->step_next_link() ); ?>" class="conjure__button conjure__button--next button-next js-conjure-license-activate-button" data-callback="activate_license">
+					<span class="conjure__button--loading__text"><?php echo esc_html( $install ); ?></span>
+					<?php echo wp_kses( $this->conjure->loading_spinner(), $this->conjure->loading_spinner_allowed_html() ); ?>
+				</a>
+			<?php else : ?>
+				<a href="<?php echo esc_url( $this->conjure->step_next_link() ); ?>" class="conjure__button conjure__button--next conjure__button--proceed conjure__button--colorchange"><?php echo esc_html( $next ); ?></a>
+			<?php endif; ?>
+			<?php wp_nonce_field( 'conjure' ); ?>
+		</footer>
+		<?php
+		$this->logger->debug( __( 'The license activation step has been displayed', 'ConjureWP' ) );
 	}
 }

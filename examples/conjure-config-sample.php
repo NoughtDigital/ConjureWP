@@ -30,11 +30,12 @@ $config = array(
 	'dev_mode'             => false, // Enable development mode for testing (disabled by default for production builds).
 	'license_step'         => false, // EDD license activation step.
 	'license_required'     => false, // Require the license activation step.
-	'license_help_url'     => '', // URL for the 'license-tooltip'.
+	'license_help_url'     => '', // URL for the licence help icon. When empty: Freemius account (if registered), else https://ConjureWP.com/
 	'edd_remote_api_url'   => '', // EDD_Theme_Updater_Admin remote_api_url.
 	'edd_item_name'        => '', // EDD_Theme_Updater_Admin item_name.
 	'edd_theme_slug'       => '', // EDD_Theme_Updater_Admin item_slug.
 	'ready_big_button_url' => '', // Link for the big button on the ready step.
+	'acf_json_save_path'   => 'acf-json', // ACF local JSON folder relative to the active theme (e.g. inc/acf-json).
 );
 
 $strings = array(

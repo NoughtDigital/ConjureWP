@@ -21,14 +21,14 @@ beforeEach(function () use ( $conjurewp_wp_file_available ) {
 });
 
 afterEach(function () {
-    // Clean up test logs
-    if (file_exists($this->tempLogFile)) {
+    // Clean up test logs (guard when beforeEach skipped and paths were never set).
+    if ( ! empty( $this->tempLogFile ) && is_string( $this->tempLogFile ) && file_exists( $this->tempLogFile ) ) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- test fixture teardown.
-        unlink($this->tempLogFile);
+        unlink( $this->tempLogFile );
     }
-    if (is_dir($this->tempLogDir)) {
+    if ( ! empty( $this->tempLogDir ) && is_string( $this->tempLogDir ) && is_dir( $this->tempLogDir ) ) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- test fixture teardown.
-        rmdir($this->tempLogDir);
+        rmdir( $this->tempLogDir );
     }
     
     // Reset singleton

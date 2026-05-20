@@ -24,6 +24,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Prevent fatal redeclarations when this file is included more than once.
+if ( defined( 'CONJUREWP_FREEMIUS_LOADED' ) ) {
+	return;
+}
+
+define( 'CONJUREWP_FREEMIUS_LOADED', true );
+
 // @freemius:premium-start
 /**
  * PREMIUM VERSION: Advanced theme detection and licensing logic.
@@ -479,13 +486,15 @@ if ( $con_fs_instance ) {
 	 * @param string $freemius_link   Freemius link HTML.
 	 * @return string Modified message.
 	 */
-	function conjure_fs_custom_connect_message_on_update( $message, $user_first_name, $plugin_title, $user_login, $site_link, $freemius_link ) {
-		return sprintf(
-			/* translators: %1$s: User's first name, %2$s: Plugin title (ConjureWP) */
-			__( 'Hey %1$s, activate your %2$s licence to unlock premium features like automatic plugin installation, advanced demo importing, and priority support.', 'ConjureWP' ),
-			$user_first_name,
-			'<strong>' . $plugin_title . '</strong>'
-		);
+	if ( ! function_exists( 'conjure_fs_custom_connect_message_on_update' ) ) {
+		function conjure_fs_custom_connect_message_on_update( $message, $user_first_name, $plugin_title, $user_login, $site_link, $freemius_link ) {
+			return sprintf(
+				/* translators: %1$s: User's first name, %2$s: Plugin title (ConjureWP) */
+				__( 'Hey %1$s, activate your %2$s licence to unlock premium features like automatic plugin installation, advanced demo importing, and priority support.', 'ConjureWP' ),
+				$user_first_name,
+				'<strong>' . $plugin_title . '</strong>'
+			);
+		}
 	}
 	$con_fs_instance->add_filter( 'connect_message_on_update', 'conjure_fs_custom_connect_message_on_update', 10, 6 );
 
@@ -500,13 +509,15 @@ if ( $con_fs_instance ) {
 	 * @param string $freemius_link   Freemius link HTML.
 	 * @return string Modified message.
 	 */
-	function conjure_fs_custom_connect_message( $message, $user_first_name, $plugin_title, $user_login, $site_link, $freemius_link ) {
-		return sprintf(
-			/* translators: %1$s: User's first name, %2$s: Plugin title (ConjureWP) */
-			__( 'Hey %1$s, activate your %2$s licence to unlock premium features like automatic plugin installation and advanced demo importing.', 'ConjureWP' ),
-			$user_first_name,
-			'<strong>' . $plugin_title . '</strong>'
-		);
+	if ( ! function_exists( 'conjure_fs_custom_connect_message' ) ) {
+		function conjure_fs_custom_connect_message( $message, $user_first_name, $plugin_title, $user_login, $site_link, $freemius_link ) {
+			return sprintf(
+				/* translators: %1$s: User's first name, %2$s: Plugin title (ConjureWP) */
+				__( 'Hey %1$s, activate your %2$s licence to unlock premium features like automatic plugin installation and advanced demo importing.', 'ConjureWP' ),
+				$user_first_name,
+				'<strong>' . $plugin_title . '</strong>'
+			);
+		}
 	}
 	$con_fs_instance->add_filter( 'connect_message', 'conjure_fs_custom_connect_message', 10, 6 );
 
@@ -516,8 +527,10 @@ if ( $con_fs_instance ) {
 	 * @param string $header Original header text.
 	 * @return string Modified header text.
 	 */
-	function conjure_fs_custom_connect_header( $header ) {
-		return __( 'Enter Your ConjureWP Licence Key', 'ConjureWP' );
+	if ( ! function_exists( 'conjure_fs_custom_connect_header' ) ) {
+		function conjure_fs_custom_connect_header( $header ) {
+			return __( 'Enter Your ConjureWP Licence Key', 'ConjureWP' );
+		}
 	}
 	$con_fs_instance->add_filter( 'connect/header_title', 'conjure_fs_custom_connect_header' );
 
@@ -527,8 +540,10 @@ if ( $con_fs_instance ) {
 	 * @param string $text Original button text.
 	 * @return string Modified button text.
 	 */
-	function conjure_fs_custom_skip_button( $text ) {
-		return __( 'Continue with Free Version', 'ConjureWP' );
+	if ( ! function_exists( 'conjure_fs_custom_skip_button' ) ) {
+		function conjure_fs_custom_skip_button( $text ) {
+			return __( 'Continue with Free Version', 'ConjureWP' );
+		}
 	}
 	$con_fs_instance->add_filter( 'skip_connection_message', 'conjure_fs_custom_skip_button' );
 
@@ -544,8 +559,10 @@ if ( $con_fs_instance ) {
 		 * @param bool $skip Whether to skip the connection.
 		 * @return bool True to skip connection screen.
 		 */
-		function conjure_fs_skip_connection_for_lifetime_theme( $skip ) {
-			return true;
+		if ( ! function_exists( 'conjure_fs_skip_connection_for_lifetime_theme' ) ) {
+			function conjure_fs_skip_connection_for_lifetime_theme( $skip ) {
+				return true;
+			}
 		}
 		$con_fs_instance->add_filter( 'skip_connection', 'conjure_fs_skip_connection_for_lifetime_theme' );
 
@@ -555,8 +572,10 @@ if ( $con_fs_instance ) {
 		 * @param bool $show Whether to show the notice.
 		 * @return bool False to hide notice.
 		 */
-		function conjure_fs_hide_activation_notice_for_lifetime_theme( $show ) {
-			return false;
+		if ( ! function_exists( 'conjure_fs_hide_activation_notice_for_lifetime_theme' ) ) {
+			function conjure_fs_hide_activation_notice_for_lifetime_theme( $show ) {
+				return false;
+			}
 		}
 		$con_fs_instance->add_filter( 'show_opt_in', 'conjure_fs_hide_activation_notice_for_lifetime_theme' );
 		$con_fs_instance->add_filter( 'show_admin_notice', 'conjure_fs_hide_activation_notice_for_lifetime_theme' );
@@ -567,8 +586,10 @@ if ( $con_fs_instance ) {
 		 * @param bool $show Whether to show activation prompt.
 		 * @return bool False to hide prompt.
 		 */
-		function conjure_fs_hide_activation_prompt_for_lifetime_theme( $show ) {
-			return false;
+		if ( ! function_exists( 'conjure_fs_hide_activation_prompt_for_lifetime_theme' ) ) {
+			function conjure_fs_hide_activation_prompt_for_lifetime_theme( $show ) {
+				return false;
+			}
 		}
 		$con_fs_instance->add_filter( 'show_connect_notice', 'conjure_fs_hide_activation_prompt_for_lifetime_theme' );
 		$con_fs_instance->add_filter( 'show_trial', 'conjure_fs_hide_activation_prompt_for_lifetime_theme' );

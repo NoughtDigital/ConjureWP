@@ -30,7 +30,13 @@ class Conjure_Redux_Importer {
 
 		foreach ( $import_data as $redux_item ) {
 			$redux_options_raw_data = file_get_contents( $redux_item['file_path'] );
-			$redux_options_data     = json_decode( $redux_options_raw_data, true );
+			$redux_options_data     = function_exists( 'conjurewp_json_decode' )
+				? conjurewp_json_decode( $redux_options_raw_data, true )
+				: json_decode( $redux_options_raw_data, true );
+
+			if ( null === $redux_options_data || ! is_array( $redux_options_data ) ) {
+				continue;
+			}
 			$redux_framework        = ReduxFrameworkInstances::get_instance( $redux_item['option_name'] );
 
 			if ( isset( $redux_framework->args['opt_name'] ) ) {

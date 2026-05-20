@@ -32,10 +32,10 @@ $config = array(
 	'parent_slug'          => $is_plugin_runtime ? 'admin.php' : 'themes.php', // The wp-admin parent page slug for the admin menu item.
 	'capability'           => 'manage_options', // The capability required for this menu to be displayed to the user.
 	'child_action_btn_url' => 'https://developer.wordpress.org/themes/advanced-topics/child-themes/', // URL for the 'child-action-link'.
-	'dev_mode'             => false, // Enable development mode for testing (disabled by default for production builds).
+	'dev_mode'             => true, // Enable development mode for testing (treats Pro as active for connectors; disable before production).
 	'license_step'         => $is_plugin_runtime, // Plugin mode shows ConjureWP licence flow by default, theme embeds default to hidden.
 	'license_required'     => false, // Require the licence activation step (set false to allow users to skip).
-	'license_help_url'     => '', // URL for the 'license-tooltip'. Will be set to Freemius account URL if available.
+	'license_help_url'     => '', // URL for the licence help icon. When empty: Freemius account (if registered), else https://ConjureWP.com/
 
 	/**
 	 * PREMIUM FEATURES (ConjureWP Licence Required):
@@ -67,6 +67,15 @@ $config = array(
 	'edd_item_name'        => 'Your Theme Name', // EDD_Theme_Updater_Admin item_name.
 	'edd_theme_slug'       => 'your-theme-slug', // EDD_Theme_Updater_Admin item_slug.
 	'ready_big_button_url' => home_url( '/' ), // Link for the big button on the ready step.
+
+	/**
+	 * ACF local JSON folder (relative to the active theme directory).
+	 *
+	 * Theme developers: set this once in your theme's copy of conjurewp-config.php
+	 * (when ConjureWP is embedded) so it survives plugin updates. Example: 'inc/acf-json'.
+	 * Per-site overrides can still be set in the ACF Setup wizard.
+	 */
+	'acf_json_save_path'   => 'acf-json',
 
 	// Logging configuration.
 	'logging'              => array(
@@ -149,6 +158,10 @@ $strings = array(
  */
 $config = apply_filters( 'conjurewp_config', $config );
 
+if ( ! empty( $config['acf_json_save_path'] ) && ! defined( 'CONJUREWP_CONFIG_ACF_JSON_SAVE_PATH' ) ) {
+	define( 'CONJUREWP_CONFIG_ACF_JSON_SAVE_PATH', $config['acf_json_save_path'] );
+}
+
 /**
  * Allow theme developers to override text strings.
  *
@@ -227,3 +240,7 @@ $strings = apply_filters( 'conjurewp_strings', $strings );
  */
 
 $wizard = new Conjure( $config, $strings );
+
+if ( ! isset( $GLOBALS['conjurewp'] ) ) {
+	$GLOBALS['conjurewp'] = $wizard;
+}

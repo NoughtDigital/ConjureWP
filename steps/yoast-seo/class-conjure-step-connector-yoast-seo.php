@@ -453,9 +453,7 @@ class Conjure_Step_Connector_Yoast_Seo extends Conjure_Step_Connector_Base {
 			update_option( 'conjure_yoast_breadcrumb_show_home', ! empty( $_POST['conjure_yoast_breadcrumb_show_home'] ) );
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

@@ -16,12 +16,12 @@ test('plugin can be activated without errors', function () {
     expect($hasInitialization)->toBeTrue();
 });
 
-test('plugin initializes core classes on load', function () {
+test('plugin bootstraps shared runtime on load', function () {
     $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
     $content = file_get_contents($pluginFile);
-    
-    // Should load core classes
-    expect($content)->toContain('class-conjure.php');
+
+    expect($content)->toContain('conjurewp-loader.php');
+    expect($content)->toContain('conjurewp_bootstrap');
 });
 
 test('plugin defines required constants on load', function () {
@@ -34,10 +34,10 @@ test('plugin defines required constants on load', function () {
     expect($content)->toContain("define( 'CONJUREWP_PLUGIN_FILE'");
 });
 
-test('plugin loads composer autoloader', function () {
-    $pluginFile = conjurewp_test_get_plugin_path('conjurewp.php');
-    $content = file_get_contents($pluginFile);
-    
+test('runtime loader loads composer autoloader when present', function () {
+    $loaderFile = conjurewp_test_get_plugin_path('includes/conjurewp-loader.php');
+    $content = file_get_contents($loaderFile);
+
     expect($content)->toContain('vendor/autoload.php');
 });
 

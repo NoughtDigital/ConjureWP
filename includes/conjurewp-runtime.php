@@ -265,3 +265,262 @@ if ( ! function_exists( 'conjurewp_get_theme_embed_base_url' ) ) {
 			: trailingslashit( $theme_root_url . '/' . $relative_path );
 	}
 }
+
+if ( ! function_exists( 'conjurewp_should_expose_error_details' ) ) {
+	/**
+	 * Whether detailed error messages may be returned to clients.
+	 *
+	 * @return bool
+	 */
+	function conjurewp_should_expose_error_details() {
+		if ( defined( 'CONJUREWP_DEBUG' ) && CONJUREWP_DEBUG ) {
+			return true;
+		}
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && ( ! defined( 'WP_DEBUG_DISPLAY' ) || WP_DEBUG_DISPLAY ) ) {
+			return true;
+		}
+
+		return (bool) apply_filters( 'conjurewp_expose_error_details', false );
+	}
+}
+
+if ( ! function_exists( 'conjurewp_safe_error_message' ) ) {
+	/**
+	 * Return a client-safe error message for production responses.
+	 *
+	 * Full details are still written to logs by callers; this helper only
+	 * gates what is exposed in AJAX/REST payloads.
+	 *
+	 * @param Throwable|string $error    Throwable or raw message.
+	 * @param string           $fallback Optional fallback when details are hidden.
+	 * @return string
+	 */
+	function conjurewp_safe_error_message( $error, $fallback = '' ) {
+		$message = '';
+
+		if ( $error instanceof Throwable ) {
+			$message = $error->getMessage();
+		} elseif ( is_string( $error ) ) {
+			$message = $error;
+		}
+
+		if ( conjurewp_should_expose_error_details() && '' !== $message ) {
+			return $message;
+		}
+
+		if ( '' !== $fallback ) {
+			return $fallback;
+		}
+
+		return __( 'An unexpected error occurred. Please try again or contact support.', 'ConjureWP' );
+	}
+}
+
+if ( ! function_exists( 'conjurewp_safe_import_message' ) ) {
+	/**
+	 * Client-safe message for import failures (paths and WP_Error details gated in production).
+	 *
+	 * @param Throwable|string|WP_Error $detail   Error source.
+	 * @param string                    $fallback Message when details are hidden.
+	 * @return string
+	 */
+	function conjurewp_safe_import_message( $detail, $fallback = '' ) {
+		if ( is_wp_error( $detail ) ) {
+			$detail = $detail->get_error_message();
+		}
+
+		return conjurewp_safe_error_message( $detail, $fallback );
+	}
+}
+
+if ( ! function_exists( 'conjurewp_json_decode' ) ) {
+	/**
+	 * Decode JSON with a bounded maximum depth to reduce memory exhaustion risk.
+	 *
+	 * @param string $json       JSON string.
+	 * @param bool   $assoc      Return associative array when true.
+	 * @param int    $max_depth  Maximum nesting depth (filterable).
+	 * @return mixed|null Decoded value, or null on failure / excessive depth.
+	 */
+	function conjurewp_json_decode( $json, $assoc = false, $max_depth = 0 ) {
+		if ( '' === $json || ! is_string( $json ) ) {
+			return null;
+		}
+
+		if ( $max_depth <= 0 ) {
+			$max_depth = (int) apply_filters( 'conjurewp_json_decode_max_depth', 32 );
+		}
+
+		$decoded = json_decode( $json, $assoc, max( 1, $max_depth ) );
+
+		if ( JSON_ERROR_DEPTH === json_last_error() ) {
+			return null;
+		}
+
+		return $decoded;
+	}
+}
+
+if ( ! function_exists( 'conjurewp_sanitize_acf_json_save_path' ) ) {
+	/**
+	 * Sanitise a relative ACF JSON directory path for use inside the active theme.
+	 *
+	 * @param string $relative_path Path relative to the theme root.
+	 * @return string
+	 */
+	function conjurewp_sanitize_acf_json_save_path( $relative_path ) {
+		$relative_path = is_string( $relative_path ) ? trim( $relative_path ) : 'acf-json';
+
+		if ( '' === $relative_path ) {
+			return 'acf-json';
+		}
+
+		$relative_path = ltrim( $relative_path, '/' );
+		$relative_path = str_replace( array( '..', '\\' ), '', $relative_path );
+
+		return '' === $relative_path ? 'acf-json' : $relative_path;
+	}
+}
+
+if ( ! function_exists( 'conjurewp_get_acf_json_save_path_config_default' ) ) {
+	/**
+	 * Default ACF JSON path from conjurewp-config.php (developer preset).
+	 *
+	 * @return string
+	 */
+	function conjurewp_get_acf_json_save_path_config_default() {
+		if ( defined( 'CONJUREWP_CONFIG_ACF_JSON_SAVE_PATH' ) ) {
+			return conjurewp_sanitize_acf_json_save_path( CONJUREWP_CONFIG_ACF_JSON_SAVE_PATH );
+		}
+
+		global $conjurewp;
+
+		if ( isset( $conjurewp ) && $conjurewp instanceof Conjure && ! empty( $conjurewp->acf_json_save_path ) ) {
+			return conjurewp_sanitize_acf_json_save_path( $conjurewp->acf_json_save_path );
+		}
+
+		return 'acf-json';
+	}
+}
+
+if ( ! function_exists( 'conjurewp_get_acf_json_save_path' ) ) {
+	/**
+	 * Resolve the ACF local JSON folder path (relative to the active theme).
+	 *
+	 * Priority: filter → wp-config constant → saved wizard option → conjurewp-config preset → acf-json.
+	 *
+	 * @return string
+	 */
+	function conjurewp_get_acf_json_save_path() {
+		$filtered = apply_filters( 'conjurewp_acf_json_save_path', null );
+
+		if ( null !== $filtered && '' !== $filtered ) {
+			return conjurewp_sanitize_acf_json_save_path( $filtered );
+		}
+
+		if ( defined( 'CONJUREWP_ACF_JSON_SAVE_PATH' ) ) {
+			return conjurewp_sanitize_acf_json_save_path( CONJUREWP_ACF_JSON_SAVE_PATH );
+		}
+
+		$option = get_option( 'conjure_acf_json_save_path', '' );
+
+		if ( is_string( $option ) && '' !== $option ) {
+			return conjurewp_sanitize_acf_json_save_path( $option );
+		}
+
+		return conjurewp_get_acf_json_save_path_config_default();
+	}
+}
+
+if ( ! function_exists( 'conjurewp_rest_import_rate_limit' ) ) {
+	/**
+	 * Enforce per-user cooldown between REST demo imports.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return true|WP_Error True when allowed; WP_Error with 429 when rate limited.
+	 */
+	function conjurewp_rest_import_rate_limit( $user_id ) {
+		$user_id = absint( $user_id );
+
+		if ( ! $user_id ) {
+			return new WP_Error(
+				'rest_import_unauthorized',
+				__( 'You must be logged in to run imports.', 'ConjureWP' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		$key      = 'conjurewp_rest_import_rl_' . $user_id;
+		$cooldown = max( 1, (int) apply_filters( 'conjurewp_rest_import_cooldown', 120 ) );
+		$last_run = get_transient( $key );
+
+		if ( false !== $last_run ) {
+			$elapsed    = time() - (int) $last_run;
+			$retry_after = max( 1, $cooldown - $elapsed );
+
+			return new WP_Error(
+				'rest_import_rate_limited',
+				__( 'Please wait before starting another import.', 'ConjureWP' ),
+				array(
+					'status'      => 429,
+					'retry_after' => $retry_after,
+				)
+			);
+		}
+
+		set_transient( $key, time(), $cooldown );
+
+		return true;
+	}
+}
+
+if ( ! function_exists( 'conjurewp_require_once' ) ) {
+	/**
+	 * Require a file once per request.
+	 *
+	 * @param string $file Absolute path to a PHP file.
+	 * @return bool True when the file exists and is loaded.
+	 */
+	function conjurewp_require_once( $file ) {
+		static $loaded = array();
+
+		if ( empty( $file ) || isset( $loaded[ $file ] ) ) {
+			return isset( $loaded[ $file ] );
+		}
+
+		if ( ! file_exists( $file ) ) {
+			return false;
+		}
+
+		require_once $file;
+		$loaded[ $file ] = true;
+
+		return true;
+	}
+}
+
+if ( ! function_exists( 'conjurewp_require_runtime_include' ) ) {
+	/**
+	 * Require a runtime include file once per request.
+	 *
+	 * @param string $relative_path Path relative to the ConjureWP base directory.
+	 * @return bool
+	 */
+	function conjurewp_require_runtime_include( $relative_path ) {
+		return conjurewp_require_once( conjurewp_get_runtime_path( $relative_path ) );
+	}
+}
+
+if ( ! function_exists( 'conjurewp_get_conjure' ) ) {
+	/**
+	 * Get the bootstrapped Conjure instance when available.
+	 *
+	 * @return Conjure|null
+	 */
+	function conjurewp_get_conjure() {
+		return ( isset( $GLOBALS['conjurewp'] ) && $GLOBALS['conjurewp'] instanceof Conjure )
+			? $GLOBALS['conjurewp']
+			: null;
+	}
+}

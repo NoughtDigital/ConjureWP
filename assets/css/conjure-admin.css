@@ -251,6 +251,21 @@
 		border: 1px solid #e2e8f0;
 		border-radius: 8px;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+		transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+	}
+
+	.conjure-admin-connector-card.is-saving {
+		opacity: 0.72;
+	}
+
+	.conjure-admin-connector-card.is-saved {
+		border-color: #86efac;
+		box-shadow: 0 0 0 1px #86efac;
+	}
+
+	.conjure-admin-connector-card.is-error {
+		border-color: #fca5a5;
+		box-shadow: 0 0 0 1px #fca5a5;
 	}
 
 	.conjure-admin-connector-header {
@@ -446,6 +461,43 @@
 		color: #3730a3;
 	}
 
+	.conjure-admin-panel-copy--pro {
+		margin-top: 0.35rem;
+		color: #5b21b6;
+	}
+
+	.conjure-admin-notice {
+		margin: 0 0 1rem;
+		padding: 0.75rem 1rem;
+		border-radius: 6px;
+		font-size: 13px;
+	}
+
+	.conjure-admin-notice--warning {
+		background: #fef3cd;
+		color: #664d03;
+		border: 1px solid #ffe69c;
+	}
+
+	.conjure-admin-card-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0.35rem 0 0.5rem;
+	}
+
+	.conjure-admin-card-warning {
+		margin: 0.5rem 0 0;
+		font-size: 12px;
+		color: #9a3412;
+	}
+
+	.conjure-admin-card-note {
+		margin: 0.5rem 0 0;
+		font-size: 12px;
+		color: #0f766e;
+	}
+
 	.conjure-admin-button {
 		@apply inline-flex items-center justify-center text-[13px] font-medium transition-colors duration-100;
 		padding: 0.4375rem 1rem;
@@ -516,23 +568,25 @@
 	}
 
 	.conjure-admin-activation-button.is-active {
+		background: #dcfce7;
+		border-color: #86efac;
+		color: #15803d;
+	}
+
+	.conjure-admin-activation-button.is-active:hover {
+		background: #bbf7d0;
+		border-color: #4ade80;
+	}
+
+	.conjure-admin-activation-button.is-inactive {
 		background: #fee2e2;
 		border-color: #fecaca;
 		color: #b91c1c;
 	}
 
-	.conjure-admin-activation-button.is-active:hover {
-		background: #fecaca;
-	}
-
-	.conjure-admin-activation-button.is-inactive {
-		background: #dcfce7;
-		border-color: #bbf7d0;
-		color: #15803d;
-	}
-
 	.conjure-admin-activation-button.is-inactive:hover {
-		background: #bbf7d0;
+		background: #fecaca;
+		border-color: #fca5a5;
 	}
 
 	.conjure-step-sortable {
@@ -544,6 +598,33 @@
 		background: #fff;
 		border: 1px solid #e2e8f0;
 		border-radius: 8px;
+	}
+
+	.conjure-step-sortable__item.is-connector-active {
+		border-color: #c7d2fe;
+		box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.08);
+	}
+
+	.conjure-step-sortable__item.is-connector-planned {
+		border-color: #fde68a;
+		box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.08);
+	}
+
+	.conjure-admin-panel-copy--autosave {
+		@apply min-h-5 text-sm;
+		color: #64748b;
+	}
+
+	.conjure-admin-panel-copy--autosave.is-saving {
+		color: #6366f1;
+	}
+
+	.conjure-admin-panel-copy--autosave.is-saved {
+		color: #059669;
+	}
+
+	.conjure-admin-panel-copy--autosave.is-error {
+		color: #dc2626;
 	}
 
 	.conjure-step-sortable__placeholder {

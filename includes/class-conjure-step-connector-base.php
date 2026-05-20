@@ -340,11 +340,17 @@ abstract class Conjure_Step_Connector_Base {
 	 * @param array $settings Resolved connector settings.
 	 * @return bool
 	 */
-	public function should_show_in_wizard( $settings = array() ) {
-		if ( empty( $settings['enabled'] ) ) {
-			return false;
-		}
+	public function should_show_in_admin_wizard_order( $settings = array() ) {
+		return ! empty( $settings['enabled'] );
+	}
 
+	/**
+	 * Determine whether the connector has at least one enabled feature.
+	 *
+	 * @param array $settings Resolved connector settings.
+	 * @return bool
+	 */
+	public function has_enabled_features( $settings = array() ) {
 		foreach ( $this->get_resolved_features( $settings ) as $feature ) {
 			if ( ! empty( $feature['enabled'] ) ) {
 				return true;
@@ -352,6 +358,31 @@ abstract class Conjure_Step_Connector_Base {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Determine whether the connector can appear in the live wizard.
+	 *
+	 * @param array $settings Resolved connector settings.
+	 * @return bool
+	 */
+	public function should_show_in_wizard( $settings = array() ) {
+		if ( ! $this->should_show_in_admin_wizard_order( $settings ) ) {
+			return false;
+		}
+
+		if ( ! $this->has_enabled_features( $settings ) ) {
+			return false;
+		}
+
+		if (
+			class_exists( 'Conjure_Connector_Catalog' )
+			&& ! Conjure_Connector_Catalog::can_show_connector_in_wizard( $this->get_id() )
+		) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -618,6 +649,28 @@ abstract class Conjure_Step_Connector_Base {
 	 * @param array $settings Resolved connector settings.
 	 * @return array
 	 */
+	public function get_admin_order_step_definition( $settings = array() ) {
+		if ( ! $this->should_show_in_admin_wizard_order( $settings ) ) {
+			return array();
+		}
+
+		$definition = array(
+			'name' => $this->get_step_name(),
+		);
+
+		if ( ! $this->can_run() ) {
+			$definition['can_run'] = false;
+		}
+
+		return $definition;
+	}
+
+	/**
+	 * Build the wizard step definition for this connector.
+	 *
+	 * @param array $settings Resolved connector settings.
+	 * @return array
+	 */
 	public function get_step_definition( $settings = array() ) {
 		if ( ! $this->should_show_in_wizard( $settings ) ) {
 			return array();
@@ -649,4 +702,103 @@ abstract class Conjure_Step_Connector_Base {
 	 * @return bool
 	 */
 	abstract public function handle_step();
+
+	/**
+	 * Get catalogue metadata for this connector.
+	 *
+	 * @return array
+	 */
+	public function get_catalog_metadata() {
+		if ( ! class_exists( 'Conjure_Connector_Catalog' ) ) {
+			return array();
+		}
+
+		return Conjure_Connector_Catalog::get( $this->get_id() );
+	}
+
+	/**
+	 * Integration tier for this connector.
+	 *
+	 * @return string
+	 */
+	public function get_integration_tier() {
+		if ( isset( $this->definition['integration_tier'] ) ) {
+			return sanitize_key( $this->definition['integration_tier'] );
+		}
+
+		$meta = $this->get_catalog_metadata();
+
+		return isset( $meta['integration_tier'] ) ? $meta['integration_tier'] : Conjure_Connector_Catalog::TIER_PREFERENCES;
+	}
+
+	/**
+	 * Whether native settings sync is available.
+	 *
+	 * @return bool
+	 */
+	public function has_native_sync() {
+		return class_exists( 'Conjure_Connector_Native_Sync' ) && Conjure_Connector_Native_Sync::supports( $this->get_id() );
+	}
+
+	/**
+	 * Admin readiness summary for this connector.
+	 *
+	 * @return array
+	 */
+	public function get_readiness_status() {
+		$plugin_status     = $this->get_plugin_status();
+		$can_run           = $this->can_run();
+		$requires_pro      = class_exists( 'Conjure_Connector_Catalog' ) && Conjure_Connector_Catalog::connectors_require_pro_plugin();
+		$has_pro_licence   = ! $requires_pro || ( class_exists( 'Conjure_Connector_Catalog' ) && Conjure_Connector_Catalog::has_pro_plugin_access() );
+
+		if ( ! $plugin_status['installed'] ) {
+			$code  = 'plugin_missing';
+			$label = __( 'Target plugin not installed', 'ConjureWP' );
+		} elseif ( ! $plugin_status['active'] ) {
+			$code  = 'plugin_inactive';
+			$label = __( 'Target plugin inactive', 'ConjureWP' );
+		} elseif ( $requires_pro && ! $has_pro_licence ) {
+			$code  = 'pending_pro';
+			$label = __( 'Configured in admin — needs ConjureWP Pro for the wizard', 'ConjureWP' );
+		} elseif ( $can_run && $this->has_native_sync() ) {
+			$code  = 'ready';
+			$label = __( 'Ready — syncs to native plugin settings', 'ConjureWP' );
+		} elseif ( $can_run ) {
+			$code  = 'active';
+			$label = __( 'Plugin active — wizard available', 'ConjureWP' );
+		} else {
+			$code  = 'inactive';
+			$label = __( 'Not ready', 'ConjureWP' );
+		}
+
+		return array(
+			'code'              => $code,
+			'label'             => $label,
+			'can_run'           => $can_run,
+			'has_pro_license'   => $has_pro_licence,
+			'integration_tier'  => $this->get_integration_tier(),
+			'tier_label'        => class_exists( 'Conjure_Connector_Catalog' ) ? Conjure_Connector_Catalog::get_tier_label( $this->get_integration_tier() ) : '',
+			'native_sync_ready' => $this->has_native_sync(),
+		);
+	}
+
+	/**
+	 * Sync wizard values to the third-party plugin, then complete the step.
+	 *
+	 * @param array $enabled_keys Enabled feature keys.
+	 * @return void
+	 */
+	protected function complete_connector_step( array $enabled_keys = array() ) {
+		if ( empty( $enabled_keys ) ) {
+			$enabled_keys = array_keys( $this->get_enabled_features() );
+		}
+
+		if ( class_exists( 'Conjure_Connector_Native_Sync' ) ) {
+			Conjure_Connector_Native_Sync::apply( $this->get_id(), $enabled_keys );
+		}
+
+		$this->conjure->mark_step_completed( $this->get_step_key() );
+		wp_safe_redirect( $this->conjure->step_next_link() );
+		exit;
+	}
 }

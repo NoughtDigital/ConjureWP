@@ -2,18 +2,9 @@
 /**
  * REST API endpoints for Conjure WP
  *
- * Exposes CLI import functionality over REST API for hosting dashboards
- * to trigger demo imports without shell access.
- *
- * @package   Conjure WP
- * @version   1.0.0
- * @link      https://ConjureWP.com/
- * @author    Jake Henshall, from Nought.digital
- * @copyright Copyright (c) 2018, Conjure WP of Nought Digital
- * @license   Licensed GPLv3 for Open Source Use
+ * @package ConjureWP
  */
 
-// Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -38,11 +29,18 @@ class Conjure_REST_API {
 	private $logger;
 
 	/**
-	 * Namespace for REST API routes.
+	 * Shared import runner.
 	 *
-	 * @var string
+	 * @var Conjure_Import_Runner
 	 */
-	private $namespace = 'ConjureWP/v1';
+	private $runner;
+
+	/**
+	 * REST API namespaces (legacy + WordPress-style).
+	 *
+	 * @var string[]
+	 */
+	private $namespaces = array( 'conjurewp/v1', 'ConjureWP/v1' );
 
 	/**
 	 * Constructor.
@@ -52,14 +50,15 @@ class Conjure_REST_API {
 	public function __construct( $conjure ) {
 		$this->conjure = $conjure;
 		$this->logger  = $conjure->logger;
+		$this->runner  = new Conjure_Import_Runner( $conjure );
+		Conjure_Import_Runner::register_job_handler();
 	}
 
 	/**
 	 * Register REST API routes.
 	 */
 	public function register_routes() {
-		register_rest_route(
-			$this->namespace,
+		$this->register_route(
 			'/demos',
 			array(
 				array(
@@ -70,8 +69,7 @@ class Conjure_REST_API {
 			)
 		);
 
-		register_rest_route(
-			$this->namespace,
+		$this->register_route(
 			'/import',
 			array(
 				array(
@@ -80,34 +78,54 @@ class Conjure_REST_API {
 					'permission_callback' => array( $this, 'check_permission' ),
 					'args'                => array(
 						'demo'         => array(
-							'description' => 'Demo slug or numeric index to import.',
-							'type'        => 'string',
-							'required'    => true,
+							'description'       => 'Demo slug or numeric index to import.',
+							'type'              => 'string',
+							'required'          => true,
+							'sanitize_callback' => 'sanitize_text_field',
 						),
 						'skip_content' => array(
-							'description' => 'Skip content import.',
-							'type'        => 'boolean',
-							'default'     => false,
+							'type'    => 'boolean',
+							'default' => false,
 						),
 						'skip_widgets' => array(
-							'description' => 'Skip widgets import.',
-							'type'        => 'boolean',
-							'default'     => false,
+							'type'    => 'boolean',
+							'default' => false,
 						),
 						'skip_options' => array(
-							'description' => 'Skip customizer options import.',
-							'type'        => 'boolean',
-							'default'     => false,
+							'type'    => 'boolean',
+							'default' => false,
 						),
 						'skip_sliders' => array(
-							'description' => 'Skip sliders import.',
+							'type'    => 'boolean',
+							'default' => false,
+						),
+						'skip_redux'   => array(
+							'type'    => 'boolean',
+							'default' => false,
+						),
+						'async'        => array(
+							'description' => 'Queue import in the background and return a job ID.',
 							'type'        => 'boolean',
 							'default'     => false,
 						),
-						'skip_redux'   => array(
-							'description' => 'Skip Redux options import.',
-							'type'        => 'boolean',
-							'default'     => false,
+					),
+				),
+			)
+		);
+
+		$this->register_route(
+			'/import/status',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'import_status' ),
+					'permission_callback' => array( $this, 'check_permission' ),
+					'args'                => array(
+						'job' => array(
+							'description'       => 'Background import job ID.',
+							'type'              => 'string',
+							'required'          => true,
+							'sanitize_callback' => 'sanitize_text_field',
 						),
 					),
 				),
@@ -116,9 +134,21 @@ class Conjure_REST_API {
 	}
 
 	/**
+	 * Register a route on all supported namespaces.
+	 *
+	 * @param string $route Route suffix.
+	 * @param array  $args  Route arguments.
+	 */
+	private function register_route( $route, $args ) {
+		foreach ( $this->namespaces as $namespace ) {
+			register_rest_route( $namespace, $route, $args );
+		}
+	}
+
+	/**
 	 * Check if user has permission to access REST API endpoints.
 	 *
-	 * @return bool|WP_Error True if user has manage_options capability, error otherwise.
+	 * @return bool|WP_Error
 	 */
 	public function check_permission() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -140,12 +170,12 @@ class Conjure_REST_API {
 	 */
 	public function list_demos( $request ) {
 		try {
-			$import_files = $this->get_import_files();
+			$import_files = $this->runner->get_import_files();
 
 			if ( empty( $import_files ) ) {
 				return new WP_REST_Response(
 					array(
-						'demos' => array(),
+						'demos'   => array(),
 						'message' => __( 'No demo imports are registered. Use the conjure_import_files filter to register demos.', 'ConjureWP' ),
 					),
 					200
@@ -156,18 +186,12 @@ class Conjure_REST_API {
 			foreach ( $import_files as $index => $import_file ) {
 				$demos[] = array(
 					'index' => $index,
-					'name' => $import_file['import_file_name'],
-					'slug' => $this->generate_slug( $import_file['import_file_name'] ),
+					'name'  => $import_file['import_file_name'],
+					'slug'  => $this->runner->generate_slug( $import_file['import_file_name'] ),
 				);
 			}
 
-			return new WP_REST_Response(
-				array(
-					'demos' => $demos,
-				),
-				200
-			);
-
+			return new WP_REST_Response( array( 'demos' => $demos ), 200 );
 		} catch ( Exception $e ) {
 			$this->logger->error(
 				'Exception in REST API list_demos',
@@ -203,8 +227,12 @@ class Conjure_REST_API {
 				);
 			}
 
-			// Get import files.
-			$import_files = $this->get_import_files();
+			$rate_limit = conjurewp_rest_import_rate_limit( get_current_user_id() );
+			if ( is_wp_error( $rate_limit ) ) {
+				return $rate_limit;
+			}
+
+			$import_files = $this->runner->get_import_files();
 
 			if ( empty( $import_files ) ) {
 				return new WP_Error(
@@ -214,37 +242,58 @@ class Conjure_REST_API {
 				);
 			}
 
-			// Find the demo by slug or index.
-			$selected_index = $this->find_demo_index( $demo, $import_files );
+			$selected_index = $this->runner->find_demo_index( $demo, $import_files );
 
 			if ( false === $selected_index ) {
 				return new WP_Error(
 					'rest_demo_not_found',
-					sprintf(
-						/* translators: %s: demo identifier */
-						__( 'Demo "%s" not found.', 'ConjureWP' ),
-						$demo
-					),
+					__( 'The requested demo was not found.', 'ConjureWP' ),
 					array( 'status' => 404 )
 				);
 			}
 
 			$selected_import = $import_files[ $selected_index ];
-
-			// Parse import options.
 			$import_options = array(
-				'content' => ! $request->get_param( 'skip_content' ),
-				'widgets' => ! $request->get_param( 'skip_widgets' ),
-				'options' => ! $request->get_param( 'skip_options' ),
-				'sliders' => ! $request->get_param( 'skip_sliders' ),
-				'redux'   => ! $request->get_param( 'skip_redux' ),
+				'content'    => ! $request->get_param( 'skip_content' ),
+				'widgets'    => ! $request->get_param( 'skip_widgets' ),
+				'options'    => ! $request->get_param( 'skip_options' ),
+				'sliders'    => ! $request->get_param( 'skip_sliders' ),
+				'redux'      => ! $request->get_param( 'skip_redux' ),
+				'acf_json'   => ! $request->get_param( 'skip_acf_json' ),
+				'gf_forms'   => ! $request->get_param( 'skip_gf_forms' ),
+				'gf_entries' => ! $request->get_param( 'skip_gf_entries' ),
 			);
 
-			// Get import files paths.
-			$import_file_paths = $this->get_import_files_paths( $selected_index );
+			if ( class_exists( 'Conjure_Connector_Upload_Registry' ) ) {
+				foreach ( Conjure_Connector_Upload_Registry::get_definitions() as $slug => $definition ) {
+					$param = $definition['skip_rest_param'];
+					$import_options[ $slug ] = ! $request->get_param( $param );
+				}
+			}
 
-			// Execute the imports.
-			$import_result = $this->execute_import( $import_file_paths, $import_options, $selected_index );
+			$use_async = (bool) $request->get_param( 'async' );
+			$use_async = (bool) apply_filters( 'conjurewp_rest_import_async', $use_async, $request );
+
+			if ( $use_async ) {
+				$job_id = $this->runner->queue_background_import( $selected_index, $import_options );
+
+				if ( is_wp_error( $job_id ) ) {
+					return $job_id;
+				}
+
+				return new WP_REST_Response(
+					array(
+						'async'   => true,
+						'job'     => $job_id,
+						'status'  => 'pending',
+						'message' => __( 'Import queued. Poll /import/status with the job ID.', 'ConjureWP' ),
+					),
+					202
+				);
+			}
+
+			$import_file_paths = $this->runner->get_import_files_paths( $selected_index );
+			$import_result     = $this->runner->execute_import( $import_file_paths, $import_options, $selected_index );
 
 			return new WP_REST_Response(
 				array(
@@ -253,14 +302,13 @@ class Conjure_REST_API {
 					'demo'    => array(
 						'index' => $selected_index,
 						'name'  => $selected_import['import_file_name'],
-						'slug'  => $this->generate_slug( $selected_import['import_file_name'] ),
+						'slug'  => $this->runner->generate_slug( $selected_import['import_file_name'] ),
 					),
 					'options' => $import_options,
 					'result'  => $import_result,
 				),
 				200
 			);
-
 		} catch ( Exception $e ) {
 			$this->logger->error(
 				'Exception in REST API import_demo',
@@ -272,352 +320,53 @@ class Conjure_REST_API {
 
 			return new WP_Error(
 				'rest_import_error',
-				sprintf(
-					/* translators: %s: error message */
-					__( 'An error occurred during import: %s', 'ConjureWP' ),
-					$e->getMessage()
-				),
+				conjurewp_safe_error_message( $e, __( 'An error occurred during import.', 'ConjureWP' ) ),
 				array( 'status' => 500 )
 			);
 		}
 	}
 
 	/**
-	 * Get registered import files.
+	 * Poll background import job status.
 	 *
-	 * @return array
+	 * @param WP_REST_Request $request REST request object.
+	 * @return WP_REST_Response|WP_Error
 	 */
-	private function get_import_files() {
-		// Ensure import files are registered.
-		do_action( 'admin_init' );
+	public function import_status( $request ) {
+		$job_id = $request->get_param( 'job' );
+		$job    = $this->runner->get_job_status( $job_id );
 
-		// Use reflection to access protected import_files property.
-		$reflection = new ReflectionClass( $this->conjure );
-		$property   = $reflection->getProperty( 'import_files' );
-		$property->setAccessible( true );
-		$import_files = $property->getValue( $this->conjure );
-
-		return is_array( $import_files ) ? $import_files : array();
-	}
-
-	/**
-	 * Generate a slug from import name.
-	 *
-	 * @param string $name Import name.
-	 * @return string
-	 */
-	private function generate_slug( $name ) {
-		return sanitize_title( $name );
-	}
-
-	/**
-	 * Find demo index by slug or numeric index.
-	 *
-	 * @param string|int $demo         Demo slug or index.
-	 * @param array      $import_files Import files array.
-	 * @return int|false
-	 */
-	private function find_demo_index( $demo, $import_files ) {
-		// Check if it's a numeric index.
-		if ( is_numeric( $demo ) ) {
-			$index = intval( $demo );
-			return isset( $import_files[ $index ] ) ? $index : false;
+		if ( ! is_array( $job ) ) {
+			return new WP_Error(
+				'rest_import_job_not_found',
+				__( 'Import job not found or expired.', 'ConjureWP' ),
+				array( 'status' => 404 )
+			);
 		}
 
-		// Search by slug.
-		foreach ( $import_files as $index => $import_file ) {
-			if ( $this->generate_slug( $import_file['import_file_name'] ) === $demo ) {
-				return $index;
-			}
+		if ( ! empty( $job['user_id'] ) && (int) $job['user_id'] !== get_current_user_id() ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to view this import job.', 'ConjureWP' ),
+				array( 'status' => 403 )
+			);
 		}
 
-		return false;
-	}
-
-	/**
-	 * Get import file paths using Conjure's method.
-	 *
-	 * @param int $selected_index Selected import index.
-	 * @return array
-	 */
-	private function get_import_files_paths( $selected_index ) {
-		// Use reflection to call protected method.
-		$reflection = new ReflectionClass( $this->conjure );
-		$method     = $reflection->getMethod( 'get_import_files_paths' );
-		$method->setAccessible( true );
-
-		return $method->invoke( $this->conjure, $selected_index );
-	}
-
-	/**
-	 * Execute the import process.
-	 *
-	 * @param array $import_files   Import file paths.
-	 * @param array $import_options What to import.
-	 * @param int   $selected_index Selected import index.
-	 * @return array Import results.
-	 */
-	private function execute_import( $import_files, $import_options, $selected_index ) {
-		$results = array(
-			'content' => null,
-			'widgets' => null,
-			'options' => null,
-			'sliders' => null,
-			'redux'   => null,
+		$response = array(
+			'job'    => $job_id,
+			'status' => $job['status'],
 		);
 
-		// Before import setup.
-		do_action( 'import_start' );
-
-		// Import content.
-		if ( $import_options['content'] && ! empty( $import_files['content'] ) ) {
-			$results['content'] = $this->import_content( $import_files['content'] );
+		if ( ! empty( $job['result'] ) ) {
+			$response['result'] = $job['result'];
 		}
 
-		// Import widgets.
-		if ( $import_options['widgets'] && ! empty( $import_files['widgets'] ) ) {
-			$results['widgets'] = $this->import_widgets( $import_files['widgets'] );
+		if ( ! empty( $job['error'] ) ) {
+			$response['error'] = $job['error'];
 		}
 
-		// Import customizer options.
-		if ( $import_options['options'] && ! empty( $import_files['options'] ) ) {
-			$results['options'] = $this->import_options( $import_files['options'] );
-		}
+		$status_code = 'completed' === $job['status'] ? 200 : ( 'failed' === $job['status'] ? 500 : 202 );
 
-		// Import sliders.
-		if ( $import_options['sliders'] && ! empty( $import_files['sliders'] ) ) {
-			$results['sliders'] = $this->import_sliders( $import_files['sliders'] );
-		}
-
-		// Import Redux options.
-		if ( $import_options['redux'] && ! empty( $import_files['redux'] ) ) {
-			$results['redux'] = $this->import_redux( $import_files['redux'] );
-		}
-
-		// After import setup.
-		do_action( 'import_end' );
-
-		// Run after all import actions.
-		do_action( 'conjure_after_all_import', $selected_index );
-
-		// Cleanup.
-		delete_transient( 'conjure_import_file_base_name' );
-
-		return $results;
-	}
-
-	/**
-	 * Import content (posts, pages, etc).
-	 *
-	 * @param string $file_path Path to content XML file.
-	 * @return array Result with success status and message.
-	 */
-	private function import_content( $file_path ) {
-		if ( ! file_exists( $file_path ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: file path */
-					__( 'Content file not found: %s', 'ConjureWP' ),
-					$file_path
-				),
-			);
-		}
-
-		// Get importer instance.
-		$reflection = new ReflectionClass( $this->conjure );
-		$property   = $reflection->getProperty( 'importer' );
-		$property->setAccessible( true );
-		$importer = $property->getValue( $this->conjure );
-
-		// Get total items for progress.
-		$total = $importer->get_number_of_posts_to_import( $file_path );
-
-		// Execute import.
-		$result = $importer->import( $file_path );
-
-		if ( is_wp_error( $result ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: error message */
-					__( 'Content import failed: %s', 'ConjureWP' ),
-					$result->get_error_message()
-				),
-			);
-		}
-
-		return array(
-			'success' => true,
-			'message' => __( 'Content imported successfully.', 'ConjureWP' ),
-			'total'   => $total,
-		);
-	}
-
-	/**
-	 * Import widgets.
-	 *
-	 * @param string $file_path Path to widgets JSON file.
-	 * @return array Result with success status and message.
-	 */
-	private function import_widgets( $file_path ) {
-		if ( ! file_exists( $file_path ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: file path */
-					__( 'Widgets file not found: %s', 'ConjureWP' ),
-					$file_path
-				),
-			);
-		}
-
-		$result = Conjure_Widget_Importer::import( $file_path );
-
-		if ( is_wp_error( $result ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: error message */
-					__( 'Widget import failed: %s', 'ConjureWP' ),
-					$result->get_error_message()
-				),
-			);
-		}
-
-		return array(
-			'success' => true,
-			'message' => __( 'Widgets imported successfully.', 'ConjureWP' ),
-		);
-	}
-
-	/**
-	 * Import customizer options.
-	 *
-	 * @param string $file_path Path to customizer DAT file.
-	 * @return array Result with success status and message.
-	 */
-	private function import_options( $file_path ) {
-		if ( ! file_exists( $file_path ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: file path */
-					__( 'Options file not found: %s', 'ConjureWP' ),
-					$file_path
-				),
-			);
-		}
-
-		$result = Conjure_Customizer_Importer::import( $file_path );
-
-		if ( is_wp_error( $result ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: error message */
-					__( 'Options import failed: %s', 'ConjureWP' ),
-					$result->get_error_message()
-				),
-			);
-		}
-
-		return array(
-			'success' => true,
-			'message' => __( 'Customizer options imported successfully.', 'ConjureWP' ),
-		);
-	}
-
-	/**
-	 * Import Revolution Sliders.
-	 *
-	 * @param string $file_path Path to slider zip file.
-	 * @return array Result with success status and message.
-	 */
-	private function import_sliders( $file_path ) {
-		if ( ! file_exists( $file_path ) ) {
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					/* translators: %s: file path */
-					__( 'Sliders file not found: %s', 'ConjureWP' ),
-					$file_path
-				),
-			);
-		}
-
-		if ( ! class_exists( 'RevSlider', false ) ) {
-			return array(
-				'success' => false,
-				'message' => __( 'Revolution Slider plugin is not active. Skipping slider import.', 'ConjureWP' ),
-				'skipped' => true,
-			);
-		}
-
-		$reflection = new ReflectionClass( $this->conjure );
-		$method     = $reflection->getMethod( 'import_revolution_sliders' );
-		$method->setAccessible( true );
-		$result = $method->invoke( $this->conjure, $file_path );
-
-		if ( 'failed' === $result ) {
-			return array(
-				'success' => false,
-				'message' => __( 'Slider import failed.', 'ConjureWP' ),
-			);
-		}
-
-		return array(
-			'success' => true,
-			'message' => __( 'Sliders imported successfully.', 'ConjureWP' ),
-		);
-	}
-
-	/**
-	 * Import Redux options.
-	 *
-	 * @param array $redux_files Redux files configuration.
-	 * @return array Result with success status and message.
-	 */
-	private function import_redux( $redux_files ) {
-		if ( empty( $redux_files ) || ! is_array( $redux_files ) ) {
-			return array(
-				'success' => false,
-				'message' => __( 'No Redux files provided.', 'ConjureWP' ),
-			);
-		}
-
-		$errors = array();
-		foreach ( $redux_files as $redux_file ) {
-			if ( empty( $redux_file['file_path'] ) || ! file_exists( $redux_file['file_path'] ) ) {
-				$errors[] = sprintf(
-					/* translators: %s: file path */
-					__( 'Redux file not found: %s', 'ConjureWP' ),
-					$redux_file['file_path'] ?? 'unknown'
-				);
-				continue;
-			}
-
-			$result = Conjure_Redux_Importer::import( $redux_file );
-
-			if ( is_wp_error( $result ) ) {
-				$errors[] = sprintf(
-					/* translators: %s: error message */
-					__( 'Redux import failed: %s', 'ConjureWP' ),
-					$result->get_error_message()
-				);
-			}
-		}
-
-		if ( ! empty( $errors ) ) {
-			return array(
-				'success' => false,
-				'message' => implode( ' ', $errors ),
-			);
-		}
-
-		return array(
-			'success' => true,
-			'message' => __( 'Redux options imported successfully.', 'ConjureWP' ),
-		);
+		return new WP_REST_Response( $response, $status_code );
 	}
 }

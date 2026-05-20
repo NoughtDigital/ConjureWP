@@ -49,6 +49,9 @@ class Conjure_Step_Connectors_Admin {
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
 		add_action( 'admin_notices', array( $this, 'render_notices' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_conjure_save_connector_setting', array( $this, 'ajax_save_connector_setting' ) );
+		add_action( 'wp_ajax_conjure_save_step_order', array( $this, 'ajax_save_step_order' ) );
+		add_action( 'wp_ajax_conjure_get_wizard_order', array( $this, 'ajax_get_wizard_order' ) );
 	}
 
 	/**
@@ -100,7 +103,163 @@ class Conjure_Step_Connectors_Admin {
 				(string) filemtime( $js_file ),
 				true
 			);
+
+			wp_localize_script(
+				'conjure-admin',
+				'conjureAdminConnectors',
+				array(
+					'ajaxurl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'conjurewp_save_connectors' ),
+					'action'  => 'conjure_save_connector_setting',
+					'strings' => array(
+						'saveFailed'       => __( 'Could not save connector setting. Please try again.', 'ConjureWP' ),
+						'orderSaving'      => __( 'Saving order...', 'ConjureWP' ),
+						'orderSaveFailed'  => __( 'Could not save wizard order. Please try again.', 'ConjureWP' ),
+						'orderSaved'       => __( 'Wizard order saved.', 'ConjureWP' ),
+					),
+				)
+			);
 		}
+	}
+
+	/**
+	 * Save a single connector setting via AJAX.
+	 *
+	 * @return void
+	 */
+	public function ajax_save_connector_setting() {
+		check_ajax_referer( 'conjurewp_save_connectors', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to change connector settings.', 'ConjureWP' ),
+				),
+				403
+			);
+		}
+
+		$connector_id = isset( $_POST['connector_id'] ) ? sanitize_key( wp_unslash( $_POST['connector_id'] ) ) : '';
+		$field        = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$feature_id   = isset( $_POST['feature_id'] ) ? sanitize_key( wp_unslash( $_POST['feature_id'] ) ) : '';
+		$value        = ! empty( $_POST['value'] );
+
+		if ( empty( $connector_id ) || ! in_array( $field, array( 'enabled', 'feature' ), true ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Invalid connector setting request.', 'ConjureWP' ),
+				),
+				400
+			);
+		}
+
+		if ( 'feature' === $field && empty( $feature_id ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Invalid connector setting request.', 'ConjureWP' ),
+				),
+				400
+			);
+		}
+
+		$connectors = $this->connector_manager->get_connectors();
+
+		if ( ! isset( $connectors[ $connector_id ] ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Unknown connector.', 'ConjureWP' ),
+				),
+				404
+			);
+		}
+
+		$all_settings = $this->connector_manager->get_all_settings();
+
+		if ( 'enabled' === $field ) {
+			$all_settings[ $connector_id ]['enabled'] = $value;
+		} else {
+			if ( ! isset( $all_settings[ $connector_id ]['features'] ) || ! is_array( $all_settings[ $connector_id ]['features'] ) ) {
+				$all_settings[ $connector_id ]['features'] = array();
+			}
+
+			$all_settings[ $connector_id ]['features'][ $feature_id ] = $value;
+		}
+
+		$saved_settings = $this->connector_manager->save_settings( $all_settings );
+
+		wp_send_json_success(
+			array(
+				'message'          => __( 'Saved.', 'ConjureWP' ),
+				'settings'         => isset( $saved_settings[ $connector_id ] ) ? $saved_settings[ $connector_id ] : array(),
+				'wizard_order_html' => $this->get_wizard_order_list_html(),
+				'wizard_step_count' => $this->get_wizard_order_step_count(),
+			)
+		);
+	}
+
+	/**
+	 * Save wizard step order via AJAX.
+	 *
+	 * @return void
+	 */
+	public function ajax_save_step_order() {
+		check_ajax_referer( 'conjurewp_save_connectors', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to change wizard order.', 'ConjureWP' ),
+				),
+				403
+			);
+		}
+
+		$submitted_step_order = isset( $_POST['step_order'] ) && is_array( $_POST['step_order'] )
+			? array_map( 'sanitize_key', wp_unslash( $_POST['step_order'] ) )
+			: array();
+
+		if ( empty( $submitted_step_order ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'No wizard steps were submitted.', 'ConjureWP' ),
+				),
+				400
+			);
+		}
+
+		$saved_order = $this->connector_manager->save_step_order( $submitted_step_order );
+
+		wp_send_json_success(
+			array(
+				'message'    => __( 'Wizard order saved.', 'ConjureWP' ),
+				'step_order' => $saved_order,
+			)
+		);
+	}
+
+	/**
+	 * Return refreshed wizard order markup via AJAX.
+	 *
+	 * @return void
+	 */
+	public function ajax_get_wizard_order() {
+		check_ajax_referer( 'conjurewp_save_connectors', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to view wizard order.', 'ConjureWP' ),
+				),
+				403
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'html'              => $this->get_wizard_order_list_html(),
+				'wizard_step_count' => $this->get_wizard_order_step_count(),
+			)
+		);
 	}
 
 	/**
@@ -109,9 +268,11 @@ class Conjure_Step_Connectors_Admin {
 	 * @return void
 	 */
 	public function handle_actions() {
-		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
 
-		if ( self::PAGE_SLUG !== $page || ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->is_steps_admin_request() ) {
 			return;
 		}
 
@@ -165,9 +326,14 @@ class Conjure_Step_Connectors_Admin {
 	 * @return void
 	 */
 	public function render_page() {
-		$this->conjure->steps();
+		$wizard_order_steps      = $this->get_wizard_order_steps();
 		$connectors              = $this->connector_manager->get_admin_connector_data();
-		$steps                   = $this->conjure->steps;
+		$reconciliation          = $this->connector_manager->get_connector_reconciliation();
+		$connectors_require_pro  = ! empty( $reconciliation['connectors_require_pro'] );
+		$has_pro_plugin_access   = ! empty( $reconciliation['has_pro_plugin_access'] );
+		$pro_plugin_price_label  = ! empty( $reconciliation['pro_plugin_price_label'] ) ? $reconciliation['pro_plugin_price_label'] : '';
+		$pro_upgrade_url         = class_exists( 'Conjure_Premium_Features' ) ? Conjure_Premium_Features::get_upgrade_url() : '';
+		$steps                   = $wizard_order_steps;
 		$connector_count         = count( $connectors );
 		$active_connector_count  = 0;
 		$total_feature_count     = 0;
@@ -192,6 +358,9 @@ class Conjure_Step_Connectors_Admin {
 				}
 			}
 		}
+
+		$initial_active_tab = $this->get_initial_active_tab();
+		$form_action        = admin_url( 'tools.php?page=' . self::PAGE_SLUG );
 		?>
 		<div class="wrap conjure-admin-page">
 			<div class="conjure-admin-shell">
@@ -207,29 +376,29 @@ class Conjure_Step_Connectors_Admin {
 					</div>
 
 					<nav class="conjure-admin-nav" aria-label="<?php esc_attr_e( 'Page sections', 'ConjureWP' ); ?>" role="tablist" aria-orientation="vertical">
-						<button type="button" id="conjure-tab-overview" class="conjure-admin-nav-link is-active js-conjure-admin-nav-link" data-panel="conjure-overview" role="tab" aria-selected="true" aria-controls="conjure-overview">
+						<button type="button" id="conjure-tab-overview" class="conjure-admin-nav-link <?php echo $this->is_admin_tab_active( 'conjure-overview', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-nav-link" data-panel="conjure-overview" role="tab" aria-selected="<?php echo $this->is_admin_tab_active( 'conjure-overview', $initial_active_tab ) ? 'true' : 'false'; ?>" aria-controls="conjure-overview">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
 							<span><?php esc_html_e( 'Dashboard', 'ConjureWP' ); ?></span>
 						</button>
 
-						<button type="button" id="conjure-tab-connectors" class="conjure-admin-nav-link js-conjure-admin-nav-link" data-panel="conjure-connectors" role="tab" aria-selected="false" aria-controls="conjure-connectors">
+						<button type="button" id="conjure-tab-connectors" class="conjure-admin-nav-link <?php echo $this->is_admin_tab_active( 'conjure-connectors', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-nav-link" data-panel="conjure-connectors" role="tab" aria-selected="<?php echo $this->is_admin_tab_active( 'conjure-connectors', $initial_active_tab ) ? 'true' : 'false'; ?>" aria-controls="conjure-connectors">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
 							<span><?php esc_html_e( 'Connectors', 'ConjureWP' ); ?></span>
 						</button>
 
-						<button type="button" id="conjure-tab-steps" class="conjure-admin-nav-link js-conjure-admin-nav-link" data-panel="conjure-steps" role="tab" aria-selected="false" aria-controls="conjure-steps">
+						<button type="button" id="conjure-tab-steps" class="conjure-admin-nav-link <?php echo $this->is_admin_tab_active( 'conjure-steps', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-nav-link" data-panel="conjure-steps" role="tab" aria-selected="<?php echo $this->is_admin_tab_active( 'conjure-steps', $initial_active_tab ) ? 'true' : 'false'; ?>" aria-controls="conjure-steps">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
 							<span><?php esc_html_e( 'Wizard Order', 'ConjureWP' ); ?></span>
 						</button>
 
 						<div class="conjure-admin-nav-divider"></div>
 
-						<button type="button" id="conjure-tab-import" class="conjure-admin-nav-link js-conjure-admin-nav-link" data-panel="conjure-import" role="tab" aria-selected="false" aria-controls="conjure-import">
+						<button type="button" id="conjure-tab-import" class="conjure-admin-nav-link <?php echo $this->is_admin_tab_active( 'conjure-import', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-nav-link" data-panel="conjure-import" role="tab" aria-selected="<?php echo $this->is_admin_tab_active( 'conjure-import', $initial_active_tab ) ? 'true' : 'false'; ?>" aria-controls="conjure-import">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
 							<span><?php esc_html_e( 'Import / Export', 'ConjureWP' ); ?></span>
 						</button>
 
-						<button type="button" id="conjure-tab-save" class="conjure-admin-nav-link js-conjure-admin-nav-link" data-panel="conjure-save" role="tab" aria-selected="false" aria-controls="conjure-save">
+						<button type="button" id="conjure-tab-save" class="conjure-admin-nav-link <?php echo $this->is_admin_tab_active( 'conjure-save', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-nav-link" data-panel="conjure-save" role="tab" aria-selected="<?php echo $this->is_admin_tab_active( 'conjure-save', $initial_active_tab ) ? 'true' : 'false'; ?>" aria-controls="conjure-save">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
 							<span><?php esc_html_e( 'Settings', 'ConjureWP' ); ?></span>
 						</button>
@@ -244,7 +413,7 @@ class Conjure_Step_Connectors_Admin {
 				</aside>
 
 				<div class="conjure-admin-content">
-					<section class="conjure-admin-tab-panel is-active js-conjure-admin-panel" id="conjure-overview" role="tabpanel" aria-labelledby="conjure-tab-overview">
+					<section class="conjure-admin-tab-panel <?php echo $this->is_admin_tab_active( 'conjure-overview', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-panel" id="conjure-overview" role="tabpanel" aria-labelledby="conjure-tab-overview"<?php echo $this->is_admin_tab_active( 'conjure-overview', $initial_active_tab ) ? '' : ' hidden'; ?>>
 						<header class="conjure-admin-page-header">
 							<p class="conjure-admin-kicker"><?php esc_html_e( 'Connector Control Centre', 'ConjureWP' ); ?></p>
 							<h1 class="conjure-admin-title"><?php esc_html_e( 'ConjureWP Steps', 'ConjureWP' ); ?></h1>
@@ -264,7 +433,7 @@ class Conjure_Step_Connectors_Admin {
 							</div>
 							<div class="conjure-admin-stat-card">
 								<span class="conjure-admin-stat-label"><?php esc_html_e( 'Current Wizard Steps', 'ConjureWP' ); ?></span>
-								<strong class="conjure-admin-stat-value"><?php echo esc_html( (string) $current_step_count ); ?></strong>
+								<strong class="conjure-admin-stat-value js-conjure-wizard-step-count"><?php echo esc_html( (string) $current_step_count ); ?></strong>
 								<p class="conjure-admin-stat-copy">
 									<?php
 									printf(
@@ -280,19 +449,51 @@ class Conjure_Step_Connectors_Admin {
 						</div>
 					</section>
 
-					<form method="post" class="conjure-admin-form" id="conjure-admin-settings-form">
+					<form method="post" action="<?php echo esc_url( $form_action ); ?>" class="conjure-admin-form" id="conjure-admin-settings-form">
 						<?php wp_nonce_field( 'conjurewp_save_connectors' ); ?>
+						<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+						<input type="hidden" name="conjurewp_steps_page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
 						<input type="hidden" name="conjurewp_save_connectors" value="1">
-						<input type="hidden" name="conjurewp_active_tab" id="conjurewp-active-tab" value="conjure-connectors">
+						<input type="hidden" name="conjurewp_active_tab" id="conjurewp-active-tab" value="<?php echo esc_attr( $initial_active_tab ); ?>">
 
-						<section class="conjure-admin-section conjure-admin-tab-panel js-conjure-admin-panel" id="conjure-connectors" role="tabpanel" aria-labelledby="conjure-tab-connectors" hidden>
+						<section class="conjure-admin-section conjure-admin-tab-panel <?php echo $this->is_admin_tab_active( 'conjure-connectors', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-panel" id="conjure-connectors" role="tabpanel" aria-labelledby="conjure-tab-connectors"<?php echo $this->is_admin_tab_active( 'conjure-connectors', $initial_active_tab ) ? '' : ' hidden'; ?>>
 							<div class="conjure-admin-panel">
 								<div class="conjure-admin-panel-header">
 									<div>
 										<h2 class="conjure-admin-panel-title"><?php esc_html_e( 'Connectors', 'ConjureWP' ); ?></h2>
-										<p class="conjure-admin-panel-copy"><?php esc_html_e( 'Each connector is shown as a compact card. Use the feature toggles to control what appears in the wizard.', 'ConjureWP' ); ?></p>
+										<p class="conjure-admin-panel-copy"><?php esc_html_e( 'Activate only the connectors you need — each activated connector appears in Wizard Order. Use the feature toggles to control what each live wizard step includes.', 'ConjureWP' ); ?></p>
+										<?php if ( $connectors_require_pro ) : ?>
+											<p class="conjure-admin-panel-copy conjure-admin-panel-copy--pro">
+												<?php
+												printf(
+													/* translators: %s: ConjureWP Pro annual price */
+													esc_html__( 'Connectors are included with ConjureWP Pro (%s per site). You can configure them here anytime; they join the wizard once your Pro licence is active.', 'ConjureWP' ),
+													esc_html( $pro_plugin_price_label )
+												);
+												?>
+											</p>
+										<?php endif; ?>
 									</div>
+									<?php if ( $connectors_require_pro && ! $has_pro_plugin_access && $pro_upgrade_url ) : ?>
+										<a href="<?php echo esc_url( $pro_upgrade_url ); ?>" class="conjure-admin-button conjure-admin-button--primary">
+											<?php esc_html_e( 'Upgrade to ConjureWP Pro', 'ConjureWP' ); ?>
+										</a>
+									<?php endif; ?>
 								</div>
+
+								<?php if ( $connectors_require_pro && ! $has_pro_plugin_access ) : ?>
+									<div class="conjure-admin-notice conjure-admin-notice--warning">
+										<p>
+											<?php
+											printf(
+												/* translators: %s: ConjureWP Pro annual price */
+												esc_html__( 'You can activate and deactivate connectors below to plan your setup. Activated connectors appear in Wizard Order immediately; ConjureWP Pro (%s) is required before they join the live wizard.', 'ConjureWP' ),
+												esc_html( $pro_plugin_price_label )
+											);
+											?>
+										</p>
+									</div>
+								<?php endif; ?>
 
 								<?php if ( empty( $connectors ) ) : ?>
 									<div class="conjure-admin-empty-state">
@@ -301,43 +502,36 @@ class Conjure_Step_Connectors_Admin {
 								<?php else : ?>
 									<div class="conjure-admin-connector-grid">
 										<?php foreach ( $connectors as $connector ) : ?>
-											<div class="conjure-admin-connector-card">
+											<div class="conjure-admin-connector-card" data-connector-id="<?php echo esc_attr( $connector['id'] ); ?>">
 												<div class="conjure-admin-connector-header">
 													<div class="conjure-admin-connector-copy">
 														<div class="conjure-admin-card-heading-row">
 															<h3 class="conjure-admin-card-title"><?php echo esc_html( $connector['name'] ); ?></h3>
-															<span class="conjure-admin-badge <?php echo esc_attr( $this->get_plugin_badge_class( $connector['plugin_status'] ) ); ?>">
-																<?php echo esc_html( $connector['plugin_status']['label'] ); ?>
+															<span class="conjure-admin-badge <?php echo esc_attr( $this->get_readiness_badge_class( $connector['readiness'] ) ); ?>">
+																<?php echo esc_html( $connector['readiness']['label'] ); ?>
 															</span>
 														</div>
+														<?php if ( ! empty( $connector['readiness']['tier_label'] ) ) : ?>
+															<p class="conjure-admin-card-meta">
+																<span class="conjure-admin-badge conjure-admin-badge--muted">
+																	<?php echo esc_html( $connector['readiness']['tier_label'] ); ?>
+																</span>
+																<span class="conjure-admin-badge <?php echo esc_attr( $this->get_plugin_badge_class( $connector['plugin_status'] ) ); ?>">
+																	<?php echo esc_html( $connector['plugin_status']['label'] ); ?>
+																</span>
+															</p>
+														<?php endif; ?>
 														<?php if ( ! empty( $connector['description'] ) ) : ?>
 															<p class="conjure-admin-card-copy"><?php echo esc_html( $connector['description'] ); ?></p>
 														<?php endif; ?>
+														<?php if ( ! $connector['readiness']['native_sync_ready'] && 'preferences' === $connector['integration_tier'] ) : ?>
+															<p class="conjure-admin-card-warning">
+																<?php esc_html_e( 'Not offered as a full-setup product yet — native sync is still in progress.', 'ConjureWP' ); ?>
+															</p>
+														<?php endif; ?>
 													</div>
 													<div class="conjure-admin-connector-actions">
-														<?php
-														$this->render_activation_button(
-															'connector_enabled[' . $connector['id'] . ']',
-															! empty( $connector['settings']['enabled'] ),
-															__( 'Activate connector', 'ConjureWP' ),
-															__( 'Deactivate connector', 'ConjureWP' )
-														);
-														?>
-														<p class="conjure-admin-connector-state">
-															<?php
-															if ( $connector['shows_in_wizard'] ) {
-																esc_html_e( 'Currently active in the wizard.', 'ConjureWP' );
-															} elseif ( ! empty( $connector['settings']['enabled'] ) && ! $connector['plugin_status']['active'] ) {
-																printf(
-																	/* translators: %s: plugin name */
-																	esc_html__( 'Connector enabled. %s will run once the plugin is active.', 'ConjureWP' ),
-																	esc_html( $connector['plugin']['name'] )
-																);
-															} else {
-																esc_html_e( 'Not currently active in the wizard.', 'ConjureWP' );
-															}
-															?>
-														</p>
+														<?php $this->render_connector_activation_control( $connector ); ?>
 													</div>
 												</div>
 
@@ -383,63 +577,28 @@ class Conjure_Step_Connectors_Admin {
 									</div>
 								<?php endif; ?>
 							</div>
-
-							<div class="conjure-admin-save-bar">
-								<button type="submit" class="conjure-admin-button conjure-admin-button--primary">
-									<?php esc_html_e( 'Save Connector Settings', 'ConjureWP' ); ?>
-								</button>
-							</div>
 						</section>
 
-						<section class="conjure-admin-section conjure-admin-tab-panel js-conjure-admin-panel" id="conjure-steps" role="tabpanel" aria-labelledby="conjure-tab-steps" hidden>
+						<section class="conjure-admin-section conjure-admin-tab-panel <?php echo $this->is_admin_tab_active( 'conjure-steps', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-panel" id="conjure-steps" role="tabpanel" aria-labelledby="conjure-tab-steps"<?php echo $this->is_admin_tab_active( 'conjure-steps', $initial_active_tab ) ? '' : ' hidden'; ?>>
 							<div class="conjure-admin-panel">
 								<div class="conjure-admin-panel-header">
 									<div>
 										<h2 class="conjure-admin-panel-title"><?php esc_html_e( 'Wizard Order', 'ConjureWP' ); ?></h2>
-										<p class="conjure-admin-panel-copy"><?php esc_html_e( 'Drag and drop these steps to change the order used by the wizard. Open a preview to review your current unsaved changes in a new tab.', 'ConjureWP' ); ?></p>
+										<p class="conjure-admin-panel-copy"><?php esc_html_e( 'Drag and drop these steps to change the order used by the wizard. Order saves automatically when you move a step.', 'ConjureWP' ); ?></p>
+										<p class="conjure-admin-panel-copy conjure-admin-panel-copy--autosave js-conjure-order-save-status" aria-live="polite"></p>
 									</div>
 									<button type="submit" name="conjurewp_preview_connectors" value="1" class="conjure-admin-button conjure-admin-button--secondary" formtarget="_blank">
 										<?php esc_html_e( 'Preview Wizard', 'ConjureWP' ); ?>
 									</button>
 								</div>
 
-								<ul class="conjure-step-sortable js-conjure-step-sortable">
-									<?php foreach ( $steps as $step_key => $step ) : ?>
-										<?php $completed = $this->conjure->get_step_completion_state( $step_key ); ?>
-										<li class="conjure-step-sortable__item js-conjure-step-item">
-											<input type="hidden" name="step_order[]" value="<?php echo esc_attr( $step_key ); ?>">
-											<div class="conjure-step-sortable__handle js-conjure-step-handle" aria-hidden="true">
-												<span></span><span></span><span></span>
-											</div>
-											<div class="conjure-step-sortable__content">
-												<div class="conjure-step-sortable__content-top">
-													<div>
-														<p class="conjure-step-sortable__label"><?php echo esc_html( isset( $step['name'] ) ? $step['name'] : $step_key ); ?></p>
-														<p class="conjure-step-sortable__key"><code><?php echo esc_html( $step_key ); ?></code></p>
-													</div>
-													<div class="conjure-step-sortable__meta">
-														<span class="conjure-admin-badge <?php echo esc_attr( $this->get_source_badge_class( $this->connector_manager->get_step_source( $step_key ) ) ); ?>">
-															<?php echo esc_html( $this->connector_manager->get_step_source( $step_key ) ); ?>
-														</span>
-														<span class="conjure-admin-badge <?php echo esc_attr( $completed ? 'conjure-admin-badge--success' : 'conjure-admin-badge--muted' ); ?>">
-															<?php echo esc_html( $completed ? __( 'Completed', 'ConjureWP' ) : __( 'Pending', 'ConjureWP' ) ); ?>
-														</span>
-													</div>
-												</div>
-											</div>
-										</li>
-									<?php endforeach; ?>
+								<ul class="conjure-step-sortable js-conjure-step-sortable" id="conjure-wizard-order-list">
+									<?php echo $this->get_wizard_order_list_html( $steps ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 								</ul>
-							</div>
-
-							<div class="conjure-admin-save-bar">
-								<button type="submit" class="conjure-admin-button conjure-admin-button--primary">
-									<?php esc_html_e( 'Save Connector Settings', 'ConjureWP' ); ?>
-								</button>
 							</div>
 						</section>
 
-						<section class="conjure-admin-section conjure-admin-tab-panel js-conjure-admin-panel" id="conjure-import" role="tabpanel" aria-labelledby="conjure-tab-import" hidden>
+						<section class="conjure-admin-section conjure-admin-tab-panel <?php echo $this->is_admin_tab_active( 'conjure-import', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-panel" id="conjure-import" role="tabpanel" aria-labelledby="conjure-tab-import"<?php echo $this->is_admin_tab_active( 'conjure-import', $initial_active_tab ) ? '' : ' hidden'; ?>>
 							<div class="conjure-admin-panel">
 								<div class="conjure-admin-panel-header">
 									<div>
@@ -474,7 +633,7 @@ class Conjure_Step_Connectors_Admin {
 							</div>
 						</section>
 
-						<section class="conjure-admin-section conjure-admin-tab-panel js-conjure-admin-panel" id="conjure-save" role="tabpanel" aria-labelledby="conjure-tab-save" hidden>
+						<section class="conjure-admin-section conjure-admin-tab-panel <?php echo $this->is_admin_tab_active( 'conjure-save', $initial_active_tab ) ? 'is-active' : ''; ?> js-conjure-admin-panel" id="conjure-save" role="tabpanel" aria-labelledby="conjure-tab-save"<?php echo $this->is_admin_tab_active( 'conjure-save', $initial_active_tab ) ? '' : ' hidden'; ?>>
 							<div class="conjure-admin-panel">
 								<div class="conjure-admin-panel-header">
 									<div>
@@ -513,11 +672,20 @@ class Conjure_Step_Connectors_Admin {
 		$submitted_settings   = array();
 
 		foreach ( $this->connector_manager->get_connectors() as $connector_id => $connector ) {
-			$defaults = $connector->get_default_settings();
-			$features = array();
+			$defaults          = $connector->get_default_settings();
+			$existing_settings = $this->connector_manager->get_connector_settings( $connector_id );
+			$features          = array();
 
 			foreach ( $defaults['features'] as $feature_id => $default_enabled ) {
-				$features[ $feature_id ] = isset( $submitted_features[ $connector_id ][ $feature_id ] );
+				if ( isset( $submitted_features[ $connector_id ][ $feature_id ] ) ) {
+					$features[ $feature_id ] = true;
+				} elseif ( isset( $submitted_features[ $connector_id ] ) ) {
+					$features[ $feature_id ] = false;
+				} elseif ( isset( $existing_settings['features'][ $feature_id ] ) ) {
+					$features[ $feature_id ] = (bool) $existing_settings['features'][ $feature_id ];
+				} else {
+					$features[ $feature_id ] = (bool) $default_enabled;
+				}
 			}
 
 			$submitted_settings[ $connector_id ] = array(
@@ -562,6 +730,11 @@ class Conjure_Step_Connectors_Admin {
 		$this->set_notice( __( 'Connector settings saved.', 'ConjureWP' ) );
 
 		$active_tab = isset( $_POST['conjurewp_active_tab'] ) ? sanitize_key( wp_unslash( $_POST['conjurewp_active_tab'] ) ) : 'conjure-connectors';
+
+		if ( ! in_array( $active_tab, $this->get_allowed_tab_ids(), true ) ) {
+			$active_tab = 'conjure-connectors';
+		}
+
 		$this->redirect_to_page( $active_tab );
 	}
 
@@ -633,7 +806,9 @@ class Conjure_Step_Connectors_Admin {
 			$this->redirect_to_page();
 		}
 
-		$payload       = json_decode( $file_contents, true );
+		$payload = function_exists( 'conjurewp_json_decode' )
+			? conjurewp_json_decode( $file_contents, true )
+			: json_decode( $file_contents, true );
 
 		if ( ! is_array( $payload ) ) {
 			$this->set_notice( __( 'The imported file is not valid JSON.', 'ConjureWP' ), 'error' );
@@ -695,15 +870,72 @@ class Conjure_Step_Connectors_Admin {
 	 *
 	 * @return void
 	 */
-	protected function redirect_to_page( $hash = '' ) {
+	protected function redirect_to_page( $tab = '' ) {
 		$url = admin_url( 'tools.php?page=' . self::PAGE_SLUG );
 
-		if ( ! empty( $hash ) ) {
-			$url .= '#' . $hash;
+		if ( ! empty( $tab ) && in_array( $tab, $this->get_allowed_tab_ids(), true ) ) {
+			$url = add_query_arg( 'conjurewp_tab', $tab, $url );
 		}
 
 		wp_safe_redirect( $url );
 		exit;
+	}
+
+	/**
+	 * Determine whether the current request targets the steps admin screen.
+	 *
+	 * @return bool
+	 */
+	protected function is_steps_admin_request() {
+		$page = isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '';
+
+		if ( self::PAGE_SLUG === $page ) {
+			return true;
+		}
+
+		return ! empty( $_POST['conjurewp_steps_page'] )
+			&& self::PAGE_SLUG === sanitize_text_field( wp_unslash( $_POST['conjurewp_steps_page'] ) );
+	}
+
+	/**
+	 * Allowed admin tab panel IDs.
+	 *
+	 * @return string[]
+	 */
+	protected function get_allowed_tab_ids() {
+		return array(
+			'conjure-overview',
+			'conjure-connectors',
+			'conjure-steps',
+			'conjure-import',
+			'conjure-save',
+		);
+	}
+
+	/**
+	 * Resolve the tab that should be active on the current request.
+	 *
+	 * @return string
+	 */
+	protected function get_initial_active_tab() {
+		$tab = isset( $_GET['conjurewp_tab'] ) ? sanitize_key( wp_unslash( $_GET['conjurewp_tab'] ) ) : '';
+
+		if ( in_array( $tab, $this->get_allowed_tab_ids(), true ) ) {
+			return $tab;
+		}
+
+		return 'conjure-overview';
+	}
+
+	/**
+	 * Check whether a tab should render as active.
+	 *
+	 * @param string $tab_id      Tab panel ID.
+	 * @param string $active_tab  Active tab ID.
+	 * @return bool
+	 */
+	protected function is_admin_tab_active( $tab_id, $active_tab ) {
+		return $tab_id === $active_tab;
 	}
 
 	/**
@@ -735,15 +967,33 @@ class Conjure_Step_Connectors_Admin {
 	}
 
 	/**
+	 * Render connector activation UI and wizard state copy.
+	 *
+	 * @param array $connector Connector admin payload.
+	 * @return void
+	 */
+	protected function render_connector_activation_control( $connector ) {
+		$enabled = ! empty( $connector['settings']['enabled'] );
+
+		$this->render_activation_button(
+			'connector_enabled[' . $connector['id'] . ']',
+			$enabled,
+			__( 'Activate', 'ConjureWP' ),
+			__( 'Deactivate', 'ConjureWP' )
+		);
+	}
+
+	/**
 	 * Render an activation button backed by a checkbox field.
 	 *
 	 * @param string $name             Field name.
 	 * @param bool   $checked          Checked state.
 	 * @param string $activate_label   Activate label.
 	 * @param string $deactivate_label Deactivate label.
+	 * @param bool   $disabled         Disabled state.
 	 * @return void
 	 */
-	protected function render_activation_button( $name, $checked, $activate_label, $deactivate_label ) {
+	protected function render_activation_button( $name, $checked, $activate_label, $deactivate_label, $disabled = false ) {
 		$field_id = 'conjure-activation-' . md5( $name );
 		?>
 		<div class="conjure-admin-activation-control">
@@ -754,6 +1004,7 @@ class Conjure_Step_Connectors_Admin {
 				name="<?php echo esc_attr( $name ); ?>"
 				value="1"
 				<?php checked( $checked ); ?>
+				<?php disabled( $disabled ); ?>
 			>
 			<button
 				type="button"
@@ -762,6 +1013,7 @@ class Conjure_Step_Connectors_Admin {
 				data-activate-label="<?php echo esc_attr( $activate_label ); ?>"
 				data-deactivate-label="<?php echo esc_attr( $deactivate_label ); ?>"
 				aria-pressed="<?php echo esc_attr( $checked ? 'true' : 'false' ); ?>"
+				<?php disabled( $disabled ); ?>
 			>
 				<?php echo esc_html( $checked ? $deactivate_label : $activate_label ); ?>
 			</button>
@@ -788,6 +1040,33 @@ class Conjure_Step_Connectors_Admin {
 	}
 
 	/**
+	 * Get readiness badge class.
+	 *
+	 * @param array $readiness Readiness payload.
+	 * @return string
+	 */
+	protected function get_readiness_badge_class( $readiness ) {
+		if ( empty( $readiness['code'] ) ) {
+			return 'conjure-admin-badge--muted';
+		}
+
+		switch ( $readiness['code'] ) {
+			case 'ready':
+				return 'conjure-admin-badge--success';
+			case 'active':
+				return 'conjure-admin-badge--info';
+			case 'pending_pro':
+			case 'license_required':
+				return 'conjure-admin-badge--warning';
+			case 'plugin_inactive':
+			case 'plugin_missing':
+				return 'conjure-admin-badge--danger';
+			default:
+				return 'conjure-admin-badge--muted';
+		}
+	}
+
+	/**
 	 * Get source badge class.
 	 *
 	 * @param string $source Step source.
@@ -803,5 +1082,103 @@ class Conjure_Step_Connectors_Admin {
 		}
 
 		return 'conjure-admin-badge--warning';
+	}
+
+	/**
+	 * Get wizard order steps for the admin screen.
+	 *
+	 * @return array
+	 */
+	protected function get_wizard_order_steps() {
+		$this->conjure->steps();
+
+		return $this->connector_manager->build_admin_wizard_order_steps( $this->conjure->steps );
+	}
+
+	/**
+	 * Count wizard order steps for overview stats.
+	 *
+	 * @return int
+	 */
+	protected function get_wizard_order_step_count() {
+		return count( $this->get_wizard_order_steps() );
+	}
+
+	/**
+	 * Render wizard order list items.
+	 *
+	 * @param array|null $steps Optional pre-built steps array.
+	 * @return string
+	 */
+	protected function get_wizard_order_list_html( $steps = null ) {
+		if ( null === $steps ) {
+			$steps = $this->get_wizard_order_steps();
+		}
+
+		ob_start();
+
+		foreach ( $steps as $step_key => $step ) {
+			echo $this->render_wizard_order_list_item( $step_key, $step ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Render a single wizard order list item.
+	 *
+	 * @param string $step_key Step key.
+	 * @param array  $step     Step definition.
+	 * @return string
+	 */
+	protected function render_wizard_order_list_item( $step_key, $step ) {
+		$completed            = $this->conjure->get_step_completion_state( $step_key );
+		$step_source          = $this->connector_manager->get_step_source( $step_key );
+		$connector_is_active  = $this->connector_manager->is_connector_step_active( $step_key );
+		$connector_is_planned = $this->connector_manager->is_connector_step_planned( $step_key );
+		$status_badge_class   = 'conjure-admin-badge--muted';
+		$status_label         = __( 'Pending', 'ConjureWP' );
+		$item_classes         = array( 'conjure-step-sortable__item', 'js-conjure-step-item' );
+
+		if ( $connector_is_active ) {
+			$status_badge_class = 'conjure-admin-badge--success';
+			$status_label       = __( 'Active', 'ConjureWP' );
+			$item_classes[]     = 'is-connector-active';
+		} elseif ( $connector_is_planned ) {
+			$status_badge_class = 'conjure-admin-badge--warning';
+			$status_label       = __( 'Planned', 'ConjureWP' );
+			$item_classes[]     = 'is-connector-planned';
+		} elseif ( $completed ) {
+			$status_badge_class = 'conjure-admin-badge--success';
+			$status_label       = __( 'Completed', 'ConjureWP' );
+		}
+
+		ob_start();
+		?>
+		<li class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>">
+			<input type="hidden" name="step_order[]" value="<?php echo esc_attr( $step_key ); ?>">
+			<div class="conjure-step-sortable__handle js-conjure-step-handle" aria-hidden="true">
+				<span></span><span></span><span></span>
+			</div>
+			<div class="conjure-step-sortable__content">
+				<div class="conjure-step-sortable__content-top">
+					<div>
+						<p class="conjure-step-sortable__label"><?php echo esc_html( isset( $step['name'] ) ? $step['name'] : $step_key ); ?></p>
+						<p class="conjure-step-sortable__key"><code><?php echo esc_html( $step_key ); ?></code></p>
+					</div>
+					<div class="conjure-step-sortable__meta">
+						<span class="conjure-admin-badge <?php echo esc_attr( $this->get_source_badge_class( $step_source ) ); ?>">
+							<?php echo esc_html( $this->connector_manager->get_step_source_label( $step_key ) ); ?>
+						</span>
+						<span class="conjure-admin-badge <?php echo esc_attr( $status_badge_class ); ?>">
+							<?php echo esc_html( $status_label ); ?>
+						</span>
+					</div>
+				</div>
+			</div>
+		</li>
+		<?php
+
+		return (string) ob_get_clean();
 	}
 }

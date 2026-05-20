@@ -404,9 +404,7 @@ class Conjure_Step_Connector_LiteSpeed_Cache extends Conjure_Step_Connector_Base
 			update_option( 'conjure_lscache_cdn_include_js', ! empty( $_POST['conjure_lscache_cdn_include_js'] ) );
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

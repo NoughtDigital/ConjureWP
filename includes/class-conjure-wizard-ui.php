@@ -149,6 +149,7 @@ class Conjure_Wizard_UI {
 				});
 			</script>
 		<?php endif; ?>
+		<?php $this->svg_sprite(); ?>
 		</body>
 		<?php do_action( 'admin_footer' ); ?>
 		<?php do_action( 'admin_print_footer_scripts' ); ?>
@@ -224,12 +225,24 @@ class Conjure_Wizard_UI {
 	 * SVG sprite.
 	 */
 	public function svg_sprite() {
-		// Define SVG sprite file.
-		$svg = trailingslashit( $this->conjure->base_path ) . $this->conjure->directory . '/assets/images/sprite.svg';
+		static $sprite_loaded = false;
 
-		// If it exists, include it.
+		if ( $sprite_loaded ) {
+			return;
+		}
+
+		if ( function_exists( 'conjurewp_get_runtime_path' ) ) {
+			$svg = conjurewp_get_runtime_path( 'assets/images/sprite.svg' );
+		} else {
+			$svg = trailingslashit( $this->conjure->base_path ) . $this->conjure->directory . '/assets/images/sprite.svg';
+		}
+
+		$svg = apply_filters( 'conjure_svg_sprite', $svg );
+
 		if ( file_exists( $svg ) ) {
-			require_once apply_filters( 'conjure_svg_sprite', $svg );
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Inline SVG sprite file.
+			require $svg;
+			$sprite_loaded = true;
 		}
 	}
 
@@ -269,6 +282,9 @@ class Conjure_Wizard_UI {
 		// Parse args.
 		$args = wp_parse_args( $args, $defaults );
 
+		$icon_slug = sanitize_key( $args['icon'] );
+		$view_box  = $this->get_svg_icon_view_box( $icon_slug );
+
 		// Set aria hidden.
 		$aria_hidden = '';
 
@@ -284,7 +300,7 @@ class Conjure_Wizard_UI {
 		}
 
 		// Begin SVG markup.
-		$svg = '<svg class="icon icon--' . esc_attr( $args['icon'] ) . '"' . $aria_hidden . $aria_labelledby . ' role="img">';
+		$svg = '<svg class="icon icon--' . esc_attr( $icon_slug ) . '" viewBox="' . esc_attr( $view_box ) . '"' . $aria_hidden . $aria_labelledby . ' role="img">';
 
 		// If there is a title, display it.
 		if ( $args['title'] ) {
@@ -296,7 +312,8 @@ class Conjure_Wizard_UI {
 			$svg .= '<desc>' . esc_html( $args['desc'] ) . '</desc>';
 		}
 
-		$svg .= '<use xlink:href="#icon-' . esc_html( $args['icon'] ) . '"></use>';
+		$icon_ref = '#icon-' . $icon_slug;
+		$svg     .= '<use href="' . esc_attr( $icon_ref ) . '" xlink:href="' . esc_attr( $icon_ref ) . '"></use>';
 
 		// Add some markup to use as a fallback for browsers that do not support SVGs.
 		if ( $args['fallback'] ) {
@@ -309,6 +326,27 @@ class Conjure_Wizard_UI {
 	}
 
 	/**
+	 * ViewBox dimensions for wizard step icons in sprite.svg.
+	 *
+	 * @param string $icon Icon slug.
+	 * @return string
+	 */
+	private function get_svg_icon_view_box( $icon ) {
+		$view_boxes = array(
+			'welcome'   => '0 0 166 105',
+			'done'      => '0 0 177 107',
+			'plugins'   => '0 0 179 95',
+			'license'   => '0 0 168 104',
+			'content'   => '0 0 175 110',
+			'child'     => '0 0 199 100',
+			'help'      => '0 0 100 100',
+			'downarrow' => '0 0 24 24',
+		);
+
+		return isset( $view_boxes[ $icon ] ) ? $view_boxes[ $icon ] : '0 0 100 100';
+	}
+
+	/**
 	 * Allowed HTML for sprites.
 	 *
 	 * @return array
@@ -318,10 +356,12 @@ class Conjure_Wizard_UI {
 		$array = array(
 			'svg' => array(
 				'class'       => array(),
+				'viewBox'     => array(),
 				'aria-hidden' => array(),
 				'role'        => array(),
 			),
 			'use' => array(
+				'href'       => array(),
 				'xlink:href' => array(),
 			),
 		);
@@ -331,6 +371,8 @@ class Conjure_Wizard_UI {
 
 	/**
 	 * Loading spinner.
+	 *
+	 * @return string
 	 */
 	public function loading_spinner() {
 
@@ -340,9 +382,14 @@ class Conjure_Wizard_UI {
 		// Retrieve the spinner.
 		$spinner = apply_filters( 'conjure_loading_spinner', $spinner );
 
-		if ( file_exists( $spinner ) ) {
-			include $spinner;
+		if ( ! file_exists( $spinner ) ) {
+			return '';
 		}
+
+		ob_start();
+		include $spinner;
+
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -353,10 +400,27 @@ class Conjure_Wizard_UI {
 	public function loading_spinner_allowed_html() {
 
 		$array = array(
-			'span' => array(
+			'span'   => array(
 				'class' => array(),
 			),
-			'cite' => array(
+			'div'    => array(
+				'class' => array(),
+			),
+			'svg'    => array(
+				'class'   => array(),
+				'viewbox' => array(),
+				'viewBox' => array(),
+			),
+			'circle' => array(
+				'class'             => array(),
+				'cx'                => array(),
+				'cy'                => array(),
+				'r'                 => array(),
+				'fill'              => array(),
+				'stroke-width'      => array(),
+				'stroke-miterlimit' => array(),
+			),
+			'cite'   => array(
 				'class' => array(),
 			),
 		);

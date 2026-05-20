@@ -19,13 +19,13 @@ test('demo helpers has get_demo_directory method', function () {
 });
 
 test('demo helpers get_demo_directory returns string path', function () {
-    // Define required constant for test
     if (!defined('CONJUREWP_PLUGIN_DIR')) {
         define('CONJUREWP_PLUGIN_DIR', conjurewp_test_get_plugin_path());
     }
-    
+
+    require_once conjurewp_test_get_plugin_path('includes/conjurewp-runtime.php');
     require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
-    
+
     $path = Conjure_Demo_Helpers::get_demo_directory();
     expect($path)->toBeString();
     expect(strlen($path))->toBeGreaterThan(0);
@@ -55,14 +55,13 @@ test('demo helpers methods accept theme slug parameter', function () {
 });
 
 test('demo helpers respects filter for custom demo path', function () {
-    // Define required constant for test
     if (!defined('CONJUREWP_PLUGIN_DIR')) {
         define('CONJUREWP_PLUGIN_DIR', conjurewp_test_get_plugin_path());
     }
-    
+
+    require_once conjurewp_test_get_plugin_path('includes/conjurewp-runtime.php');
     require_once conjurewp_test_get_plugin_path('includes/class-conjure-demo-helpers.php');
-    
-    // Test that the method can be called
+
     $path = Conjure_Demo_Helpers::get_demo_directory();
     expect($path)->toBeString();
 });

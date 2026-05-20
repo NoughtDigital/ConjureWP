@@ -372,9 +372,7 @@ class Conjure_Step_Connector_Gravity_Forms extends Conjure_Step_Connector_Base {
 			$this->apply_launch_checklist_settings();
 		}
 
-		$this->conjure->mark_step_completed( $this->get_step_key() );
-		wp_safe_redirect( $this->conjure->step_next_link() );
-		exit;
+		$this->complete_connector_step( $enabled_keys );
 	}
 
 	/**

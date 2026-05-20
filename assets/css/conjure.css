@@ -967,7 +967,9 @@ svg:not(:root) {
 	height: 27px;
 	position: absolute;
 	right: 3px;
-	top: 4px;
+	top: 50%;
+	-webkit-transform: translateY(-50%);
+	transform: translateY(-50%);
 	width: 27px;
 }
 

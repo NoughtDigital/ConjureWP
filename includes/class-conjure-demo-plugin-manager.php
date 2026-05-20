@@ -323,34 +323,43 @@ class Conjure_Demo_Plugin_Manager {
 			'activate' => array(),
 		);
 
+		$slug_list  = array_keys( $required_slugs );
+		$status_map = $this->installer->get_slug_status_map( $slug_list );
+
 		foreach ( $required_slugs as $slug => $plugin_config ) {
-			// Use the plugin config directly from the demo.
 			$plugin = is_array( $plugin_config ) ? $plugin_config : array( 'slug' => $slug );
 
-			// Ensure slug is set.
 			if ( ! isset( $plugin['slug'] ) ) {
 				$plugin['slug'] = $slug;
 			}
 
-			// Set default name if not provided.
 			if ( ! isset( $plugin['name'] ) ) {
 				$plugin['name'] = ucwords( str_replace( '-', ' ', $slug ) );
 			}
 
-			// Check plugin status and add to plugin data.
-			$is_active = $this->installer->is_plugin_active( $slug );
-			$is_installed = $this->installer->is_plugin_installed( $slug );
+			$status = isset( $status_map[ $slug ] ) ? $status_map[ $slug ] : array(
+				'installed' => false,
+				'active'    => false,
+			);
 
-			$this->logger->debug( "Plugin '{$slug}': is_active={$is_active}, is_installed={$is_installed}" );
+			$is_active    = ! empty( $status['active'] );
+			$is_installed = ! empty( $status['installed'] );
 
-			// Add status info to plugin data.
-			$plugin['is_active'] = $is_active;
+			if ( defined( 'CONJUREWP_DEBUG' ) && CONJUREWP_DEBUG ) {
+				$this->logger->debug(
+					'Demo plugin status',
+					array(
+						'slug'       => $slug,
+						'is_active'  => $is_active,
+						'installed'  => $is_installed,
+					)
+				);
+			}
+
+			$plugin['is_active']    = $is_active;
 			$plugin['is_installed'] = $is_installed;
-
-			// Always add to 'all' array so it shows in the UI (like content options).
 			$plugins['all'][ $slug ] = $plugin;
 
-			// Only add to action arrays if not already active.
 			if ( ! $is_active ) {
 				if ( ! $is_installed ) {
 					$plugins['install'][ $slug ] = $plugin;
